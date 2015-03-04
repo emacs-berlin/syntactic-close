@@ -23,35 +23,6 @@
 
 ;;; Code: 
 
-;; Some valid Emacs Lisp suitable for testing
-;; (setq foo (list "([{123}])"))
-
-(ert-deftest gen-close-test-1 ()
-  (with-temp-buffer
-    (insert "(list \"([{123")
-    ;; (switch-to-buffer (current-buffer))
-    (general-close)
-    (should (eq (char-before) ?}))
-    (general-close)
-    (should (eq (char-before) ?\]))
-    (general-close)
-    (should (eq (char-before) ?\)))
-    (general-close)
-    (should (eq (char-before) ?\"))))
-
-(ert-deftest gen-close-test-2 ()
-  (with-temp-buffer
-    (insert "(list \"([\n;;{123\n;;{123\n")
-    (switch-to-buffer (current-buffer))
-    (font-lock-fontify-buffer)
-    (emacs-lisp-mode) 
-    (general-close)
-    (should (eq (char-before) ?\]))
-    (general-close)
-    (should (eq (char-before) ?\)))
-    (general-close)
-    (should (eq (char-before) ?\"))))
-
 (defun gen--return-compliment-char (erg)
   (cond ((eq erg ?\")
 	 erg)
