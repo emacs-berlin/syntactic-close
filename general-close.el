@@ -1,8 +1,6 @@
 ;;; general-close.el --- Insert closing delimiter
 
-;; Copyright (C) 2015  Andreas Roehler
-
-;; Author: Andreas Roehler <andreas.roehler@online.de>
+;; Authored by Emacs User Group Berlin
 
 ;; Keywords: languages, lisp
 
@@ -23,17 +21,30 @@
 
 ;;
 
-;;; Code:
+;;; Code: 
 
 ;; Some valid Emacs Lisp suitable for testing
 ;; (setq foo (list "([{123}])"))
 
-(ert-deftest gen-close-test ()
+(ert-deftest gen-close-test-1 ()
   (with-temp-buffer
     (insert "(list \"([{123")
     ;; (switch-to-buffer (current-buffer))
     (general-close)
     (should (eq (char-before) ?}))
+    (general-close)
+    (should (eq (char-before) ?\]))
+    (general-close)
+    (should (eq (char-before) ?\)))
+    (general-close)
+    (should (eq (char-before) ?\"))))
+
+(ert-deftest gen-close-test-2 ()
+  (with-temp-buffer
+    (insert "(list \"([\n;;{123\n;;{123\n")
+    (switch-to-buffer (current-buffer))
+    (font-lock-fontify-buffer)
+    (emacs-lisp-mode) 
     (general-close)
     (should (eq (char-before) ?\]))
     (general-close)
@@ -52,11 +63,14 @@
 	 ?\))))
 
 (defun general-close ()
-  "Command will insert closing delimiter whichever needed. " 
+  "Command will insert closing delimiter whichever needed. "
   (interactive "*")
-  (let (res stack done)
+  (let (res stack done erg pps-list)
     (save-excursion
       (while (and (not (bobp)) (not done))
+	(while (and (setq pps-list (parse-partial-sexp (line-beginning-position) (point))) (nth 4 pps-list) (nth 8 pps-list))
+	  (goto-char (nth 8 pps-list))
+	  (skip-chars-backward " \t\r\n\f"))
 	(cond ((member (char-before) (list ?\) ?\] ?}))
 	       (push (char-before) stack)
 	       (forward-char -1))
@@ -67,7 +81,7 @@
 		     (pop stack)
 		     (forward-char -1))
 		 (setq done t)))
-	      (t (skip-chars-backward "^\"{\(\[\]\)}")) )))
+	      (t (skip-chars-backward "^\"{\(\[\]\)}")))))
     (insert res)))
 
 (provide 'general-close)
