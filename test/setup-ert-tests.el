@@ -1,5 +1,10 @@
 ;;; setup-ert-tests.el --- Provide needed forms
 
+;; Copyright (C) 2014  Andreas Roehler
+
+;; Author: Andreas Roehler <andreas.roehler@easy-emacs.de>
+;; Keywords: lisp
+
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -17,16 +22,18 @@
 
 ;;; Code:
 
-(setq py-install-directory default-directory)
+(setq gen-install-directory default-directory)
 (sit-for 0.1 t) 
 
 
 ;; (require 'python-mode)
 
-(defvar py-debug-p nil
+(defvar gen-debug-p nil
   "Avoid error")
 
-(defmacro gc-test-with-temp-buffer (contents &rest body)
+;; (setq gen-verbose-p t)
+
+(defmacro gen-test-with-temp-buffer (contents &rest body)
   "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -34,6 +41,73 @@ BODY is code to be executed within the temp buffer.  Point is
   `(with-temp-buffer
      (let (hs-minor-mode)
        (insert ,contents)
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer)) 
+       ;; (message "ERT %s" (point))
+       ,@body)))
+
+(defmacro gen-test-with-temp-buffer-point-min (contents &rest body)
+  "Create temp buffer inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 2) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (insert ,contents)
+       (goto-char (point-min))
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer)) 
+       ;; (message "ERT %s" (point))
+       ,@body)))
+
+(defmacro gen-test-with-python-buffer-point-min (contents &rest body)
+  "Create temp buffer in `python-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+;;     (and (featurep 'python) (unload-feature 'python))
+     (let (hs-minor-mode)
+       (python-mode)
+       (insert ,contents)
+       ;; (message "ERT %s" (point))
+       (goto-char (point-min))
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer)) 
+       ,@body)))
+
+(defmacro gen-test-with-python-buffer (contents &rest body)
+  "Create temp buffer in `python-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     ;; (and (featurep 'python) (unload-feature 'python))
+     (let (hs-minor-mode)
+       (python-mode)
+       (insert ,contents)
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer)) 
+       ;; (message "ERT %s" (point))
+       ,@body)))
+
+(defmacro gen-test-with-elisp-buffer (contents &rest body)
+  "Create temp buffer in `python-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     ;; (and (featurep 'python) (unload-feature 'python))
+     (let (hs-minor-mode)
+       (emacs-lisp-mode)
+       (insert ,contents)
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer)) 
        ;; (message "ERT %s" (point))
        ,@body)))
 
