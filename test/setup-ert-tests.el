@@ -31,7 +31,7 @@
 (defvar gen-debug-p nil
   "Avoid error")
 
-;; (setq gen-verbose-p t)
+(setq gen-verbose-p t)
 
 (defmacro gen-test-with-temp-buffer (contents &rest body)
   "Create temp buffer inserting CONTENTS.

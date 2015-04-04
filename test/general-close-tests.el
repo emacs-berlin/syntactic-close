@@ -116,5 +116,18 @@
     (should (eq (char-before) ?'))
     (should (eq -3 (skip-chars-backward "'")))))
 
+(ert-deftest gen-close-python-dedent-test ()
+  (gen-test-with-python-buffer
+      "for i in range(anzahl):
+    klauf.pylauf()
+    datei.write(str(spiel[i]) + \"\\n"
+    (general-close)
+    (should (eq (char-before) ?\"))
+    (general-close)
+    (should (eq (char-before) ?\)))
+    (general-close)
+    (should (eq 0 (current-indentation)))))
+
+
 (provide 'general-close-tests)
 ;;; general-close-tests.el ends here

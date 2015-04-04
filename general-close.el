@@ -93,30 +93,29 @@ Does not require parenthesis syntax WRT \"{[(\" "
   (interactive "*")
   (when (ignore-errors comment-start)
     ;; travel comments
-  	(while (and (setq pps-list (parse-partial-sexp (point-min) (point))) (nth 4 pps-list) (nth 8 pps-list))
+    (while (and (setq pps-list (parse-partial-sexp (point-min) (point))) (nth 4 pps-list) (nth 8 pps-list))
       (goto-char (nth 8 pps-list))
       (skip-chars-backward " \t\r\n\f")))
   (let* (erg
          (pps-list (parse-partial-sexp (point-min) (point)))
-         (res
-          (save-excursion
-            ;; in string precedes
-            (cond ((nth 3 pps-list)
-		   (setq erg (gen--in-string-p-intern pps-list))
-                   (make-string (nth 2 erg)(nth 1 erg)))
-                  ((nth 1 pps-list)
-                   (goto-char (nth 1 pps-list))
-                   (gen--return-compliment-char (char-after)))
-                  ;; other delimiter?
-                  ((eq major-mode 'python-mode)
-                   (gen--python-close))
-
-
-                  ))))
+         res done)
+    (save-excursion
+      ;; in string precedes
+      (cond ((nth 3 pps-list)
+	     (setq erg (gen--in-string-p-intern pps-list))
+	     (setq res (make-string (nth 2 erg)(nth 1 erg))))
+	    ((nth 1 pps-list)
+	     (goto-char (nth 1 pps-list))
+	     (setq res (gen--return-compliment-char (char-after))))
+	    ;; other delimiter?
+	    ((eq major-mode 'python-mode)
+	     (gen-python-mode-close)
+	     (setq done t))))
     (if res
         (insert res)
-      (newline)
-      (message "%s"  "Nothing to insert here!"))))
+      (unless done 
+	(newline)
+	(message "%s"  "Nothing to insert here!")))))
 
 (provide 'general-close)
 ;;; general-close.el ends here
