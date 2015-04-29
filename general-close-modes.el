@@ -20,13 +20,15 @@
 
 ;;; Commentary:
 
-;; 
+;;
 
 ;;; Code:
 
-(defun gen-python-mode-close (&optional arg) 
+(defun gen-python-mode-close (&optional arg)
   "Equivalent to py-dedent"
-  (interactive "p*") 
+  (interactive "p*")
+  (when (eolp)
+    (newline-and-indent))
   (py-dedent arg))
 
 (provide 'general-close-modes)
