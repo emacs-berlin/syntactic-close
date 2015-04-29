@@ -84,7 +84,7 @@
     (general-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest gen-close-singlequoted-tqs-test ()
+(ert-deftest gen-close-singlequoted-test ()
   (with-temp-buffer
     (insert "'Some Doku")
     (python-mode)

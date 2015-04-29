@@ -26,6 +26,7 @@
 ;; Some valid Emacs Lisp suitable for testing
 ;; (setq foo (list "([{123}])"))
 
+(require 'general-close-modes)
 
 (defvar gen-verbose-p nil)
 
