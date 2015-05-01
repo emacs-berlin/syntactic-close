@@ -112,8 +112,12 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	   (goto-char orig))
 	  ;; other delimiter?
 	  ((eq major-mode 'python-mode)
-	   (gen-python-mode-close)
-	   (setq done t)))
+	   (gen-python-close)
+	   (setq done t))
+	  ((eq major-mode 'ruby-mode)
+	   (gen-ruby-close)
+	   (setq done t))
+	  )
     (if res
         (insert res)
       (unless done

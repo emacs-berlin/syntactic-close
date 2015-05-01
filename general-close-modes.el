@@ -24,12 +24,27 @@
 
 ;;; Code:
 
-(defun gen-python-mode-close (&optional arg)
+(defun gen-python-close (&optional arg)
   "Equivalent to py-dedent"
   (interactive "p*")
   (when (eolp)
     (newline-and-indent))
   (py-dedent arg))
+
+(defun gen-ruby-close (&optional arg)
+  "Equivalent to py-dedent"
+  (interactive "*")
+  (let (
+	;; (need (save-excursion (ruby-beginning-of-block) (current-column)))
+	)
+    (unless (or (looking-back ";[ \t]*"))
+      (unless (and (bolp)(eolp))
+	(newline))
+      (unless (looking-back "^[^ \t]*\\_<end")
+	(insert "end")
+	(save-excursion
+	  (back-to-indentation)
+	  (indent-according-to-mode))))))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

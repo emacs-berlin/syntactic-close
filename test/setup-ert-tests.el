@@ -23,10 +23,7 @@
 ;;; Code:
 
 (setq gen-install-directory default-directory)
-(sit-for 0.1 t) 
-
-
-;; (require 'python-mode)
+(sit-for 0.1 t)
 
 (defvar gen-debug-p nil
   "Avoid error")
@@ -43,8 +40,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (when gen-verbose-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer)) 
-       ;; (message "ERT %s" (point))
+	 (font-lock-fontify-buffer))
        ,@body)))
 
 (defmacro gen-test-with-temp-buffer-point-min (contents &rest body)
@@ -58,8 +54,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when gen-verbose-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer)) 
-       ;; (message "ERT %s" (point))
+	 (font-lock-fontify-buffer))
        ,@body)))
 
 (defmacro gen-test-with-python-buffer-point-min (contents &rest body)
@@ -72,11 +67,10 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (python-mode)
        (insert ,contents)
-       ;; (message "ERT %s" (point))
        (goto-char (point-min))
        (when gen-verbose-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer)) 
+	 (font-lock-fontify-buffer))
        ,@body)))
 
 (defmacro gen-test-with-python-buffer (contents &rest body)
@@ -85,14 +79,42 @@ BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
   (declare (indent 1) (debug t))
   `(with-temp-buffer
-     ;; (and (featurep 'python) (unload-feature 'python))
      (let (hs-minor-mode)
        (python-mode)
        (insert ,contents)
        (when gen-verbose-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer)) 
+	 (font-lock-fontify-buffer))
+       ,@body)))
+
+(defmacro gen-test-with-ruby-buffer-point-min (contents &rest body)
+  "Create temp buffer in `python-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (ruby-mode)
+       (insert ,contents)
        ;; (message "ERT %s" (point))
+       (goto-char (point-min))
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
+       ,@body)))
+
+(defmacro gen-test-with-ruby-buffer (contents &rest body)
+  "Create temp buffer in `python-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (ruby-mode)
+       (insert ,contents)
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
        ,@body)))
 
 (defmacro gen-test-with-elisp-buffer (contents &rest body)
@@ -107,7 +129,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (when gen-verbose-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer)) 
+	 (font-lock-fontify-buffer))
        ;; (message "ERT %s" (point))
        ,@body)))
 
