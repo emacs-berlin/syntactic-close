@@ -31,20 +31,30 @@
     (newline-and-indent))
   (py-dedent arg))
 
+(defun gen--ruby-fetch-delimiter-maybe ()
+  (save-excursion
+    (and (< 0 (abs (skip-syntax-backward "\\sw")))
+	 (eq 1 (car (syntax-after (1- (point)))))
+	 (char-before))))
+
+(defun gen--ruby-insert-end ()
+  (unless (or (looking-back ";[ \t]*"))
+    (unless (and (bolp)(eolp))
+      (newline))
+    (unless (looking-back "^[^ \t]*\\_<end")
+      (insert "end")
+      (save-excursion
+	(back-to-indentation)
+	(indent-according-to-mode)))))
+
 (defun gen-ruby-close (&optional arg)
   "Equivalent to py-dedent"
   (interactive "*")
-  (let (
-	;; (need (save-excursion (ruby-beginning-of-block) (current-column)))
-	)
-    (unless (or (looking-back ";[ \t]*"))
-      (unless (and (bolp)(eolp))
-	(newline))
-      (unless (looking-back "^[^ \t]*\\_<end")
-	(insert "end")
-	(save-excursion
-	  (back-to-indentation)
-	  (indent-according-to-mode))))))
+  (let ((orig (point))
+	(erg (gen--ruby-fetch-delimiter-maybe)))
+    (if erg
+	(insert (char-to-string erg))
+      (gen--ruby-insert-end))))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

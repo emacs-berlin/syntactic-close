@@ -42,17 +42,22 @@
 (ert-deftest gen-close-ruby-paren-test ()
   (gen-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\""
     (general-close)
-    ;; (sit-for 1 t) 
+    ;; (sit-for 1 t)
     (should (eq (char-before) ?\)))))
 
-;; this fails, interpolation not recognised
-;; (ert-deftest gen-close-ruby-test-3 ()
-;;   (gen-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
-;;   \"Sending from #{from} to #{to} via #{via"
-;;     (general-close)
-;;     (should (eq (char-before) ?}))
-;;     (general-close)
-;;     (should (eq (char-before) ?\"))))
+(ert-deftest gen-close-ruby-pipe-test ()
+  (gen-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW"
+    ;; (SWITCH-TO-BUFFER (CURRENT-BUFFER))
+    (general-close)
+    (should (eq (char-before) ?|))))
+
+(ert-deftest gen-close-ruby-string-interpolation-test ()
+  (gen-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
+  \"Sending from #{from} to #{to} via #{via"
+    (general-close)
+    (should (eq (char-before) ?}))
+    (general-close)
+    (should (eq (char-before) ?\"))))
 
 (provide 'general-close-ruby-tests)
 ;;; general-close-ruby-tests.el ends here

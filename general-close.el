@@ -89,6 +89,11 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	      (t (skip-chars-backward "^\"{\(\[\]\)}")))))
     (insert res)))
 
+(defun gen--in-string-interpolation-maybe ()
+  (and (< 0 (abs (skip-syntax-backward "\\sw")))
+       (looking-back " *#{")
+       125))
+
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
@@ -103,8 +108,10 @@ Does not require parenthesis syntax WRT \"{[(\" "
          res done)
     ;; in string precedes
     (cond ((nth 3 pps-list)
-	   (setq erg (gen--in-string-p-intern pps-list))
-	   (setq res (make-string (nth 2 erg)(nth 1 erg)))
+	   (if (gen--in-string-interpolation-maybe)
+	       (setq res ?})
+	     (setq erg (gen--in-string-p-intern pps-list))
+	     (setq res (make-string (nth 2 erg)(nth 1 erg))))
 	   (goto-char orig))
 	  ((nth 1 pps-list)
 	   (goto-char (nth 1 pps-list))
@@ -116,8 +123,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	   (setq done t))
 	  ((eq major-mode 'ruby-mode)
 	   (gen-ruby-close)
-	   (setq done t))
-	  )
+	   (setq done t)))
     (if res
         (insert res)
       (unless done
