@@ -56,9 +56,9 @@
 ;;     klauf.pylauf()
 ;;     datei.write(str(spiel[i]) + \"\\n\")"
 ;;     (general-close)
-;;     ;; (sit-for 0.1 t) 
+;;     ;; (sit-for 0.1 t)
 ;;     ;; (should (eq 0 (current-indentation)))
-;;     (should (eq 10 (char-before))) 
+;;     (should (eq 10 (char-before)))
 ;;     ))
 
 (ert-deftest gen-close-python-brace-paren-bracket-test ()
@@ -81,6 +81,34 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
+(ert-deftest gen-close-python-string-interpolation-test-1 ()
+  (gen-test-with-python-buffer "print('%(language"
+    (general-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest gen-close-python-string-interpolation-test-2 ()
+  (gen-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
+      {'language"
+    (general-close)
+    (should (eq (char-before) ?'))))
+
+(ert-deftest gen-close-python-string-interpolation-test-3 ()
+  (gen-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
+      {'language': \"Python"
+    (general-close)
+    (should (eq (char-before) ?\"))))
+
+(ert-deftest gen-close-python-string-interpolation-test-4 ()
+  (gen-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
+      {'language': \"Python\", \"number\": 2"
+    (general-close)
+    (should (eq (char-before) ?}))))
+
+(ert-deftest gen-close-python-string-interpolation-test-5 ()
+  (gen-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
+      {'language': \"Python\", \"number\": 2}"
+    (general-close)
+    (should (eq (char-before) ?\)))))
 
 (provide 'general-close-python-tests)
 ;;; general-close-python-tests.el ends here

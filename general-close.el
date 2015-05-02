@@ -91,8 +91,8 @@ Does not require parenthesis syntax WRT \"{[(\" "
 
 (defun gen--in-string-interpolation-maybe ()
   (and (< 0 (abs (skip-syntax-backward "\\sw")))
-       (looking-back " *#{")
-       125))
+       (member (char-before) (list ?\( ?{ ?\[))
+       (setq res (gen--return-compliment-char (char-before)))))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
@@ -108,8 +108,9 @@ Does not require parenthesis syntax WRT \"{[(\" "
          res done)
     ;; in string precedes
     (cond ((nth 3 pps-list)
-	   (if (gen--in-string-interpolation-maybe)
-	       (setq res ?})
+	   (unless
+	       ;; sets res to compliment character
+	       (gen--in-string-interpolation-maybe)
 	     (setq erg (gen--in-string-p-intern pps-list))
 	     (setq res (make-string (nth 2 erg)(nth 1 erg))))
 	   (goto-char orig))
