@@ -28,7 +28,21 @@
 
 (require 'general-close-modes)
 
+(defgroup general-close nil
+  "Insert closing delimiter whichever needed. "
+  :group 'languages
+  :prefix "gen-")
+
+(defcustom gen-delete-whitespace-backward-p nil
+  "If whitespace characters before point should be deleted.
+
+Default is nil"
+
+  :type 'boolean
+  :group 'general-close)
+
 (defvar gen-verbose-p nil)
+
 
 (defun gen--return-compliment-char (erg)
   (cond ((eq erg ?\")
@@ -66,7 +80,6 @@ If non-nil, return a list composed of
     ;; (list (nth 8 pps) (char-before) (1+ (skip-chars-forward (char-to-string (char-before)))))
     (when (and gen-verbose-p (interactive-p)) (message "%s" erg))
     erg)))
-
 
 (defun general-close-stack-based ()
   "Command will insert closing delimiter whichever needed.
@@ -126,7 +139,11 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	   (gen-ruby-close)
 	   (setq done t)))
     (if res
-        (insert res)
+	(progn
+	  (and gen-delete-whitespace-backward-p
+	       (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+	       (delete-region (point) orig))
+	  (insert res))
       (unless done
 	(newline)
 	(message "%s"  "Nothing to insert here!")))))

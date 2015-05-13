@@ -71,6 +71,13 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
+(ert-deftest gen-close-delete-whitespace-backward-test ()
+  (gen-test-with-python-buffer
+      "(list ([{123 "
+    (let ((gen-delete-whitespace-backward-p t))
+      (general-close)
+      (should (eq (point) 14)))))
+
 (ert-deftest gen-close-python-nested-paren-test ()
   (gen-test-with-python-buffer
     "(list ([\n# {123\n# {123\n"
