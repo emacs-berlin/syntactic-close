@@ -17,7 +17,11 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary: A still naive implementation of a general-close command
+;;; Commentary: A still naive implementation of a general-close
+;;  command. A first draft was published at emacs-devel list:
+;; 
+;; http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
+
 
 ;;
 
