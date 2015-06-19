@@ -24,15 +24,21 @@
 
 ;;; Code:
 
+(defvar python-test-string-1 "\"Some Doku")
+(setq python-test-string-1 "\"Some Doku")
+
+(defvar python-test-string-2 "{[(123")
+(setq python-test-string-2 "{[(123")
+
 (ert-deftest gen-close-python-doublequoted-test ()
   (gen-test-with-python-buffer
-      "\"Some Doku"
+      python-test-string-1
     (general-close)
     (should (eq (char-before) ?\"))))
 
 (ert-deftest gen-close-python-singlequoted-test ()
   (gen-test-with-python-buffer
-    "'Some Doku"
+      "'Some Doku"
     (general-close)
     (should (eq (char-before) ?'))))
 
@@ -63,13 +69,13 @@
 
 (ert-deftest gen-close-python-brace-paren-bracket-test ()
   (gen-test-with-python-buffer
-      "(list ([{123"
+      python-test-string-2
     (general-close)
-    (should (eq (char-before) ?}))
+    (should (eq (char-before) ?\)))
     (general-close)
     (should (eq (char-before) ?\]))
     (general-close)
-    (should (eq (char-before) ?\)))))
+    (should (eq (char-before) ?}))))
 
 (ert-deftest gen-close-delete-whitespace-backward-test ()
   (gen-test-with-python-buffer

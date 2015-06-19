@@ -19,7 +19,7 @@
 
 ;;; Commentary: A still naive implementation of a general-close
 ;;  command. A first draft was published at emacs-devel list:
-;; 
+;;
 ;; http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
 
 
@@ -111,6 +111,27 @@ Does not require parenthesis syntax WRT \"{[(\" "
        (member (char-before) (list ?\( ?{ ?\[))
        (setq res (gen--return-compliment-char (char-before)))))
 
+(defun gc--fetch-delimiter-char-maybe ()
+  (cond ((nth 3 pps-list)
+	 (save-excursion
+	   (unless
+	       ;; sets res to compliment character
+	       (gen--in-string-interpolation-maybe)
+	     (setq erg (gen--in-string-p-intern pps-list))
+	     (setq res (make-string (nth 2 erg)(nth 1 erg))))))
+	((nth 1 pps-list)
+	 (save-excursion
+	   (goto-char (nth 1 pps-list))
+	   (setq res (gen--return-compliment-char (char-after)))))))
+
+(defun gc--insert-delimiter-char-maybe ()
+  (when res
+    (and gen-delete-whitespace-backward-p
+	 (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+	 (delete-region (point) orig))
+    (insert res)
+    (setq done t)))
+
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
@@ -123,34 +144,18 @@ Does not require parenthesis syntax WRT \"{[(\" "
          (pps-list (parse-partial-sexp (point-min) (point)))
 	 (orig (point))
          res done)
-    ;; in string precedes
-    (cond ((nth 3 pps-list)
-	   (unless
-	       ;; sets res to compliment character
-	       (gen--in-string-interpolation-maybe)
-	     (setq erg (gen--in-string-p-intern pps-list))
-	     (setq res (make-string (nth 2 erg)(nth 1 erg))))
-	   (goto-char orig))
-	  ((nth 1 pps-list)
-	   (goto-char (nth 1 pps-list))
-	   (setq res (gen--return-compliment-char (char-after)))
-	   (goto-char orig))
-	  ;; other delimiter?
-	  ((eq major-mode 'python-mode)
-	   (gen-python-close)
-	   (setq done t))
-	  ((eq major-mode 'ruby-mode)
-	   (gen-ruby-close)
-	   (setq done t)))
-    (if res
-	(progn
-	  (and gen-delete-whitespace-backward-p
-	       (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-	       (delete-region (point) orig))
-	  (insert res))
-      (unless done
-	(newline)
-	(message "%s"  "Nothing to insert here!")))))
+    ;; in string or list?
+    (gc--fetch-delimiter-char-maybe)
+    (gc--insert-delimiter-char-maybe)
+    ;; other delimiter?
+    (unless done
+      (cond ((eq major-mode 'python-mode)
+	     (gen-python-close)
+	     (setq done t))
+	    ((eq major-mode 'ruby-mode)
+	     (gen-ruby-close)
+	     (setq done t))))))
+
 
 (provide 'general-close)
 ;;; general-close.el ends here

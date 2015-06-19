@@ -27,7 +27,7 @@ echo "\$1: $1"
 
 FILE=
 
-SETUP=$TESTDIR/setup-ert-tests.el
+SETUP=$TESTDIR/general-close-setup-ert-tests.el
 
 TEST1=$TESTDIR/general-close-tests.el
 TEST2=$TESTDIR/general-close-ruby-tests.el

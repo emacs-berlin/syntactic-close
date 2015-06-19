@@ -28,8 +28,10 @@
   "Equivalent to py-dedent"
   (interactive "p*")
   (when (eolp)
-    (newline-and-indent))
-  (py-dedent arg))
+    (ignore-errors (newline-and-indent)))
+  (if (functionp 'py-dedent)
+      (py-dedent 1)
+    (python-indent-dedent-line-backspace 1)))
 
 (defun gen--ruby-fetch-delimiter-maybe ()
   (save-excursion
