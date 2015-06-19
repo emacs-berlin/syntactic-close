@@ -87,8 +87,39 @@ BODY is code to be executed within the temp buffer.  Point is
 	 (font-lock-fontify-buffer))
        ,@body)))
 
+
+(defmacro gen-test-with-php-buffer-point-min (contents &rest body)
+  "Create temp buffer in `php-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+;;     (and (featurep 'php) (unload-feature 'php))
+     (let (hs-minor-mode)
+       (php-mode)
+       (insert ,contents)
+       (goto-char (point-min))
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
+       ,@body)))
+
+(defmacro gen-test-with-php-buffer (contents &rest body)
+  "Create temp buffer in `php-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (php-mode)
+       (insert ,contents)
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
+       ,@body)))
+
 (defmacro gen-test-with-ruby-buffer-point-min (contents &rest body)
-  "Create temp buffer in `python-mode' inserting CONTENTS.
+  "Create temp buffer in `php-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
   (declare (indent 1) (debug t))
@@ -104,7 +135,7 @@ BODY is code to be executed within the temp buffer.  Point is
        ,@body)))
 
 (defmacro gen-test-with-ruby-buffer (contents &rest body)
-  "Create temp buffer in `python-mode' inserting CONTENTS.
+  "Create temp buffer in `ruby-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
   (declare (indent 1) (debug t))
@@ -118,7 +149,7 @@ BODY is code to be executed within the temp buffer.  Point is
        ,@body)))
 
 (defmacro gen-test-with-elisp-buffer (contents &rest body)
-  "Create temp buffer in `python-mode' inserting CONTENTS.
+  "Create temp buffer in `emacs-lisp-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
   (declare (indent 1) (debug t))

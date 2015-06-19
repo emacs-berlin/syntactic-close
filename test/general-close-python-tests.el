@@ -24,15 +24,15 @@
 
 ;;; Code:
 
-(defvar python-test-string-1 "\"Some Doku")
-(setq python-test-string-1 "\"Some Doku")
+(defvar general-close-python-test-string-1 "\"Some Doku")
+(setq general-close-python-test-string-1 "\"Some Doku")
 
-(defvar python-test-string-2 "{[(123")
-(setq python-test-string-2 "{[(123")
+(defvar general-close-python-test-string-2 "{[(123")
+(setq general-close-python-test-string-2 "{[(123")
 
 (ert-deftest gen-close-python-doublequoted-test ()
   (gen-test-with-python-buffer
-      python-test-string-1
+      general-close-python-test-string-1
     (general-close)
     (should (eq (char-before) ?\"))))
 
@@ -69,7 +69,7 @@
 
 (ert-deftest gen-close-python-brace-paren-bracket-test ()
   (gen-test-with-python-buffer
-      python-test-string-2
+      general-close-python-test-string-2
     (general-close)
     (should (eq (char-before) ?\)))
     (general-close)

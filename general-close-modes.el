@@ -24,6 +24,7 @@
 
 ;;; Code:
 
+;; Python
 (defun gen-python-close (&optional arg)
   "Equivalent to py-dedent"
   (interactive "p*")
@@ -33,6 +34,7 @@
       (py-dedent 1)
     (python-indent-dedent-line-backspace 1)))
 
+;; Ruby
 (defun gen--ruby-fetch-delimiter-maybe ()
   (save-excursion
     (and (< 0 (abs (skip-syntax-backward "\\sw")))
@@ -57,6 +59,28 @@
     (if erg
 	(insert (char-to-string erg))
       (gen--ruby-insert-end))))
+
+;; Php
+(defun gen-php-after ()
+  (let ((pps (parse-partial-sexp (point-min) (point)))
+	erg done)
+    (unless (nth 1 pps)
+      (save-excursion
+	(forward-char -1)
+	(setq pps (parse-partial-sexp (point-min) (point)))
+	(when (nth 1 pps)
+	  (save-excursion
+	    (goto-char (nth 1 pps))
+	    (setq erg (not (member (char-before) (list ?\t ?\n ?\ ?=))))
+	    (save-excursion
+	      (beginning-of-line)
+	      (and (looking-at "function")
+		   (setq done t))))))
+      (unless done
+	(when erg (insert ";"))
+	))))
+
+
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

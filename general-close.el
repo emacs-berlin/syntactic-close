@@ -154,7 +154,9 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	     (setq done t))
 	    ((eq major-mode 'ruby-mode)
 	     (gen-ruby-close)
-	     (setq done t))))))
+	     (setq done t))))
+    (cond ((eq major-mode 'php-mode)
+	   (gen-php-after)))))
 
 
 (provide 'general-close)
