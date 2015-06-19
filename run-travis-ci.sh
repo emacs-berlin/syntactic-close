@@ -32,6 +32,7 @@ SETUP=$TESTDIR/general-close-setup-ert-tests.el
 TEST1=$TESTDIR/general-close-tests.el
 TEST2=$TESTDIR/general-close-ruby-tests.el
 TEST3=$TESTDIR/general-close-python-tests.el
+TEST4=$TESTDIR/general-close-php-tests.el
 
 
 if [ -s emacs24 ]; then
@@ -44,4 +45,4 @@ echo "\$EMACS: $EMACS"
 
 # Form delivered by $SETUP is not used yet
 
-$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$TESTDIR/\")" -l $PDIR/general-close.el -load $SETUP -l $TEST1 -l $TEST2 -l $TEST3 -f ert-run-tests-batch-and-exit
+$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$TESTDIR/\")" -l $PDIR/general-close.el -load $SETUP -l $TEST1 -l $TEST2 -l $TEST3 -l $TEST4 -f ert-run-tests-batch-and-exit

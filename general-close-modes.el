@@ -62,22 +62,21 @@
 
 ;; Php
 (defun gen-php-after ()
-  (let ((pps (parse-partial-sexp (point-min) (point)))
-	erg done)
-    (unless (nth 1 pps)
+  (let ((pps (parse-partial-sexp (point-min) (point))))
+    (unless (and (not (eq closer ?})) (nth 1 pps))
       (save-excursion
 	(forward-char -1)
-	(setq pps (parse-partial-sexp (point-min) (point)))
+	(setq pps (parse-partial-sexp (line-beginning-position) (point)))
 	(when (nth 1 pps)
 	  (save-excursion
 	    (goto-char (nth 1 pps))
-	    (setq erg (not (member (char-before) (list ?\t ?\n ?\ ?=))))
+	    (setq done (member (char-before) (list ?\t ?\n ?\ ?=)))
 	    (save-excursion
 	      (beginning-of-line)
-	      (and (looking-at "function")
+	      (and (or (looking-at "function")(looking-at "public function"))
 		   (setq done t))))))
       (unless done
-	(when erg (insert ";"))
+	(insert ";")
 	))))
 
 

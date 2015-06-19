@@ -65,10 +65,23 @@ function €()
     (general-close)
     (should (eq (char-before) ?\"))
     (general-close)
+    (should (eq (char-before) ?\)))
+    (general-close)
     (should (eq (char-before) ?\;))))
 
-(ert-deftest gen-close-php-paren-semicolon-test ()
+(ert-deftest gen-close-public-function-test ()
   (gen-test-with-php-buffer
-      general-close-php-test-string-5
+      "public function Foobar(){
+  echo \"Foobar"
     (general-close)
-    (should (eq (char-before) ?>))))
+    (should (eq (char-before) ?\"))
+    (general-close)
+    (should (eq (char-before) ?\;))
+    (general-close)
+    (should (eq (char-before) ?}))))
+
+;; (ert-deftest gen-close-php-paren-semicolon-test ()
+;;   (gen-test-with-php-buffer
+;;       general-close-php-test-string-5
+;;     (general-close)
+;;     (should (eq (char-before) ?>))))

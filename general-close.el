@@ -90,47 +90,55 @@ If non-nil, return a list composed of
 
 Does not require parenthesis syntax WRT \"{[(\" "
   (interactive "*")
-  (let (res stack done erg pps-list)
+  (let (closer stack done erg pps-list)
     (save-excursion
       (while (and (not (bobp)) (not done))
 	(cond ((member (char-before) (list ?\) ?\] ?}))
 	       (push (char-before) stack)
 	       (forward-char -1))
 	      ((member (char-before) (list ?\( ?\" ?{ ?\[))
-	       (setq res (gen--return-compliment-char (char-before)))
-	       (if (eq (car stack) res)
+	       (setq closer (gen--return-compliment-char (char-before)))
+	       (if (eq (car stack) closer)
 		   (progn
 		     (pop stack)
 		     (forward-char -1))
 		 (setq done t)))
 	      (t (skip-chars-backward "^\"{\(\[\]\)}")))))
-    (insert res)))
+    (insert closer)))
 
 (defun gen--in-string-interpolation-maybe ()
   (and (< 0 (abs (skip-syntax-backward "\\sw")))
        (member (char-before) (list ?\( ?{ ?\[))
-       (setq res (gen--return-compliment-char (char-before)))))
+       (setq closer (gen--return-compliment-char (char-before)))))
 
 (defun gc--fetch-delimiter-char-maybe ()
   (cond ((nth 3 pps-list)
 	 (save-excursion
 	   (unless
-	       ;; sets res to compliment character
+	       ;; sets closer to compliment character
 	       (gen--in-string-interpolation-maybe)
 	     (setq erg (gen--in-string-p-intern pps-list))
-	     (setq res (make-string (nth 2 erg)(nth 1 erg))))))
+	     (setq closer (make-string (nth 2 erg)(nth 1 erg))))))
 	((nth 1 pps-list)
 	 (save-excursion
 	   (goto-char (nth 1 pps-list))
-	   (setq res (gen--return-compliment-char (char-after)))))))
+	   (setq closer (gen--return-compliment-char (char-after)))))))
 
 (defun gc--insert-delimiter-char-maybe ()
-  (when res
+  (when closer
     (and gen-delete-whitespace-backward-p
 	 (< 0 (abs (skip-chars-backward " \t\r\n\f")))
 	 (delete-region (point) orig))
-    (insert res)
-    (setq done t)))
+    (cond ((and (eq closer ?}) (eq major-mode 'php-mode)(eq (char-before) ?\;))
+	   (newline-and-indent)
+	   (insert closer)
+	   (setq done t))
+	  ((and (eq closer ?}) (not (eq major-mode 'php-mode)))
+	   (insert closer)
+	   (setq done t))
+	  ((not (eq closer ?}))
+	   (insert closer)
+	   (setq done t)))))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
@@ -141,9 +149,9 @@ Does not require parenthesis syntax WRT \"{[(\" "
       (goto-char (nth 8 pps-list))
       (skip-chars-backward " \t\r\n\f")))
   (let* (erg
-         (pps-list (parse-partial-sexp (point-min) (point)))
+	 (pps-list (parse-partial-sexp (point-min) (point)))
 	 (orig (point))
-         res done)
+	 closer done)
     ;; in string or list?
     (gc--fetch-delimiter-char-maybe)
     (gc--insert-delimiter-char-maybe)
@@ -154,10 +162,12 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	     (setq done t))
 	    ((eq major-mode 'ruby-mode)
 	     (gen-ruby-close)
+	     (setq done t))
+	    ((eq major-mode 'php-mode)
+	     (gen-php-after)
 	     (setq done t))))
-    (cond ((eq major-mode 'php-mode)
+    (cond ((and (not done) (eq major-mode 'php-mode))
 	   (gen-php-after)))))
-
 
 (provide 'general-close)
 ;;; general-close.el ends here
