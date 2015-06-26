@@ -60,7 +60,8 @@ Default is nil"
 
 (defvar gen-verbose-p nil)
 
-(defvar gen-command-separator-char ";")
+(defvar gen-command-separator-char ?\;)
+(setq gen-command-separator-char ?\;)
 
 (defun gen--return-compliment-char (erg)
   (cond ((eq erg ?\")
@@ -157,7 +158,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 
 See `gen-command-separator-char'"
   (cond ((eq closer ?})
-	 (if (or (string= (char-to-string (char-before)) gen-command-separator-char)
+	 (if (or (eq (char-before) gen-command-separator-char)
 		 (eq (char-before) closer))
 	     (progn
 	       (unless (looking-back "^[ \t]+")
@@ -175,7 +176,7 @@ See `gen-command-separator-char'"
 	(closer
 	 (insert closer)
 	 (setq done t))
-	((not (looking-back gen-command-separator-char))
+	((not (eq (char-before) gen-command-separator-char))
 	 (insert gen-command-separator-char)
 	 (setq done t))))
 
@@ -196,11 +197,7 @@ See `gen-command-separator-char'"
       (gc--fetch-delimiter-char-maybe pps)
 
       (if (member major-mode gc--separator-modes)
-	  ;; (if (string= (char-to-string (char-before)) gen-command-separator-char)
-	  ;; (gc--insert-delimiter-char-maybe orig closer)
 	  (gc--handle-separator-modes)
-	;; (gen-insert-closing-char pps)
-	;;)
 	(gc--insert-delimiter-char-maybe orig closer))
       ;; other delimiter?
       (unless done
