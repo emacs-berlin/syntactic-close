@@ -23,7 +23,6 @@
 ;;
 ;; http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
 
-
 ;;
 
 ;;; Code:
@@ -190,12 +189,10 @@ See `gen-command-separator-char'"
 	(goto-char (nth 8 pps))
 	(skip-chars-backward " \t\r\n\f")))
     (let (erg
-	  (pps (parse-partial-sexp (point-min) (point)))
 	  (orig (point))
 	  closer done)
       ;; in string or list?
       (gc--fetch-delimiter-char-maybe pps)
-
       (if (member major-mode gc--separator-modes)
 	  (gc--handle-separator-modes)
 	(gc--insert-delimiter-char-maybe orig closer))
@@ -208,7 +205,6 @@ See `gen-command-separator-char'"
 	 ((eq major-mode 'ruby-mode)
 	  (gen-ruby-close)
 	  (setq done t)))))))
-
 
 (provide 'general-close)
 ;;; general-close.el ends here
