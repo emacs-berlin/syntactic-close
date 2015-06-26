@@ -25,7 +25,7 @@ export TESTDIR
 
 echo "\$1: $1"
 
-FILE=
+FILE1=$HOME/arbeit/emacs/elisp/php-mode.el
 
 SETUP=$TESTDIR/general-close-setup-ert-tests.el
 
@@ -33,7 +33,7 @@ TEST1=$TESTDIR/general-close-tests.el
 TEST2=$TESTDIR/general-close-ruby-tests.el
 TEST3=$TESTDIR/general-close-python-tests.el
 TEST4=$TESTDIR/general-close-php-tests.el
-
+TEST5=$TESTDIR/general-close-js-tests.el
 
 if [ -s emacs24 ]; then
     EMACS=emacs24
@@ -45,4 +45,4 @@ echo "\$EMACS: $EMACS"
 
 # Form delivered by $SETUP is not used yet
 
-$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$TESTDIR/\")" -l $PDIR/general-close.el -load $SETUP -l $TEST1 -l $TEST2 -l $TEST3 -l $TEST4 -f ert-run-tests-batch-and-exit
+$EMACS -Q --batch --eval "(message (emacs-version))" --eval "(add-to-list 'load-path \"$PDIR/\")" --eval "(add-to-list 'load-path \"$TESTDIR/\")" -l $FILE1 -l $PDIR/general-close.el -load $SETUP --eval "(setq gen-verbose-p nil)" -l $TEST1 -l $TEST2 -l $TEST3 -l $TEST4 -l $TEST5 -f ert-run-tests-batch-and-exit

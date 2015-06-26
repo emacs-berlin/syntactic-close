@@ -28,7 +28,7 @@
 (defvar gen-debug-p nil
   "Avoid error")
 
-(setq gen-verbose-p t)
+(defvar gen-verbose-p t)
 
 (defmacro gen-test-with-temp-buffer (contents &rest body)
   "Create temp buffer inserting CONTENTS.
@@ -162,6 +162,36 @@ BODY is code to be executed within the temp buffer.  Point is
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ;; (message "ERT %s" (point))
+       ,@body)))
+
+(defmacro gen-test-with-js-buffer-point-min (contents &rest body)
+  "Create temp buffer in `js-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+;;     (and (featurep 'js) (unload-feature 'js))
+     (let (hs-minor-mode)
+       (js-mode)
+       (insert ,contents)
+       (goto-char (point-min))
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
+       ,@body)))
+
+(defmacro gen-test-with-js-buffer (contents &rest body)
+  "Create temp buffer in `js-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (js-mode)
+       (insert ,contents)
+       (when gen-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
        ,@body)))
 
 (provide 'setup-ert-tests)

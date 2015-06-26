@@ -24,6 +24,8 @@
 
 ;;; Code:
 
+
+
 ;; Python
 (defun gen-python-close (&optional arg)
   "Equivalent to py-dedent"
@@ -61,8 +63,8 @@
       (gen--ruby-insert-end))))
 
 ;; Php
-(defun gen-php-after ()
-  (let ((pps (parse-partial-sexp (point-min) (point))))
+(defun gen--php-check (pps)
+  (let ((pps pps))
     (unless (and (not (eq closer ?})) (nth 1 pps))
       (save-excursion
 	(forward-char -1)
@@ -70,16 +72,18 @@
 	(when (nth 1 pps)
 	  (save-excursion
 	    (goto-char (nth 1 pps))
+	    ;; just a single list
 	    (setq done (member (char-before) (list ?\t ?\n ?\ ?=)))
-	    (save-excursion
-	      (beginning-of-line)
-	      (and (or (looking-at "function")(looking-at "public function"))
-		   (setq done t))))))
-      (unless done
-	(insert ";")
-	))))
+	    (or done
+		(beginning-of-line)
+		(and (or (looking-at "function")(looking-at "public function"))
+		     (setq done t)))))))))
 
-
+(defun gen-insert-closing-char (pps)
+  (when (eq major-mode 'php-mode)
+    (gen--php-check pps))
+  (unless done
+    (insert gen-command-separator-char)))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

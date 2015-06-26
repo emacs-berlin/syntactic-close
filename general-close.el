@@ -1,6 +1,7 @@
 ;;; general-close.el --- Insert closing delimiter
 
-;; Authored by Emacs User Group Berlin
+;; Authored and maintained by
+;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
 
 ;; Keywords: languages, lisp
 
@@ -45,8 +46,21 @@ Default is nil"
   :type 'boolean
   :group 'general-close)
 
+(defcustom gc--separator-modes
+  (list
+   'js-mode
+   'js2-mode
+   'perl-mode
+   'php-mode
+   )
+  "List of modes which commands must be closed by `gen-command-separator-char. "
+
+  :type 'list
+  :group 'general-close)
+
 (defvar gen-verbose-p nil)
 
+(defvar gen-command-separator-char ";")
 
 (defun gen--return-compliment-char (erg)
   (cond ((eq erg ?\")
@@ -73,13 +87,13 @@ If non-nil, return a list composed of
   (save-excursion
     (let* ((pps (parse-partial-sexp (point-min) (point)))
 	   (erg (when (nth 3 pps)
-		  (gen-in-string-p-intern pps))))
+		  (gen--in-string-p-intern pps))))
       (unless erg
 	(when (looking-at "\"\\|'")
 	  (forward-char 1)
 	  (setq pps (parse-partial-sexp (line-beginning-position) (point)))
 	  (when (nth 3 pps)
-	    (setq erg (gen-in-string-p-intern pps)))))
+	    (setq erg (gen--in-string-p-intern pps)))))
 
     ;; (list (nth 8 pps) (char-before) (1+ (skip-chars-forward (char-to-string (char-before)))))
     (when (and gen-verbose-p (interactive-p)) (message "%s" erg))
@@ -111,63 +125,93 @@ Does not require parenthesis syntax WRT \"{[(\" "
        (member (char-before) (list ?\( ?{ ?\[))
        (setq closer (gen--return-compliment-char (char-before)))))
 
-(defun gc--fetch-delimiter-char-maybe ()
-  (cond ((nth 3 pps-list)
-	 (save-excursion
-	   (unless
-	       ;; sets closer to compliment character
-	       (gen--in-string-interpolation-maybe)
-	     (setq erg (gen--in-string-p-intern pps-list))
-	     (setq closer (make-string (nth 2 erg)(nth 1 erg))))))
-	((nth 1 pps-list)
-	 (save-excursion
-	   (goto-char (nth 1 pps-list))
-	   (setq closer (gen--return-compliment-char (char-after)))))))
+(defun gc--fetch-delimiter-char-maybe (pps-list)
+  (let (erg)
+    (cond ((nth 3 pps-list)
+	   (save-excursion
+	     (unless
+		 ;; sets closer to compliment character
+		 (gen--in-string-interpolation-maybe)
+	       (setq erg (gen--in-string-p-intern pps-list))
+	       (setq closer (make-string (nth 2 erg)(nth 1 erg))))))
+	  ((nth 1 pps-list)
+	   (save-excursion
+	     (goto-char (nth 1 pps-list))
+	     (setq closer (gen--return-compliment-char (char-after))))))))
 
-(defun gc--insert-delimiter-char-maybe ()
+(defun gc--insert-delimiter-char-maybe (orig closer)
   (when closer
-    (and gen-delete-whitespace-backward-p
-	 (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-	 (delete-region (point) orig))
-    (cond ((and (eq closer ?}) (eq major-mode 'php-mode)(eq (char-before) ?\;))
-	   (newline-and-indent)
-	   (insert closer)
-	   (setq done t))
-	  ((and (eq closer ?}) (not (eq major-mode 'php-mode)))
-	   (insert closer)
-	   (setq done t))
-	  ((not (eq closer ?}))
-	   (insert closer)
-	   (setq done t)))))
+    (when (and (not (looking-back "^[ \t]+")) gen-delete-whitespace-backward-p
+	       (< 0 (abs (skip-chars-backward " \t\r\n\f"))))
+      (delete-region (point) orig))
+    (cond
+     ((and (eq closer ?}) (not (eq major-mode 'php-mode)))
+      (insert closer)
+      (setq done t))
+     ((not (eq closer ?}))
+      (insert closer)
+      (setq done t)))))
+
+(defun gc--handle-separator-modes ()
+  "Some languages close a command with a special char, often `;'
+
+See `gen-command-separator-char'"
+  (cond ((eq closer ?})
+	 (if (or (string= (char-to-string (char-before)) gen-command-separator-char)
+		 (eq (char-before) closer))
+	     (progn
+	       (unless (looking-back "^[ \t]+")
+		 (newline-and-indent))
+	       (insert closer))
+	   (insert gen-command-separator-char))
+	 (setq done t))
+	((and (eq closer ?\)) (eq (char-before) ?\;))
+	 (newline-and-indent)
+	 (insert closer)
+	 (setq done t))
+	((and (eq closer ?\)) (eq (char-before) ?\)))
+	 (insert gen-command-separator-char)
+	 (setq done t))
+	(closer
+	 (insert closer)
+	 (setq done t))
+	((not (looking-back gen-command-separator-char))
+	 (insert gen-command-separator-char)
+	 (setq done t))))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
-  (when (ignore-errors comment-start)
-    ;; travel comments
-    (while (and (setq pps-list (parse-partial-sexp (point-min) (point))) (nth 4 pps-list) (nth 8 pps-list))
-      (goto-char (nth 8 pps-list))
-      (skip-chars-backward " \t\r\n\f")))
-  (let* (erg
-	 (pps-list (parse-partial-sexp (point-min) (point)))
-	 (orig (point))
-	 closer done)
-    ;; in string or list?
-    (gc--fetch-delimiter-char-maybe)
-    (gc--insert-delimiter-char-maybe)
-    ;; other delimiter?
-    (unless done
-      (cond ((eq major-mode 'python-mode)
-	     (gen-python-close)
-	     (setq done t))
-	    ((eq major-mode 'ruby-mode)
-	     (gen-ruby-close)
-	     (setq done t))
-	    ((eq major-mode 'php-mode)
-	     (gen-php-after)
-	     (setq done t))))
-    (cond ((and (not done) (eq major-mode 'php-mode))
-	   (gen-php-after)))))
+  (let (pps)
+    (when (ignore-errors comment-start)
+      ;; travel comments
+      (while (and (setq pps (parse-partial-sexp (point-min) (point))) (nth 4 pps) (nth 8 pps))
+	(goto-char (nth 8 pps))
+	(skip-chars-backward " \t\r\n\f")))
+    (let (erg
+	  (pps (parse-partial-sexp (point-min) (point)))
+	  (orig (point))
+	  closer done)
+      ;; in string or list?
+      (gc--fetch-delimiter-char-maybe pps)
+
+      (if (member major-mode gc--separator-modes)
+	  ;; (if (string= (char-to-string (char-before)) gen-command-separator-char)
+	  ;; (gc--insert-delimiter-char-maybe orig closer)
+	  (gc--handle-separator-modes)
+	;; (gen-insert-closing-char pps)
+	;;)
+	(gc--insert-delimiter-char-maybe orig closer))
+      ;; other delimiter?
+      (unless done
+	(cond
+	 ((eq major-mode 'python-mode)
+	  (gen-python-close)
+	  (setq done t))
+	 ((eq major-mode 'ruby-mode)
+	  (gen-ruby-close)
+	  (setq done t)))))))
+
 
 (provide 'general-close)
 ;;; general-close.el ends here
