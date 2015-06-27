@@ -1,6 +1,7 @@
 ;;; general-close-tests.el ---  Tests
 
-;; Authored by Emacs User Group Berlin
+;; Authored and maintained by
+;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
 
 ;; Keywords: languages, lisp
 

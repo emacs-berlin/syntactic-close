@@ -1,8 +1,8 @@
 ;;; setup-ert-tests.el --- Provide needed forms
 
-;; Copyright (C) 2014  Andreas Roehler
+;; Authored and maintained by
+;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
 
-;; Author: Andreas Roehler <andreas.roehler@easy-emacs.de>
 ;; Keywords: lisp
 
 ;; This program is free software; you can redistribute it and/or modify

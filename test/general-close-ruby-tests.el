@@ -1,8 +1,8 @@
 ;;; general-close-ruby-tests.el --- Ruby tests
 
-;; Copyright (C) 2015  Andreas Roehler
+;; Authored and maintained by
+;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
 
-;; Author: Andreas Roehler <andreas.roehler@online.de>
 ;; Keywords: lisp
 
 ;; This program is free software; you can redistribute it and/or modify
