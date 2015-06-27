@@ -47,6 +47,7 @@ $EMACS -Q --batch --eval "(message (emacs-version))" \
        --eval "(add-to-list 'load-path \"$PDIR/\")" \
        --eval "(add-to-list 'load-path \"$TESTDIR/\")" \
        -l $PDIR/general-close.el \
+       -l $PDIR/modes/php-mode.el \
        -l $SETUP \
        --eval "(setq gen-verbose-p nil)" \
        -l $TEST1 -l $TEST2 -l $TEST3 -l $TEST4 -l $TEST5 \
