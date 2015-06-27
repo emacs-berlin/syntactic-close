@@ -44,7 +44,8 @@
 
 (ert-deftest gen-close-python-doublequoted-tqs-test ()
   (gen-test-with-python-buffer
-    "\"\"\"Some Doku"
+      "\"\"\"Some Doku"
+    (font-lock-fontify-buffer)
     (general-close)
     (should (eq (char-before) ?\"))
     (should (eq -3 (skip-chars-backward "\"")))))
@@ -52,6 +53,7 @@
 (ert-deftest gen-close-python-singlequoted-tqs-test ()
   (gen-test-with-python-buffer
       "'''Some Doku"
+    (font-lock-fontify-buffer)
     (general-close)
     (should (eq (char-before) ?'))
     (should (eq -3 (skip-chars-backward "'")))))

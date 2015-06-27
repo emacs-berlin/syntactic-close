@@ -44,8 +44,8 @@ echo "\$EMACS: $EMACS"
 # Form delivered by $SETUP is not used yet
 
 $EMACS -Q --batch --eval "(message (emacs-version))" \
-       --eval "(add-to-list 'load-path \"$PDIR/\")" \
-       --eval "(add-to-list 'load-path \"$TESTDIR/\")" \
+       -L "$PDIR" \
+       -L "$TESTDIR" \
        -l $PDIR/general-close.el \
        -l $PDIR/modes/php-mode.el \
        -l $SETUP \

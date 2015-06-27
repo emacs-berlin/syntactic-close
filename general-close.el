@@ -62,6 +62,15 @@ Default is nil"
 (defvar gen-command-separator-char ?\;)
 (setq gen-command-separator-char ?\;)
 
+(defun gen-toggle-verbosity () 
+  "If `gen-verbose-p' is nil, switch it on.
+
+Otherwise switch it off. "
+  (interactive)
+  (setq gen-verbose-p (not gen-verbose-p))
+  (when (interactive-p) (message "gen-verbose-p: %s" gen-verbose-p))) 
+
+  
 (defun gen--return-compliment-char (erg)
   (cond ((eq erg ?\")
 	 erg)
