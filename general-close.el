@@ -45,6 +45,14 @@ Default is nil"
   :type 'boolean
   :group 'general-close)
 
+(defcustom gen-electric-indent-p nil
+  "When `t', after insert at empty line indent according to mode.
+
+Default is nil"
+
+  :type 'boolean
+  :group 'general-close)
+
 (defcustom gc--separator-modes
   (list
    'js-mode
@@ -202,6 +210,7 @@ See `gen-command-separator-char'"
 	(skip-chars-backward " \t\r\n\f")))
     (let (erg
 	  (orig (point))
+	  (gen-empty-line (and (looking-back "^[ \t]*")(eolp)))
 	  closer done)
       ;; in string or list?
       (gc--fetch-delimiter-char-maybe pps)
@@ -216,7 +225,9 @@ See `gen-command-separator-char'"
 	  (setq done t))
 	 ((eq major-mode 'ruby-mode)
 	  (gen-ruby-close)
-	  (setq done t)))))))
+	  (setq done t))))
+      (when (and gen-electric-indent-p gen-empty-line)
+	(indent-according-to-mode)))))
 
 (provide 'general-close)
 ;;; general-close.el ends here
