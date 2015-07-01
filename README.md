@@ -9,5 +9,6 @@ Also closing must not mean to insert a single character: if behind an
 
 This should speed up editing to some extend.
 
-Idea was proposed at emacs-devel mailing-list in time around 2013,
-2014; however no implementation was known so far.
+A first draft was proposed at emacs-devel mailing-list: 
+http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
+
