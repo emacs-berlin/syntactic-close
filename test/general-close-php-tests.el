@@ -106,5 +106,29 @@ function €()
     (general-close)
     (should (eq (char-before) ?}))))
 
+
+(ert-deftest gen-close-php-indented-line-test ()
+  (gen-test-with-php-buffer
+      "if ($foobar){
+    foreach ($foobar as $key =>  $val) {
+         echo $key;
+	 "
+    (general-close)
+    (should (eq (char-before) ?}))))
+
+(ert-deftest gen-close-php-check-indent-test ()
+  (gen-test-with-php-buffer
+      "if ($foobar){
+    foreach ($foobar as $key =>  $val) {
+         echo $key;
+	 }"
+    (indent-according-to-mode) 
+    (should (eq (current-indentation) 4))
+    (newline-and-indent)
+    (general-close)
+    (newline-and-indent) 
+    (should (eq (current-indentation) 0))
+    ))
+
 (provide 'general-close-php-tests)
 ;;; general-close-php-tests.el ends here
