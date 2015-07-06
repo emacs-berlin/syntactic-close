@@ -189,9 +189,10 @@ See `gen-command-separator-char'"
 	 (newline-and-indent)
 	 (insert closer)
 	 (setq done t))
-	((and (eq closer ?\)) (eq (char-before) ?\)))
-	 (insert gen-command-separator-char)
-	 (setq done t))
+	;; Semicolon inserted where it probably shouldn't be? #12
+	;; ((and (eq closer ?\)) (eq (char-before) ?\)))
+	;;  (insert gen-command-separator-char)
+	;;  (setq done t))
 	(closer
 	 (insert closer)
 	 (setq done t))

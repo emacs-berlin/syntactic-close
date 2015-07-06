@@ -64,8 +64,21 @@
     (should (eq (char-before) ?\)))
     (general-close)
     (should (eq (char-before) ?\;))
-
 ))
+
+(ert-deftest gen-close-js-test-2 ()
+  (gen-test-with-js-buffer
+      "function foo(a,b,c,d) {
+if ( (a == b) || (c == d"
+
+    (general-close)
+    (should (eq (char-before) ?\)))
+    (general-close)
+    (should (eq (char-before) ?\)))
+    (general-close)
+    (should (eq (char-before) ?\;))
+    (general-close)
+    (should (eq (char-before) ?}))))
 
 (provide 'general-close-js-tests)
 ;;; general-close-js-tests.el ends here
