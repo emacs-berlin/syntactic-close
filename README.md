@@ -1,5 +1,5 @@
 When it's about to insert a closing delimiter, commonly typing a
-parenthese, bracket, brace or whatever is needed.
+parenthesis, bracket, brace or whatever is needed.
 
 Beside these keys are often more difficult to reach than others on
 some keyboards, all closing in all modes could be done by just one
