@@ -1,3 +1,6 @@
+General Close [![Build Status](https://travis-ci.org/emacs-berlin/general-close.svg?branch=master)](https://travis-ci.org/emacs-berlin/general-close)
+===
+
 When it's about to insert a closing delimiter, commonly typing a
 parenthesis, bracket, brace or whatever is needed.
 
