@@ -140,7 +140,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 (defun gen--in-string-interpolation-maybe ()
   (and (< 0 (abs (skip-syntax-backward "\\sw")))
        (member (char-before) (list ?\( ?{ ?\[))
-       (setq closer (gen--return-compliment-char (char-before)))))
+       (gen--return-compliment-char (char-before))))
 
 (defun gc--fetch-delimiter-char-maybe (pps-list)
   (let (erg)
@@ -148,7 +148,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	   (save-excursion
 	     (unless
 		 ;; sets closer to compliment character
-		 (gen--in-string-interpolation-maybe)
+		 (setq closer (gen--in-string-interpolation-maybe))
 	       (setq erg (gen--in-string-p-intern pps-list))
 	       (setq closer (make-string (nth 2 erg)(nth 1 erg))))))
 	  ((nth 1 pps-list)
