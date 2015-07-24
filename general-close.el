@@ -146,15 +146,15 @@ Does not require parenthesis syntax WRT \"{[(\" "
   (let (erg)
     (cond ((nth 3 pps-list)
 	   (save-excursion
-	     (unless
-		 ;; sets closer to compliment character
-		 (setq closer (gen--in-string-interpolation-maybe))
-	       (setq erg (gen--in-string-p-intern pps-list))
-	       (setq closer (make-string (nth 2 erg)(nth 1 erg))))))
+	     (or
+	      ;; sets closer to compliment character
+	      (setq closer (gen--in-string-interpolation-maybe))
+	      (and (setq erg (gen--in-string-p-intern pps-list))
+		   (setq closer (make-string (nth 2 erg)(nth 1 erg)))))))
 	  ((nth 1 pps-list)
 	   (save-excursion
 	     (goto-char (nth 1 pps-list))
-	     (setq closer (gen--return-compliment-char (char-after))))))))
+	     (gen--return-compliment-char (char-after)))))))
 
 (defun gc--insert-delimiter-char-maybe (orig closer)
   (when closer
@@ -203,18 +203,18 @@ See `gen-command-separator-char'"
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
-  (let (pps)
-    (when (ignore-errors comment-start)
+  (let ((pps (parse-partial-sexp (point-min) (point))))
+    (when (looking-at (ignore-errors comment-start))
+      (goto-char (match-end 0))
       ;; travel comments
       (while (and (setq pps (parse-partial-sexp (point-min) (point))) (nth 4 pps) (nth 8 pps))
 	(goto-char (nth 8 pps))
 	(skip-chars-backward " \t\r\n\f")))
-    (let (erg
-	  (orig (point))
+    (let ((orig (point))
 	  (gen-empty-line (and (looking-back "^[ \t]*")(eolp)))
-	  closer done)
-      ;; in string or list?
-      (gc--fetch-delimiter-char-maybe pps)
+	  ;; in string or list?
+	  (closer (gc--fetch-delimiter-char-maybe pps))
+	  done erg)
       (if (member major-mode gc--separator-modes)
 	  (gc--handle-separator-modes)
 	(gc--insert-delimiter-char-maybe orig closer))
