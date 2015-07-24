@@ -76,7 +76,7 @@ Default is nil"
 Otherwise switch it off. "
   (interactive)
   (setq gen-verbose-p (not gen-verbose-p))
-  (when (interactive-p) (message "gen-verbose-p: %s" gen-verbose-p)))
+  (when (called-interactive-p 'any) (message "gen-verbose-p: %s" gen-verbose-p)))
 
 
 (defun gen--return-compliment-char (erg)
@@ -113,7 +113,7 @@ If non-nil, return a list composed of
 	    (setq erg (gen--in-string-p-intern pps)))))
 
     ;; (list (nth 8 pps) (char-before) (1+ (skip-chars-forward (char-to-string (char-before)))))
-    (when (and gen-verbose-p (interactive-p)) (message "%s" erg))
+    (when (and gen-verbose-p (called-interactive-p 'any)) (message "%s" erg))
     erg)))
 
 (defun general-close-stack-based ()
