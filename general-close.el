@@ -164,10 +164,10 @@ Does not require parenthesis syntax WRT \"{[(\" "
     (cond
      ((and (eq closer ?}) (not (eq major-mode 'php-mode)))
       (insert closer)
-      (setq done t))
+      closer)
      ((not (eq closer ?}))
       (insert closer)
-      (setq done t)))))
+      closer))))
 
 (defun gc--handle-separator-modes ()
   "Some languages close a command with a special char, often `;'
@@ -217,7 +217,7 @@ See `gen-command-separator-char'"
 	  done erg)
       (if (member major-mode gc--separator-modes)
 	  (gc--handle-separator-modes)
-	(gc--insert-delimiter-char-maybe orig closer))
+	(setq done (gc--insert-delimiter-char-maybe orig closer)))
       ;; other delimiter?
       (unless done
 	(cond
