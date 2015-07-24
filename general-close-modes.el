@@ -1,6 +1,4 @@
-;;; general-close-modes.el --- mode-specific functions  -*- lexical-binding: t; -*-
-
-;; Copyright (C) 2015  Andreas Röhler
+;;; general-close-modes.el --- mode-specific functions
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
