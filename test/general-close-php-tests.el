@@ -84,8 +84,8 @@ function €()
       "<td><?php echo \$person->getName(); ?></td"
       )
 
-(ert-deftest gen-close-php-paren-semicolon-test ()
-  (gen-test-with-php-buffer-point-min
+(ert-deftest general-close-close-php-paren-semicolon-test ()
+  (general-close-test-with-php-buffer-point-min
       general-close-php-test-string-2
     (search-forward "passw")
     (general-close)
@@ -95,8 +95,8 @@ function €()
     (general-close)
     (should (eq (char-before) ?\;))))
 
-(ert-deftest gen-close-php-public-function-test ()
-  (gen-test-with-php-buffer
+(ert-deftest general-close-close-php-public-function-test ()
+  (general-close-test-with-php-buffer
       "public function Foobar(){
   echo \"Foobar"
     (general-close)
@@ -107,8 +107,8 @@ function €()
     (should (eq (char-before) ?}))))
 
 
-(ert-deftest gen-close-php-indented-line-test ()
-  (gen-test-with-php-buffer
+(ert-deftest general-close-close-php-indented-line-test ()
+  (general-close-test-with-php-buffer
       "if ($foobar){
     foreach ($foobar as $key =>  $val) {
          echo $key;
@@ -116,9 +116,9 @@ function €()
     (general-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest gen-close-php-check-indent-test ()
-  (let ((gen-electric-indent-p t))
-    (gen-test-with-php-buffer
+(ert-deftest general-close-close-php-check-indent-test ()
+  (let ((general-close-electric-indent-p t))
+    (general-close-test-with-php-buffer
 	"if ($foobar){
     foreach ($foobar as $key =>  $val) {
          echo $key;

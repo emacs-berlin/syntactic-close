@@ -25,7 +25,7 @@
 
 
 ;; Python
-(defun gen-python-close (&optional arg)
+(defun general-close-python-close (&optional arg)
   "Equivalent to py-dedent"
   (interactive "p*")
   (when (eolp)
@@ -35,13 +35,13 @@
     (python-indent-dedent-line-backspace 1)))
 
 ;; Ruby
-(defun gen--ruby-fetch-delimiter-maybe ()
+(defun general-close--ruby-fetch-delimiter-maybe ()
   (save-excursion
     (and (< 0 (abs (skip-syntax-backward "\\sw")))
 	 (eq 1 (car (syntax-after (1- (point)))))
 	 (char-before))))
 
-(defun gen--ruby-insert-end ()
+(defun general-close--ruby-insert-end ()
   (unless (or (looking-back ";[ \t]*"))
     (unless (and (bolp)(eolp))
       (newline))
@@ -51,17 +51,17 @@
 	(back-to-indentation)
 	(indent-according-to-mode)))))
 
-(defun gen-ruby-close (&optional arg)
+(defun general-close-ruby-close (&optional arg)
   "Equivalent to py-dedent"
   (interactive "*")
   (let ((orig (point))
-	(erg (gen--ruby-fetch-delimiter-maybe)))
+	(erg (general-close--ruby-fetch-delimiter-maybe)))
     (if erg
 	(insert (char-to-string erg))
-      (gen--ruby-insert-end))))
+      (general-close--ruby-insert-end))))
 
 ;; Php
-(defun gen--php-check (pps)
+(defun general-close--php-check (pps)
   (let ((pps pps))
     (unless (and (not (eq closer ?})) (nth 1 pps))
       (save-excursion
@@ -77,11 +77,11 @@
 		(and (or (looking-at "function")(looking-at "public function"))
 		     (setq done t)))))))))
 
-(defun gen-insert-closing-char (pps)
+(defun general-close-insert-closing-char (pps)
   (when (eq major-mode 'php-mode)
-    (gen--php-check pps))
+    (general-close--php-check pps))
   (unless done
-    (insert gen-command-separator-char)))
+    (insert general-close-command-separator-char)))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

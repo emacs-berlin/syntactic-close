@@ -35,9 +35,9 @@
 (defgroup general-close nil
   "Insert closing delimiter whichever needed. "
   :group 'languages
-  :prefix "gen-")
+  :prefix "general-close-")
 
-(defcustom gen-delete-whitespace-backward-p nil
+(defcustom general-close-delete-whitespace-backward-p nil
   "If whitespace characters before point should be deleted.
 
 Default is nil"
@@ -45,7 +45,7 @@ Default is nil"
   :type 'boolean
   :group 'general-close)
 
-(defcustom gen-electric-indent-p nil
+(defcustom general-close-electric-indent-p nil
   "When `t', after insert at empty line indent according to mode.
 
 Default is nil"
@@ -53,33 +53,33 @@ Default is nil"
   :type 'boolean
   :group 'general-close)
 
-(defcustom gc--separator-modes
+(defcustom general-close--separator-modes
   (list
    'js-mode
    'js2-mode
    'perl-mode
    'php-mode
    )
-  "List of modes which commands must be closed by `gen-command-separator-char. "
+  "List of modes which commands must be closed by `general-close-command-separator-char. "
 
   :type 'list
   :group 'general-close)
 
-(defvar gen-verbose-p nil)
+(defvar general-close-verbose-p nil)
 
-(defvar gen-command-separator-char ?\;)
-(setq gen-command-separator-char ?\;)
+(defvar general-close-command-separator-char ?\;)
+(setq general-close-command-separator-char ?\;)
 
-(defun gen-toggle-verbosity ()
-  "If `gen-verbose-p' is nil, switch it on.
+(defun general-close-toggle-verbosity ()
+  "If `general-close-verbose-p' is nil, switch it on.
 
 Otherwise switch it off. "
   (interactive)
-  (setq gen-verbose-p (not gen-verbose-p))
-  (when (called-interactively-p 'any) (message "gen-verbose-p: %s" gen-verbose-p)))
+  (setq general-close-verbose-p (not general-close-verbose-p))
+  (when (called-interactively-p 'any) (message "general-close-verbose-p: %s" general-close-verbose-p)))
 
 
-(defun gen--return-compliment-char (erg)
+(defun general-close--return-compliment-char (erg)
   (cond ((eq erg ?\")
 	 erg)
 	((eq erg ?\[)
@@ -89,11 +89,11 @@ Otherwise switch it off. "
 	((eq erg ?\()
 	 ?\))))
 
-(defun gen--in-string-p-intern (pps)
+(defun general-close--in-string-p-intern (pps)
   (goto-char (nth 8 pps))
   (list (point) (char-after)(skip-chars-forward (char-to-string (char-after)))))
 
-(defun gen-in-string-p ()
+(defun general-close-in-string-p ()
   "if inside a double- triple- or singlequoted string,
 
 If non-nil, return a list composed of
@@ -104,16 +104,16 @@ If non-nil, return a list composed of
   (save-excursion
     (let* ((pps (parse-partial-sexp (point-min) (point)))
 	   (erg (when (nth 3 pps)
-		  (gen--in-string-p-intern pps))))
+		  (general-close--in-string-p-intern pps))))
       (unless erg
 	(when (looking-at "\"\\|'")
 	  (forward-char 1)
 	  (setq pps (parse-partial-sexp (line-beginning-position) (point)))
 	  (when (nth 3 pps)
-	    (setq erg (gen--in-string-p-intern pps)))))
+	    (setq erg (general-close--in-string-p-intern pps)))))
 
     ;; (list (nth 8 pps) (char-before) (1+ (skip-chars-forward (char-to-string (char-before)))))
-    (when (and gen-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+    (when (and general-close-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg)))
 
 (defun general-close-stack-based ()
@@ -128,7 +128,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	       (push (char-before) stack)
 	       (forward-char -1))
 	      ((member (char-before) (list ?\( ?\" ?{ ?\[))
-	       (setq closer (gen--return-compliment-char (char-before)))
+	       (setq closer (general-close--return-compliment-char (char-before)))
 	       (if (eq (car stack) closer)
 		   (progn
 		     (pop stack)
@@ -137,28 +137,28 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	      (t (skip-chars-backward "^\"{\(\[\]\)}")))))
     (insert closer)))
 
-(defun gen--in-string-interpolation-maybe ()
+(defun general-close--in-string-interpolation-maybe ()
   (and (< 0 (abs (skip-syntax-backward "\\sw")))
        (member (char-before) (list ?\( ?{ ?\[))
-       (gen--return-compliment-char (char-before))))
+       (general-close--return-compliment-char (char-before))))
 
-(defun gc--fetch-delimiter-char-maybe (pps-list)
+(defun general-close--fetch-delimiter-char-maybe (pps-list)
   (let (erg)
     (cond ((nth 3 pps-list)
 	   (save-excursion
 	     (or
 	      ;; sets closer to compliment character
-	      (setq closer (gen--in-string-interpolation-maybe))
-	      (and (setq erg (gen--in-string-p-intern pps-list))
+	      (setq closer (general-close--in-string-interpolation-maybe))
+	      (and (setq erg (general-close--in-string-p-intern pps-list))
 		   (setq closer (make-string (nth 2 erg)(nth 1 erg)))))))
 	  ((nth 1 pps-list)
 	   (save-excursion
 	     (goto-char (nth 1 pps-list))
-	     (gen--return-compliment-char (char-after)))))))
+	     (general-close--return-compliment-char (char-after)))))))
 
-(defun gc--insert-delimiter-char-maybe (orig closer)
+(defun general-close--insert-delimiter-char-maybe (orig closer)
   (when closer
-    (when (and (not (looking-back "^[ \t]+")) gen-delete-whitespace-backward-p
+    (when (and (not (looking-back "^[ \t]+")) general-close-delete-whitespace-backward-p
 	       (< 0 (abs (skip-chars-backward " \t\r\n\f"))))
       (delete-region (point) orig))
     (cond
@@ -169,21 +169,21 @@ Does not require parenthesis syntax WRT \"{[(\" "
       (insert closer)
       closer))))
 
-(defun gc--handle-separator-modes ()
+(defun general-close--handle-separator-modes ()
   "Some languages close a command with a special char, often `;'
 
-See `gen-command-separator-char'"
+See `general-close-command-separator-char'"
   (cond ((eq closer ?})
 	 (if
 	     (save-excursion
 	       (skip-chars-backward " \t\r\n\f")
-	       (or (eq (char-before) gen-command-separator-char)
+	       (or (eq (char-before) general-close-command-separator-char)
 		   (eq (char-before) closer)))
 	     (progn
 	       (unless (looking-back "^[ \t]+")
 		 (newline-and-indent))
 	       (insert closer))
-	   (insert gen-command-separator-char))
+	   (insert general-close-command-separator-char))
 	 closer)
 	((and (eq closer ?\)) (eq (char-before) ?\;))
 	 (newline-and-indent)
@@ -191,13 +191,13 @@ See `gen-command-separator-char'"
 	 closer)
 	;; Semicolon inserted where it probably shouldn't be? #12
 	;; ((and (eq closer ?\)) (eq (char-before) ?\)))
-	;;  (insert gen-command-separator-char)
+	;;  (insert general-close-command-separator-char)
 	;;  closer)
 	(closer
 	 (insert closer)
 	 closer)
-	((not (eq (char-before) gen-command-separator-char))
-	 (insert gen-command-separator-char)
+	((not (eq (char-before) general-close-command-separator-char))
+	 (insert general-close-command-separator-char)
 	 closer)))
 
 (defun general-close ()
@@ -211,23 +211,23 @@ See `gen-command-separator-char'"
 	(goto-char (nth 8 pps))
 	(skip-chars-backward " \t\r\n\f")))
     (let ((orig (point))
-	  (gen-empty-line (and (looking-back "^[ \t]*")(eolp)))
+	  (general-close-empty-line (and (looking-back "^[ \t]*")(eolp)))
 	  ;; in string or list?
-	  (closer (gc--fetch-delimiter-char-maybe pps))
+	  (closer (general-close--fetch-delimiter-char-maybe pps))
 	  done erg)
-      (if (member major-mode gc--separator-modes)
-	  (setq done (gc--handle-separator-modes))
-	(setq done (gc--insert-delimiter-char-maybe orig closer)))
+      (if (member major-mode general-close--separator-modes)
+	  (setq done (general-close--handle-separator-modes))
+	(setq done (general-close--insert-delimiter-char-maybe orig closer)))
       ;; other delimiter?
       (unless done
 	(cond
 	 ((eq major-mode 'python-mode)
-	  (gen-python-close)
+	  (general-close-python-close)
 	  (setq done t))
 	 ((eq major-mode 'ruby-mode)
-	  (gen-ruby-close)
+	  (general-close-ruby-close)
 	  (setq done t))))
-      (when (and gen-electric-indent-p gen-empty-line)
+      (when (and general-close-electric-indent-p general-close-empty-line)
 	(indent-according-to-mode)))))
 
 (provide 'general-close)

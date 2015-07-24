@@ -40,8 +40,8 @@
               if (e.type == 'mouseover') {
                   $(this).addClass('hover")
 
-(ert-deftest gen-close-js-test-1 ()
-  (gen-test-with-js-buffer
+(ert-deftest general-close-close-js-test-1 ()
+  (general-close-test-with-js-buffer
       general-close-js-test-string-1
     (skip-chars-backward " \t\r\n\f")
     (general-close)
@@ -66,8 +66,8 @@
     (should (eq (char-before) ?\;))
 ))
 
-(ert-deftest gen-close-js-test-2 ()
-  (gen-test-with-js-buffer
+(ert-deftest general-close-close-js-test-2 ()
+  (general-close-test-with-js-buffer
       "function foo(a,b,c,d) {
 if ( (a == b) || (c == d"
 

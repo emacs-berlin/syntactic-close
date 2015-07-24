@@ -30,36 +30,36 @@
 (defvar general-close-python-test-string-2 "{[(123")
 (setq general-close-python-test-string-2 "{[(123")
 
-(ert-deftest gen-close-python-doublequoted-test ()
-  (gen-test-with-python-buffer
+(ert-deftest general-close-close-python-doublequoted-test ()
+  (general-close-test-with-python-buffer
       general-close-python-test-string-1
     (general-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest gen-close-python-singlequoted-test ()
-  (gen-test-with-python-buffer
+(ert-deftest general-close-close-python-singlequoted-test ()
+  (general-close-test-with-python-buffer
       "'Some Doku"
     (general-close)
     (should (eq (char-before) ?'))))
 
-(ert-deftest gen-close-python-doublequoted-tqs-test ()
-  (gen-test-with-python-buffer
+(ert-deftest general-close-close-python-doublequoted-tqs-test ()
+  (general-close-test-with-python-buffer
       "\"\"\"Some Doku"
     (font-lock-fontify-buffer)
     (general-close)
     (should (eq (char-before) ?\"))
     (should (eq -3 (skip-chars-backward "\"")))))
 
-(ert-deftest gen-close-python-singlequoted-tqs-test ()
-  (gen-test-with-python-buffer
+(ert-deftest general-close-close-python-singlequoted-tqs-test ()
+  (general-close-test-with-python-buffer
       "'''Some Doku"
     (font-lock-fontify-buffer)
     (general-close)
     (should (eq (char-before) ?'))
     (should (eq -3 (skip-chars-backward "'")))))
 
-;; (ert-deftest gen-close-python-dedent-test ()
-;;   (gen-test-with-python-buffer
+;; (ert-deftest general-close-close-python-dedent-test ()
+;;   (general-close-test-with-python-buffer
 ;;       "for i in range(anzahl):
 ;;     klauf.pylauf()
 ;;     datei.write(str(spiel[i]) + \"\\n\")"
@@ -69,8 +69,8 @@
 ;;     (should (eq 10 (char-before)))
 ;;     ))
 
-(ert-deftest gen-close-python-brace-paren-bracket-test ()
-  (gen-test-with-python-buffer
+(ert-deftest general-close-close-python-brace-paren-bracket-test ()
+  (general-close-test-with-python-buffer
       general-close-python-test-string-2
     (general-close)
     (should (eq (char-before) ?\)))
@@ -79,15 +79,15 @@
     (general-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest gen-close-delete-whitespace-backward-test ()
-  (gen-test-with-python-buffer
+(ert-deftest general-close-close-delete-whitespace-backward-test ()
+  (general-close-test-with-python-buffer
       "(list ([{123 "
-    (let ((gen-delete-whitespace-backward-p t))
+    (let ((general-close-delete-whitespace-backward-p t))
       (general-close)
       (should (eq (point) 14)))))
 
-(ert-deftest gen-close-python-nested-paren-test ()
-  (gen-test-with-python-buffer
+(ert-deftest general-close-close-python-nested-paren-test ()
+  (general-close-test-with-python-buffer
     "(list ([\n# {123\n# {123\n"
     (general-close)
     (should (eq (char-before) ?\]))
@@ -96,31 +96,31 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest gen-close-python-string-interpolation-test-1 ()
-  (gen-test-with-python-buffer "print('%(language"
+(ert-deftest general-close-close-python-string-interpolation-test-1 ()
+  (general-close-test-with-python-buffer "print('%(language"
     (general-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest gen-close-python-string-interpolation-test-2 ()
-  (gen-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
+(ert-deftest general-close-close-python-string-interpolation-test-2 ()
+  (general-close-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
       {'language"
     (general-close)
     (should (eq (char-before) ?'))))
 
-(ert-deftest gen-close-python-string-interpolation-test-3 ()
-  (gen-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
+(ert-deftest general-close-close-python-string-interpolation-test-3 ()
+  (general-close-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
       {'language': \"Python"
     (general-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest gen-close-python-string-interpolation-test-4 ()
-  (gen-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
+(ert-deftest general-close-close-python-string-interpolation-test-4 ()
+  (general-close-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
       {'language': \"Python\", \"number\": 2"
     (general-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest gen-close-python-string-interpolation-test-5 ()
-  (gen-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
+(ert-deftest general-close-close-python-string-interpolation-test-5 ()
+  (general-close-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
       {'language': \"Python\", \"number\": 2}"
     (general-close)
     (should (eq (char-before) ?\)))))

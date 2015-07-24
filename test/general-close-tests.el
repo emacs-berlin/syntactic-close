@@ -24,8 +24,8 @@
 
 ;;; Code:
 
-(ert-deftest gen-close-elisp-nested-bracket-paren-test ()
-  (gen-test-with-elisp-buffer
+(ert-deftest general-close-close-elisp-nested-bracket-paren-test ()
+  (general-close-test-with-elisp-buffer
     "(list ([\n;;{123\n;;{123\n"
     (general-close)
     (should (eq (char-before) ?\]))

@@ -24,8 +24,8 @@
 
 ;;; Code:
 
-(ert-deftest gen-close-ruby-class-test ()
-  (gen-test-with-ruby-buffer "class MyClass
+(ert-deftest general-close-close-ruby-class-test ()
+  (general-close-test-with-ruby-buffer "class MyClass
   private
   def a_method; true; end
   def another_method; false; end
@@ -34,25 +34,25 @@
     (should (looking-back "end"))
     (should (eq 0 (current-indentation)))))
 
-(ert-deftest gen-close-ruby-string-test ()
-  (gen-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail"
+(ert-deftest general-close-close-ruby-string-test ()
+  (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail"
     (general-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest gen-close-ruby-paren-test ()
-  (gen-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\""
+(ert-deftest general-close-close-ruby-paren-test ()
+  (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\""
     (general-close)
     ;; (sit-for 1 t)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest gen-close-ruby-pipe-test ()
-  (gen-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW"
+(ert-deftest general-close-close-ruby-pipe-test ()
+  (general-close-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW"
     ;; (SWITCH-TO-BUFFER (CURRENT-BUFFER))
     (general-close)
     (should (eq (char-before) ?|))))
 
-(ert-deftest gen-close-ruby-string-interpolation-test ()
-  (gen-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
+(ert-deftest general-close-close-ruby-string-interpolation-test ()
+  (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
   \"Sending from #{from} to #{to} via #{via"
     (general-close)
     (should (eq (char-before) ?}))

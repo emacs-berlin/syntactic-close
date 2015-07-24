@@ -22,16 +22,16 @@
 
 ;;; Code:
 
-(setq gen-install-directory default-directory)
+(setq general-close-install-directory default-directory)
 (sit-for 0.1 t)
 
-(defvar gen-debug-p nil
+(defvar general-close-debug-p nil
   "Avoid error")
 
-(defvar gen-verbose-p t)
-;; (setq gen-verbose-p t)
+(defvar general-close-verbose-p t)
+;; (setq general-close-verbose-p t)
 
-(defmacro gen-test-with-temp-buffer (contents &rest body)
+(defmacro general-close-test-with-temp-buffer (contents &rest body)
   "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -39,12 +39,12 @@ BODY is code to be executed within the temp buffer.  Point is
   `(with-temp-buffer
      (let (hs-minor-mode)
        (insert ,contents)
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro gen-test-with-temp-buffer-point-min (contents &rest body)
+(defmacro general-close-test-with-temp-buffer-point-min (contents &rest body)
   "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -53,12 +53,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro gen-test-with-python-buffer-point-min (contents &rest body)
+(defmacro general-close-test-with-python-buffer-point-min (contents &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -69,12 +69,12 @@ BODY is code to be executed within the temp buffer.  Point is
        (python-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro gen-test-with-python-buffer (contents &rest body)
+(defmacro general-close-test-with-python-buffer (contents &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -83,13 +83,13 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (python-mode)
        (insert ,contents)
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
 
-(defmacro gen-test-with-php-buffer-point-min (contents &rest body)
+(defmacro general-close-test-with-php-buffer-point-min (contents &rest body)
   "Create temp buffer in `php-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -100,12 +100,12 @@ BODY is code to be executed within the temp buffer.  Point is
        (php-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro gen-test-with-php-buffer (contents &rest body)
+(defmacro general-close-test-with-php-buffer (contents &rest body)
   "Create temp buffer in `php-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -114,12 +114,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (php-mode)
        (insert ,contents)
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro gen-test-with-ruby-buffer-point-min (contents &rest body)
+(defmacro general-close-test-with-ruby-buffer-point-min (contents &rest body)
   "Create temp buffer in `php-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -130,12 +130,12 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        ;; (message "ERT %s" (point))
        (goto-char (point-min))
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro gen-test-with-ruby-buffer (contents &rest body)
+(defmacro general-close-test-with-ruby-buffer (contents &rest body)
   "Create temp buffer in `ruby-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -144,12 +144,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (ruby-mode)
        (insert ,contents)
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro gen-test-with-elisp-buffer (contents &rest body)
+(defmacro general-close-test-with-elisp-buffer (contents &rest body)
   "Create temp buffer in `emacs-lisp-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -159,13 +159,13 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (emacs-lisp-mode)
        (insert ,contents)
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ;; (message "ERT %s" (point))
        ,@body)))
 
-(defmacro gen-test-with-js-buffer-point-min (contents &rest body)
+(defmacro general-close-test-with-js-buffer-point-min (contents &rest body)
   "Create temp buffer in `js-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -176,12 +176,12 @@ BODY is code to be executed within the temp buffer.  Point is
        (js-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro gen-test-with-js-buffer (contents &rest body)
+(defmacro general-close-test-with-js-buffer (contents &rest body)
   "Create temp buffer in `js-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -190,7 +190,7 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (js-mode)
        (insert ,contents)
-       (when gen-verbose-p
+       (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))

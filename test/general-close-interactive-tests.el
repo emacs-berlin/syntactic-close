@@ -25,8 +25,8 @@
 ;;; Code:
 
 
-(ert-deftest gen-close-ruby-block-test ()
-  (gen-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW|"
+(ert-deftest general-close-close-ruby-block-test ()
+  (general-close-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW|"
     (general-close)
     (should (eq (char-before) ?d))
     (should (looking-at "end"))))
