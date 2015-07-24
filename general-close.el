@@ -184,21 +184,21 @@ See `gen-command-separator-char'"
 		 (newline-and-indent))
 	       (insert closer))
 	   (insert gen-command-separator-char))
-	 (setq done t))
+	 closer)
 	((and (eq closer ?\)) (eq (char-before) ?\;))
 	 (newline-and-indent)
 	 (insert closer)
-	 (setq done t))
+	 closer)
 	;; Semicolon inserted where it probably shouldn't be? #12
 	;; ((and (eq closer ?\)) (eq (char-before) ?\)))
 	;;  (insert gen-command-separator-char)
-	;;  (setq done t))
+	;;  closer)
 	(closer
 	 (insert closer)
-	 (setq done t))
+	 closer)
 	((not (eq (char-before) gen-command-separator-char))
 	 (insert gen-command-separator-char)
-	 (setq done t))))
+	 closer)))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
@@ -216,7 +216,7 @@ See `gen-command-separator-char'"
 	  (closer (gc--fetch-delimiter-char-maybe pps))
 	  done erg)
       (if (member major-mode gc--separator-modes)
-	  (gc--handle-separator-modes)
+	  (setq done (gc--handle-separator-modes))
 	(setq done (gc--insert-delimiter-char-maybe orig closer)))
       ;; other delimiter?
       (unless done
