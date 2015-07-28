@@ -35,6 +35,7 @@
 (defgroup general-close nil
   "Insert closing delimiter whichever needed. "
   :group 'languages
+  :tag "general-close"
   :prefix "general-close-")
 
 (defcustom general-close-delete-whitespace-backward-p nil
@@ -43,6 +44,7 @@
 Default is nil"
 
   :type 'boolean
+  :tag "general-close-delete-whitespace-backward-p"
   :group 'general-close)
 
 (defcustom general-close-electric-indent-p nil
@@ -51,6 +53,7 @@ Default is nil"
 Default is nil"
 
   :type 'boolean
+  :tag "general-close-electric-indent-p"
   :group 'general-close)
 
 (defcustom general-close--separator-modes
@@ -63,6 +66,7 @@ Default is nil"
   "List of modes which commands must be closed by `general-close-command-separator-char. "
 
   :type 'list
+  :tag "general-close--separator-modes"
   :group 'general-close)
 
 (defvar general-close-verbose-p nil)
