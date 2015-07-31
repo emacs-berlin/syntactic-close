@@ -1,4 +1,4 @@
-;;; general-close-interactive-tests.el --- Tests known to work when called interactively only 
+;;; general-close-interactive-tests.el --- Tests known to work when called interactively only
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -24,13 +24,11 @@
 
 ;;; Code:
 
-
 (ert-deftest general-close-close-ruby-block-test ()
   (general-close-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW|"
     (general-close)
     (should (eq (char-before) ?d))
     (should (looking-at "end"))))
-
 
 (ert-deftest general-close-c-nesting-comment-test ()
   (general-close-test "/* The open system call "
