@@ -32,6 +32,7 @@ TEST2=$TESTDIR/general-close-ruby-tests.el
 TEST3=$TESTDIR/general-close-python-tests.el
 TEST4=$TESTDIR/general-close-php-tests.el
 TEST5=$TESTDIR/general-close-js-tests.el
+TEST6=$TESTDIR/general-close-c-tests.el
 
 if [ -s emacs24 ]; then
     EMACS=emacs24
@@ -50,5 +51,5 @@ $EMACS -Q --batch --eval "(message (emacs-version))" \
        -l $PDIR/modes/php-mode.el \
        -l $SETUP \
        --eval "(setq gen-verbose-p nil)" \
-       -l $TEST1 -l $TEST2 -l $TEST3 -l $TEST4 -l $TEST5 \
+       -l $TEST1 -l $TEST2 -l $TEST3 -l $TEST4 -l $TEST5 -l $TEST6 \
        -f ert-run-tests-batch-and-exit

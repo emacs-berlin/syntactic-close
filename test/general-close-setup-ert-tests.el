@@ -58,6 +58,36 @@ BODY is code to be executed within the temp buffer.  Point is
 	 (font-lock-fontify-buffer))
        ,@body)))
 
+(defmacro general-close-test (contents mode verbose &rest body)
+  "Create temp buffer in `python-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (funcall ,mode)
+       (insert ,contents)
+       (when ,verbose
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
+       ,@body)))
+
+(defmacro general-close-test-point-min (contents mode verbose &rest body)
+  "Create temp buffer in `python-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+;;     (and (featurep 'python) (unload-feature 'python))
+     (let (hs-minor-mode)
+       (funcall ,mode)
+       (insert ,contents)
+       (goto-char (point-min))
+       (when ,verbose
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
+       ,@body)))
+
 (defmacro general-close-test-with-python-buffer-point-min (contents &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is

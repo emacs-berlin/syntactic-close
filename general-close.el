@@ -148,7 +148,13 @@ Does not require parenthesis syntax WRT \"{[(\" "
 
 (defun general-close--fetch-delimiter-char-maybe (pps-list)
   (let (erg)
-    (cond ((nth 3 pps-list)
+    (cond ((nth 4 pps-list)
+	   (if (string= "" comment-end)
+	       (if (eq system-type 'windows-nt)
+		   "\r\n"
+		 "\n")
+	     comment-end))
+	  ((nth 3 pps-list)
 	   (save-excursion
 	     (or
 	      ;; sets closer to compliment character

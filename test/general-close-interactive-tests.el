@@ -32,5 +32,12 @@
     (should (looking-at "end"))))
 
 
+(ert-deftest general-close-c-nesting-comment-test ()
+  (general-close-test "/* The open system call "
+    'c-mode
+    'general-close-verbose-p
+    (general-close)
+    (should (eq (char-before) ?/))))
+
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here
