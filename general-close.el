@@ -214,7 +214,7 @@ See `general-close-command-separator-char'"
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
   (let ((pps (parse-partial-sexp (point-min) (point))))
-    (when (looking-at (ignore-errors comment-start))
+    (when (ignore-errors (looking-at comment-start))
       (goto-char (match-end 0))
       ;; travel comments
       (while (and (setq pps (parse-partial-sexp (point-min) (point))) (nth 4 pps) (nth 8 pps))
