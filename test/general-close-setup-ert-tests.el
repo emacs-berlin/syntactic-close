@@ -28,6 +28,8 @@
 (defvar general-close-debug-p nil
   "Avoid error")
 
+;; (setq general-close-debug-p t)
+
 (defvar general-close-verbose-p t)
 ;; (setq general-close-verbose-p t)
 
@@ -159,8 +161,9 @@ BODY is code to be executed within the temp buffer.  Point is
   "Create temp buffer in `emacs-lisp-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
-  (declare (indent 1) (debug t))
+  (declare (indent 2) (debug t))
   `(with-temp-buffer
+     (switch-to-buffer (current-buffer)) 
      ;; (and (featurep 'python) (unload-feature 'python))
      (let (hs-minor-mode)
        (emacs-lisp-mode)

@@ -73,18 +73,24 @@
   (general-close-test-with-python-buffer
       general-close-python-test-string-2
     (general-close)
+    (switch-to-buffer (current-buffer)) 
     (should (eq (char-before) ?\)))
     (general-close)
     (should (eq (char-before) ?\]))
     (general-close)
-    (should (eq (char-before) ?}))))
+    (should (eq (char-before) ?}))
+    (general-close)
+    (should (bolp))
+
+    ))
 
 (ert-deftest general-close-delete-whitespace-backward-test ()
   (general-close-test-with-python-buffer
-      "(list ([{123 "
+      "[1, 3] "
     (let ((general-close-delete-whitespace-backward-p t))
       (general-close)
-      (should (eq (point) 14)))))
+      (when general-close-verbose-p (switch-to-buffer (current-buffer))) 
+      (should (bolp)))))
 
 (ert-deftest general-close-python-nested-paren-test ()
   (general-close-test-with-python-buffer
@@ -124,6 +130,14 @@
       {'language': \"Python\", \"number\": 2}"
     (general-close)
     (should (eq (char-before) ?\)))))
+
+(ert-deftest colon-after-arguments-list-test ()
+  (general-close-test-with-python-buffer "def datei(datei, verzeichnis)"
+    (general-close)
+    (should (eq 4 (current-column))) 
+    (skip-chars-backward " \t\r\n\f") 
+    (should (eq (char-before) ?:))))
+
 
 (provide 'general-close-python-tests)
 ;;; general-close-python-tests.el ends here

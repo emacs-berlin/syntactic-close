@@ -56,7 +56,7 @@ Default is nil"
   :tag "general-close-electric-indent-p"
   :group 'general-close)
 
-(defcustom general-close--separator-modes
+(defcustom general-close--semicolon-separator-modes
   (list
    'js-mode
    'js2-mode
@@ -66,13 +66,23 @@ Default is nil"
   "List of modes which commands must be closed by `general-close-command-separator-char. "
 
   :type 'list
-  :tag "general-close--separator-modes"
+  :tag "general-close--semicolon-separator-modes"
+  :group 'general-close)
+
+(defcustom general-close--colon-separator-modes
+  (list
+   'python-mode
+   )
+  "List of modes which commands which require a colon after arguments list. "
+
+  :type 'list
+  :tag "general-close--semicolon-separator-modes"
   :group 'general-close)
 
 (defvar general-close-verbose-p nil)
 
-(defvar general-close-command-separator-char ?\;)
-(setq general-close-command-separator-char ?\;)
+(defvar general-close-command-separator-char ?\;
+  "This char will be modified internally. ")
 
 (defun general-close-toggle-verbosity ()
   "If `general-close-verbose-p' is nil, switch it on.
@@ -168,9 +178,12 @@ Does not require parenthesis syntax WRT \"{[(\" "
 
 (defun general-close--insert-delimiter-char-maybe (orig closer)
   (when closer
-    (when (and (not (looking-back "^[ \t]+")) general-close-delete-whitespace-backward-p
-	       (< 0 (abs (skip-chars-backward " \t\r\n\f"))))
-      (delete-region (point) orig))
+    (save-excursion
+      (when (and (not (looking-back "^[ \t]+")) general-close-delete-whitespace-backward-p
+		 (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+		 ;;  not in comment
+		 (not (nth 4 (parse-partial-sexp (point-min) (point)))))
+	(delete-region (point) orig)))
     (cond
      ((and (eq closer ?}) (not (eq major-mode 'php-mode)))
       (insert closer)
@@ -179,7 +192,24 @@ Does not require parenthesis syntax WRT \"{[(\" "
       (insert closer)
       closer))))
 
-(defun general-close--handle-separator-modes ()
+(defun general-close--insert-separator-maybe (orig)
+  (let (erg)
+    (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+      (delete-region (point) orig))
+    (when
+	(not (eq (char-before) general-close-command-separator-char))
+      (when (save-excursion
+	      (forward-char -1)
+	      (when (ignore-errors (setq erg (nth 1 (parse-partial-sexp (point-min) (point)))))
+		(goto-char erg)
+		(skip-chars-backward " \t\r\n\f" (line-beginning-position))
+		(unless (bolp) (forward-char -1))
+		;; default
+		(face-at-point)))
+	(insert general-close-command-separator-char)
+	closer))))
+
+(defun general-close--handle-separator-modes (orig closer pps)
   "Some languages close a command with a special char, often `;'
 
 See `general-close-command-separator-char'"
@@ -206,9 +236,26 @@ See `general-close-command-separator-char'"
 	(closer
 	 (insert closer)
 	 closer)
-	((not (eq (char-before) general-close-command-separator-char))
-	 (insert general-close-command-separator-char)
-	 closer)))
+	(t (general-close--insert-separator-maybe orig))))
+
+(defun general-close--intern (orig closer pps)
+  (cond
+   ;; a command separator may precede closing delimiter
+   ((member major-mode general-close--semicolon-separator-modes)
+    (setq general-close-command-separator-char ?\;)
+    (setq done (general-close--handle-separator-modes orig closer pps)))
+   ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
+    (setq general-close-command-separator-char ?\:)
+    (setq done (general-close--handle-separator-modes orig closer pps)))
+   (t (setq done (general-close--insert-delimiter-char-maybe orig closer)))))
+
+(defun general-close--modes ()
+  (cond
+   ((eq major-mode 'python-mode)
+    (general-close-python-close))
+   ((eq major-mode 'ruby-mode)
+    (general-close-ruby-close)
+    (setq done t))))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
@@ -225,19 +272,12 @@ See `general-close-command-separator-char'"
 	  ;; in string or list?
 	  (closer (general-close--fetch-delimiter-char-maybe pps))
 	  done erg)
-      (if (member major-mode general-close--separator-modes)
-	  (setq done (general-close--handle-separator-modes))
-	(setq done (general-close--insert-delimiter-char-maybe orig closer)))
+      (general-close--intern orig closer pps)
       ;; other delimiter?
       (unless done
-	(cond
-	 ((eq major-mode 'python-mode)
-	  (general-close-python-close)
-	  (setq done t))
-	 ((eq major-mode 'ruby-mode)
-	  (general-close-ruby-close)
-	  (setq done t))))
-      (when (and general-close-electric-indent-p general-close-empty-line)
+	(general-close--modes))
+      (unless (or done (eolp)) (newline))
+      (when general-close-electric-indent-p
 	(indent-according-to-mode)))))
 
 (provide 'general-close)

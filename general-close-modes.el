@@ -30,9 +30,10 @@
   (interactive "p*")
   (when (eolp)
     (ignore-errors (newline-and-indent)))
-  (if (functionp 'py-dedent)
-      (py-dedent 1)
-    (python-indent-dedent-line-backspace 1)))
+  ;; (if (functionp 'py-dedent)
+  ;; (py-dedent 1)
+  ;; (python-indent-dedent-line-backspace 1))
+  )
 
 ;; Ruby
 (defun general-close--ruby-fetch-delimiter-maybe ()
