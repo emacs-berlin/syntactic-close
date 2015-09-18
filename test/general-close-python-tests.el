@@ -58,28 +58,17 @@
     (should (eq (char-before) ?'))
     (should (eq -3 (skip-chars-backward "'")))))
 
-;; (ert-deftest general-close-python-dedent-test ()
-;;   (general-close-test-with-python-buffer
-;;       "for i in range(anzahl):
-;;     klauf.pylauf()
-;;     datei.write(str(spiel[i]) + \"\\n\")"
-;;     (general-close)
-;;     ;; (sit-for 0.1 t)
-;;     ;; (should (eq 0 (current-indentation)))
-;;     (should (eq 10 (char-before)))
-;;     ))
-
 (ert-deftest general-close-python-brace-paren-bracket-test ()
   (general-close-test-with-python-buffer
       general-close-python-test-string-2
     (general-close)
-    (switch-to-buffer (current-buffer)) 
     (should (eq (char-before) ?\)))
     (general-close)
     (should (eq (char-before) ?\]))
     (general-close)
     (should (eq (char-before) ?}))
     (general-close)
+    (sit-for 0.1) 
     (should (bolp))
 
     ))
@@ -89,7 +78,6 @@
       "[1, 3] "
     (let ((general-close-delete-whitespace-backward-p t))
       (general-close)
-      (when general-close-verbose-p (switch-to-buffer (current-buffer))) 
       (should (bolp)))))
 
 (ert-deftest general-close-python-nested-paren-test ()
@@ -134,10 +122,29 @@
 (ert-deftest colon-after-arguments-list-test ()
   (general-close-test-with-python-buffer "def datei(datei, verzeichnis)"
     (general-close)
-    (should (eq 4 (current-column))) 
-    (skip-chars-backward " \t\r\n\f") 
     (should (eq (char-before) ?:))))
 
+(ert-deftest general-close-python-colon-test ()
+  (general-close-test-with-python-buffer
+      "#! /usr/bin/env python3
+with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
+    (general-close)
+    (should (eq (char-before) ?:))
+    (general-close)
+    (should (eq (char-before) 32))))
+
+(ert-deftest general-close-python-colon-test-2 ()
+  (general-close-test-with-python-buffer
+      "class TutorialApp(App):
+    def build(self):
+        return Button(text=\"Hello!\",
+                      background_color=(0, 0, 1, 1)
+                      font_size=150)
+if __name__ == \"__main__\""
+    (font-lock-fontify-buffer)
+    (general-close)
+    (should (eq (char-before) ?:))
+    (should (eq 0 (current-indentation)))))
 
 (provide 'general-close-python-tests)
 ;;; general-close-python-tests.el ends here

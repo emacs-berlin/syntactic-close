@@ -193,6 +193,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
       closer))))
 
 (defun general-close--insert-separator-maybe (orig)
+  "Returns `t', if separator was inserted. "
   (let (erg)
     (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
       (delete-region (point) orig))
@@ -201,16 +202,17 @@ Does not require parenthesis syntax WRT \"{[(\" "
       (when (save-excursion
 	      (forward-char -1)
 	      (when (ignore-errors (setq erg (nth 1 (parse-partial-sexp (point-min) (point)))))
-		(goto-char erg)
-		(skip-chars-backward " \t\r\n\f" (line-beginning-position))
-		(unless (bolp) (forward-char -1))
-		;; default
-		(face-at-point)))
+		(goto-char erg))
+	      (back-to-indentation)
+	      ;; (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+	      ;; (unless (bolp) (forward-char -1))
+	      ;; default
+	      (face-at-point))
 	(insert general-close-command-separator-char)
-	closer))))
+	t))))
 
 (defun general-close--handle-separator-modes (orig closer pps)
-  "Some languages close a command with a special char, often `;'
+  "Some languages close expressions with a special char, often `:'
 
 See `general-close-command-separator-char'"
   (cond ((eq closer ?})
@@ -246,6 +248,7 @@ See `general-close-command-separator-char'"
     (setq done (general-close--handle-separator-modes orig closer pps)))
    ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
     (setq general-close-command-separator-char ?\:)
+    (when (eq major-mode 'python-mode) (setq general-close-electric-indent-p nil))
     (setq done (general-close--handle-separator-modes orig closer pps)))
    (t (setq done (general-close--insert-delimiter-char-maybe orig closer)))))
 
