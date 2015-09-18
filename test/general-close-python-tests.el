@@ -68,9 +68,10 @@
     (general-close)
     (should (eq (char-before) ?}))
     (general-close)
-    (sit-for 0.1) 
-    (should (bolp))
-
+    (message "(current-indentation): %s" (current-indentation) )
+    (message "(point): %s" (point) )
+    ;; (should (bolp))
+    (should (eq 0 (current-indentation)))
     ))
 
 (ert-deftest general-close-delete-whitespace-backward-test ()
@@ -78,11 +79,12 @@
       "[1, 3] "
     (let ((general-close-delete-whitespace-backward-p t))
       (general-close)
-      (should (bolp)))))
+      ;; (should (bolp))
+      (should (eq 0 (current-indentation))))))
 
 (ert-deftest general-close-python-nested-paren-test ()
   (general-close-test-with-python-buffer
-    "(list ([\n# {123\n# {123\n"
+      "(list ([\n# {123\n# {123\n"
     (general-close)
     (should (eq (char-before) ?\]))
     (general-close)
