@@ -81,6 +81,11 @@ Default is nil"
 
 (defvar general-close-verbose-p nil)
 
+(defvar general-close-keywords nil
+  "Knowing keywords avoids call for face-at-point:
+
+conditionals closed by a colon for example. ")
+
 (defvar general-close-command-separator-char ?\;
   "This char will be modified internally. ")
 
@@ -204,12 +209,10 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	      (when (ignore-errors (setq erg (nth 1 (parse-partial-sexp (point-min) (point)))))
 		(goto-char erg))
 	      (back-to-indentation)
-	      ;; (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-	      ;; (unless (bolp) (forward-char -1))
-	      ;; default
-	      (face-at-point))
-	(insert general-close-command-separator-char)
-	t))))
+	      ;; ert does no font-lock
+	      (or (and general-close-keywords (looking-at general-close-keywords))
+		  (face-at-point)))
+	(insert general-close-command-separator-char) t))))
 
 (defun general-close--handle-separator-modes (orig closer pps)
   "Some languages close expressions with a special char, often `:'
@@ -248,8 +251,10 @@ See `general-close-command-separator-char'"
     (setq done (general-close--handle-separator-modes orig closer pps)))
    ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
     (setq general-close-command-separator-char ?\:)
-    (when (eq major-mode 'python-mode) (setq general-close-electric-indent-p nil))
-    (setq done (general-close--handle-separator-modes orig closer pps)))
+    (when (eq major-mode 'python-mode)
+      (let ((general-close-keywords general-close-python-keywords)
+	    general-close-electric-indent-p)
+	(setq done (general-close--handle-separator-modes orig closer pps)))))
    (t (setq done (general-close--insert-delimiter-char-maybe orig closer)))))
 
 (defun general-close--modes ()

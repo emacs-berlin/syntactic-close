@@ -68,19 +68,24 @@
     (general-close)
     (should (eq (char-before) ?}))
     (general-close)
-    (message "(current-indentation): %s" (current-indentation) )
-    (message "(point): %s" (point) )
+    ;; (message "(current-indentation): %s" (current-indentation))
+    ;; (message "(point): %s" (point))
     ;; (should (bolp))
-    (should (eq 0 (current-indentation)))
-    ))
+    (should (eq 11 (point)))
+    (should (eq 0 (current-indentation)))))
 
 (ert-deftest general-close-delete-whitespace-backward-test ()
   (general-close-test-with-python-buffer
       "[1, 3] "
     (let ((general-close-delete-whitespace-backward-p t))
       (general-close)
+      ;; (message "(point): %s" (point))
+      ;; (message "(count-lines: %s" (count-lines (point-min) (point) ))
       ;; (should (bolp))
-      (should (eq 0 (current-indentation))))))
+      ;; (should (eobp))
+      (should (eq 8 (point)))
+      (should (eq 0 (current-indentation)))
+      )))
 
 (ert-deftest general-close-python-nested-paren-test ()
   (general-close-test-with-python-buffer
@@ -143,10 +148,12 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
                       background_color=(0, 0, 1, 1)
                       font_size=150)
 if __name__ == \"__main__\""
+    (switch-to-buffer (current-buffer))
     (font-lock-fontify-buffer)
     (general-close)
     (should (eq (char-before) ?:))
-    (should (eq 0 (current-indentation)))))
+    (general-close)
+    (should (eq 4 (current-indentation)))))
 
 (provide 'general-close-python-tests)
 ;;; general-close-python-tests.el ends here
