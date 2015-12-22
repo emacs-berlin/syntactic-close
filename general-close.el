@@ -62,6 +62,7 @@ Default is nil"
    'js2-mode
    'perl-mode
    'php-mode
+   'web-mode
    )
   "List of modes which commands must be closed by `general-close-command-separator-char. "
 
@@ -257,13 +258,15 @@ See `general-close-command-separator-char'"
 	(setq done (general-close--handle-separator-modes orig closer pps)))))
    (t (setq done (general-close--insert-delimiter-char-maybe orig closer)))))
 
-(defun general-close--modes ()
+(defun general-close--modes (pps)
   (cond
    ((eq major-mode 'python-mode)
     (general-close-python-close))
    ((eq major-mode 'ruby-mode)
-    (general-close-ruby-close)
-    (setq done t))))
+    (general-close-ruby-close))
+   ((eq major-mode 'php-mode)
+    (general-close-insert-closing-char pps))
+   (setq done t)))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
@@ -283,7 +286,7 @@ See `general-close-command-separator-char'"
       (general-close--intern orig closer pps)
       ;; other delimiter?
       (unless done
-	(general-close--modes))
+	(general-close--modes pps))
       (unless (or done (eolp)) (newline))
       (when general-close-electric-indent-p
 	(indent-according-to-mode)))))

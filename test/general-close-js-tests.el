@@ -62,8 +62,8 @@
     (should (eq (char-before) ?\}))
     (general-close)
     (should (eq (char-before) ?\)))
-    (general-close)
-    (should (eq (char-before) ?\;))
+    ;; (general-close)
+    ;; (should (eq (char-before) ?\;))
 ))
 
 (ert-deftest general-close-close-js-test-2 ()
@@ -79,6 +79,20 @@ if ( (a == b) || (c == d"
     (should (eq (char-before) ?\;))
     (general-close)
     (should (eq (char-before) ?}))))
+
+(ert-deftest general-close-web-mode-test ()
+  (general-close-test-with-js-buffer
+    "$(document).ready(function() {
+    var test = 0 []"
+    (setq major-mode 'web-mode)
+    (general-close)
+    (should (eq (char-before) ?\;))
+    (general-close)
+    (should (eq (char-before) ?\}))
+    (general-close)
+    (should (eq (char-before) ?\)))))
+    
+
 
 (provide 'general-close-js-tests)
 ;;; general-close-js-tests.el ends here
