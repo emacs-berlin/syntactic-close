@@ -1,0 +1,9 @@
+(source gnu)
+(source melpa)
+
+(package-file "general-close.el")
+
+(files "general-close.el" "general-close-modes.el")
+
+(development
+ (depends-on "php-mode"))

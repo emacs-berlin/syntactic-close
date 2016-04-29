@@ -3,6 +3,7 @@
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
 
+;; Version: 0.1
 ;; Keywords: languages, lisp
 
 ;; This program is free software; you can redistribute it and/or modify
