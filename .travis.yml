@@ -1,12 +1,28 @@
-language: Emacs Lisp
-
-before_install:
-  sudo add-apt-repository -y ppa:cassou/emacs &&
-  sudo apt-get update -qq &&
-  sudo apt-get install -qq emacs24 emacs24-el emacs24-common-non-dfsg;
-
+language: emacs-lisp
+cache:
+  directories:
+    - .cask/
 env:
-  EMACS=emacs24
-
+  matrix:
+# Run unit tests against oldest supported stable, latest stable, and trunk
+    - EMACS_VERSION=24.3
+    - EMACS_VERSION=24.5
+    - EMACS_VERSION=snapshot COMPILEFLAGS='error-on-warn'
+before_install:
+  - export PATH="$HOME/bin:$PATH"
+  - wget 'https://raw.githubusercontent.com/flycheck/emacs-travis/master/emacs-travis.mk'
+  - if [[ -n $EMACS_VERSION ]]; then make -f emacs-travis.mk install_emacs; fi
+  - if [[ -n $EMACS_VERSION ]]; then make -f emacs-travis.mk install_cask; fi
+  - if [[ -n $EMACS_VERSION ]]; then emacs --version; fi
+install:
+  - if [[ -n $EMACS_VERSION ]]; then make deps; fi
 script:
-  ./run-travis-ci.sh
+  - if [[ -n $EMACS_VERSION ]]; then make compile; fi
+  - if [[ -n $EMACS_VERSION ]]; then make test; fi
+matrix:
+  # Finish the build even if any build with allowed failures are still running
+  fast_finish: true
+  allow_failures:
+    # Allow the snapshot build to fail, because Emacs snapshot sometimes fails
+    # to build
+    - env: EMACS_VERSION=snapshot COMPILEFLAGS='error-on-warn'
