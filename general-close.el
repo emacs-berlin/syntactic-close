@@ -186,7 +186,8 @@ Does not require parenthesis syntax WRT \"{[(\" "
 (defun general-close--insert-delimiter-char-maybe (orig closer)
   (when closer
     (save-excursion
-      (when (and (not (looking-back "^[ \t]+")) general-close-delete-whitespace-backward-p
+      (when (and (not (looking-back "^[ \t]+" nil))
+                 general-close-delete-whitespace-backward-p
 		 (< 0 (abs (skip-chars-backward " \t\r\n\f")))
 		 ;;  not in comment
 		 (not (nth 4 (parse-partial-sexp (point-min) (point)))))
@@ -227,7 +228,7 @@ See `general-close-command-separator-char'"
 	       (or (eq (char-before) general-close-command-separator-char)
 		   (eq (char-before) closer)))
 	     (progn
-	       (unless (looking-back "^[ \t]+")
+	       (unless (looking-back "^[ \t]+" nil)
 		 (newline-and-indent))
 	       (insert closer))
 	   (insert general-close-command-separator-char))
@@ -280,7 +281,7 @@ See `general-close-command-separator-char'"
 	(goto-char (nth 8 pps))
 	(skip-chars-backward " \t\r\n\f")))
     (let ((orig (point))
-	  (general-close-empty-line (and (looking-back "^[ \t]*")(eolp)))
+	  (general-close-empty-line (and (looking-back "^[ \t]*" nil) (eolp)))
 	  ;; in string or list?
 	  (closer (general-close--fetch-delimiter-char-maybe pps))
 	  done erg)

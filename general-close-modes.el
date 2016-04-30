@@ -44,10 +44,10 @@
 	 (char-before))))
 
 (defun general-close--ruby-insert-end ()
-  (unless (or (looking-back ";[ \t]*"))
+  (unless (or (looking-back ";[ \t]*" nil))
     (unless (and (bolp)(eolp))
       (newline))
-    (unless (looking-back "^[^ \t]*\\_<end")
+    (unless (looking-back "^[^ \t]*\\_<end" nil)
       (insert "end")
       (save-excursion
 	(back-to-indentation)
