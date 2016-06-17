@@ -47,7 +47,6 @@
 
 (ert-deftest general-close-close-ruby-pipe-test ()
   (general-close-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW"
-    ;; (SWITCH-TO-BUFFER (CURRENT-BUFFER))
     (general-close)
     (should (eq (char-before) ?|))))
 

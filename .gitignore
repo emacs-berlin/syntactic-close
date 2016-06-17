@@ -1,2 +1,16 @@
 /.cask
 *.elc
+run-travis-ci.sh
+RCS
+test/*.py
+test/*.php
+test/*.org
+test/*.rb
+test/*.txt
+test/*.js
+*.py
+*.php
+*.org
+*.rb
+*.txt
+*.js

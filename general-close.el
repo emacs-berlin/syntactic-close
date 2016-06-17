@@ -81,6 +81,20 @@ Default is nil"
   :tag "general-close--semicolon-separator-modes"
   :group 'general-close)
 
+(defcustom general-close--ml-modes
+  (list
+   'html-mode
+   'nxml-mode
+   'sgml-mode
+   'xml-mode
+   'xxml-mode
+   )
+  "List of modes using markup language. "
+
+  :type 'list
+  :tag "general-close--semicolon-separator-modes"
+  :group 'general-close)
+
 (defvar general-close-verbose-p nil)
 
 (defvar general-close-keywords nil
@@ -262,13 +276,14 @@ See `general-close-command-separator-char'"
 
 (defun general-close--modes (pps)
   (cond
+   ((eq major-mode 'php-mode)
+    (general-close-insert-closing-char pps))
    ((eq major-mode 'python-mode)
     (general-close-python-close))
    ((eq major-mode 'ruby-mode)
     (general-close-ruby-close))
-   ((eq major-mode 'php-mode)
-    (general-close-insert-closing-char pps))
-   (setq done t)))
+   ((member major-mode general-close--ml-modes)
+    (general-close-ml))))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
@@ -288,8 +303,11 @@ See `general-close-command-separator-char'"
       (general-close--intern orig closer pps)
       ;; other delimiter?
       (unless done
-	(general-close--modes pps))
-      (unless (or done (eolp)) (newline))
+	;; (setq done (general-close--modes pps)))
+      	(general-close--modes pps))
+      (unless (or done 
+		  ;; (eolp)
+		  ) (newline))
       (when general-close-electric-indent-p
 	(indent-according-to-mode)))))
 

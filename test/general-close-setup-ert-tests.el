@@ -146,7 +146,6 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (ruby-mode)
        (insert ,contents)
-       ;; (message "ERT %s" (point))
        (goto-char (point-min))
        (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
@@ -225,6 +224,38 @@ BODY is code to be executed within the temp buffer.  Point is
        (when general-close-verbose-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
+       ,@body)))
+
+(defmacro general-close-test-with-nxml-buffer (contents &rest body)
+  "Create temp buffer in `nxml-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     ;; (and (featurep 'python) (unload-feature 'python))
+     (let (hs-minor-mode)
+       (nxml-mode)
+       (insert ,contents)
+       (when general-close-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
+       ;; (message "ERT %s" (point))
+       ,@body)))
+
+(defmacro general-close-test-with-html-buffer (contents &rest body)
+  "Create temp buffer in `nxml-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     ;; (and (featurep 'python) (unload-feature 'python))
+     (let (hs-minor-mode)
+       (html-mode)
+       (insert ,contents)
+       (when general-close-verbose-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
+       ;; (message "ERT %s" (point))
        ,@body)))
 
 (provide 'setup-ert-tests)

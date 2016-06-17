@@ -42,12 +42,14 @@
 
     (let ((debug-on-error t)
           (tests (list
+		  "general-close-ml-tests"
+                  "general-close-c-tests"
                   "general-close-emacs-lisp-tests"
-                  "general-close-ruby-tests"
-                  "general-close-python-tests"
-                  "general-close-php-tests"
                   "general-close-js-tests"
-                  "general-close-c-tests")))
+                  "general-close-php-tests"
+                  "general-close-python-tests"
+                  "general-close-ruby-tests"
+		  )))
 
       (load (expand-file-name "general-close-modes" source-directory))
       (load (expand-file-name "general-close" source-directory))
