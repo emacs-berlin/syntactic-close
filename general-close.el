@@ -32,6 +32,7 @@
 ;; (setq foo (list "([{123}])"))
 
 (require 'general-close-modes)
+(require 'sgml-mode)
 
 (defgroup general-close nil
   "Insert closing delimiter whichever needed. "

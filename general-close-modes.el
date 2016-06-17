@@ -28,13 +28,22 @@
 ;; Ml
 (defun general-close-ml ()
   (interactive "*")
+  (let ((oldmode major-mode))
     (cond ((save-excursion
 	     (and (< 0 (abs (skip-syntax-backward "w")))
 		  (not (bobp))
 		  ;; (syntax-after (1- (point)))
-		  (eq ?< (char-before (point)))))
+		  (or (eq ?< (char-before (point)))
+		      (and (eq ?< (char-before (1- (point))))
+			   (eq ?/ (char-before (point)))))))
 	   (insert ">")
-	   (setq done t))))
+	   (setq done t))
+	  (t (when (eq ?> (char-before (point)))(newline))
+	     (sgml-mode)
+	     (sgml-close-tag)
+	     (funcall oldmode)
+	     (font-lock-fontify-buffer)
+	     (setq done t)))))
 
 ;; Python
 (defun general-close-python-close ()

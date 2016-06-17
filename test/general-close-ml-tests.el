@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(ert-deftest general-close--nxml-close-test ()
+(ert-deftest general-close--nxml-close-test-1 ()
   (general-close-test-with-nxml-buffer
     "<catalog"
     (nxml-mode)
@@ -37,6 +37,22 @@
     (html-mode)
     (general-close)
     (should (eq (char-before) ?>))))
+
+(ert-deftest general-close--nxml-close-test-2 ()
+  (general-close-test-with-nxml-buffer
+      "<CATALOG>
+  <PLANT>
+    <COMMON>Bloodroot</COMMON>
+    <BOTANICAL>Sanguinaria canadensis"
+    (general-close)
+    (save-excursion
+      (forward-char -1)
+      (skip-syntax-backward "w")
+      (should (looking-at "BOTANICAL")))
+    (general-close)
+    (forward-char -1)
+    (skip-syntax-backward "w")
+    (should (looking-at "PLANT"))))
 
 (provide 'general-close-ml-tests)
 ;;; general-close-emacs-lisp-tests.el ends here
