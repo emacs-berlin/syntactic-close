@@ -26,9 +26,9 @@
   "Contents like py-font-lock-keyword")
 
 ;; Ml
-(defun general-close-ml (pps closer)
+(defun general-close-ml ()
   (interactive "*")
-  (let ((oldmode major-mode))
+  (let ((oldmode major-mode) done)
     (cond ((save-excursion
 	     (and (< 0 (abs (skip-syntax-backward "w")))
 		  (not (bobp))
@@ -43,21 +43,24 @@
 	     (sgml-close-tag)
 	     (funcall oldmode)
 	     (font-lock-fontify-buffer)
-	     (setq done t)))))
+	     (setq done t)))
+    done))
 
 (defun general-close-python-listclose (closer)
   "If inside list, assume another item first. "
-  (cond ((eq (char-before) ?,)
-	 (delete-char -1)
-	 (insert closer)
-	 (setq done t))
-	((member (char-before) (list ?' ?\"))
-	 (insert ","))
-	(t (insert closer)
-	   (setq done t))))
+  (let (done)
+    (cond ((eq (char-before) ?,)
+	   (delete-char -1)
+	   (insert closer)
+	   (setq done t))
+	  ((member (char-before) (list ?' ?\"))
+	   (insert ","))
+	  (t (insert closer)
+	     (setq done t)))
+    done))
 
 ;; Python
-(defun general-close-python-close (pps &optional closer)
+(defun general-close-python-close (closer)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
   (if closer
@@ -69,7 +72,8 @@
 	  (general-close-beginning-of-block-re
 	   (if (ignore-errors (boundp 'py-block-re))
 	       py-block-re
-	     (python-rx block-start))))
+	     (python-rx block-start)))
+	  done)
       (cond ((and (not (char-equal ?: (char-before)))
 		  (save-excursion
 		    (funcall general-close-beginning-of-statement)
@@ -78,7 +82,8 @@
 	     (setq done t))
 	    (t (eolp)
 	       (ignore-errors (newline-and-indent))
-	       (setq done t))))))
+	       (setq done t)))
+      done)))
 
 ;; Ruby
 (defun general-close--generic-fetch-delimiter-maybe ()
@@ -100,7 +105,7 @@
 	  (indent-according-to-mode))))
     done))
 
-(defun general-close-ruby-close (pps orig &optional closer)
+(defun general-close-ruby-close (&optional closer)
   (let ((closer (or closer (general-close--generic-fetch-delimiter-maybe)))
 	done)
     (if closer
@@ -110,10 +115,10 @@
       (setq done (general-close--ruby-insert-end))
       done)))
 
-
 ;; Php
 (defun general-close--php-check (pps closer)
-  (let ((orig (point)))
+  (let ((orig (point))
+	done)
     (cond ((and (eq closer ?})(general-close-empty-line-p))
 	   (insert closer)
 	   (setq done t)
@@ -137,7 +142,8 @@
 	   (when (eq (char-before) ?=)
 	     (goto-char orig)
 	     (insert ";")
-	     (setq done t))))))
+	     (setq done t))))
+    done))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

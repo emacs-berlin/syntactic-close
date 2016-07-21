@@ -112,6 +112,7 @@ conditionals closed by a colon for example. ")
 (defvar general-close-known-comint-modes (list 'inferior-sml-mode)
   "`parse-partial-sexp' must scan only from last prompt. ")
 
+(defvar general-closs-empty-line-p-chars nil)
 (defcustom general-closs-empty-line-p-chars "^[ \t\r]*$"
   "empty-line-p-chars"
   :type 'regexp
@@ -181,7 +182,7 @@ If non-nil, return a list composed of
 
 Does not require parenthesis syntax WRT \"{[(\" "
   (interactive "*")
-  (let (closer stack done erg pps-list)
+  (let (closer stack done)
     (save-excursion
       (while (and (not (bobp)) (not done))
 	(cond ((member (char-before) (list ?\) ?\] ?}))
@@ -212,7 +213,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 ;; 	   (general-close--return-compliment-char-maybe (char-after))))))
 
 (defun general-close--fetch-delimiter-maybe (pps)
-  (let (erg)
+  (let (erg closer)
     (cond ((nth 4 pps)
 	   (if (string= "" comment-end)
 	       (if (eq system-type 'windows-nt)
@@ -267,7 +268,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 		  (face-at-point)))
 	(insert general-close-command-separator-char) t))))
 
-(defun general-close--handle-separator-modes (orig closer pps)
+(defun general-close--handle-separator-modes (orig closer)
   "Some languages close expressions with a special char, often `:'
 
 See `general-close-command-separator-char'"
@@ -298,40 +299,47 @@ See `general-close-command-separator-char'"
 	(t (general-close--insert-separator-maybe orig))))
 
 (defun general-close--intern (orig closer pps)
-  (cond
-   ;; a command separator may precede closing delimiter
-   ((member major-mode general-close--semicolon-separator-modes)
-    (setq general-close-command-separator-char ?\;)
-    (setq done (general-close--handle-separator-modes orig closer pps)))
-   ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
-    (setq general-close-command-separator-char ?\:)
-    (setq done (general-close--handle-separator-modes orig closer pps)))
-   (t (setq done (general-close--insert-delimiter-char-maybe orig closer)))))
+  (let (done)
+    (cond
+     ;; a command separator may precede closing delimiter
+     ((member major-mode general-close--semicolon-separator-modes)
+      (setq general-close-command-separator-char ?\;)
+      (setq done (general-close--handle-separator-modes orig closer)))
+     ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
+      (setq general-close-command-separator-char ?\:)
+      (setq done (general-close--handle-separator-modes orig closer)))
+     (t (setq done (general-close--insert-delimiter-char-maybe orig closer))))
+    done))
 
 (defun general-close-sml (pps closer orig)
-  (cond (closer
-	 (insert closer)
-	 (setq done t))
-	((eq (char-before) general-close-command-separator-char)
-	 (comint-send-input)
-	 (goto-char (point-max))
-	 (setq done t))
-	(general-close--intern (orig closer pps)
-	(t (general-close-insert-closing-char pps)))))
+  (let (done)
+    (cond (closer
+	   (insert closer)
+	   (setq done t))
+	  ((eq (char-before) general-close-command-separator-char)
+	   (comint-send-input)
+	   (goto-char (point-max))
+	   (setq done t))
+	  ;; (general-close--intern (orig closer pps))
+	  ;; (t (setq done (general-close-insert-closing-char pps)))
+)
+    done))
 
 (defun general-close--modes (pps closer orig)
-  (cond
-   ((eq major-mode 'inferior-sml-mode)
-    (general-close-sml pps closer orig))
-   ((eq major-mode 'php-mode)
-    (general-close--php-check pps closer))
-   ((eq major-mode 'python-mode)
-    (general-close-python-close pps closer))
-   ((eq major-mode 'ruby-mode)
-    (general-close-ruby-close pps orig closer))
-   ((member major-mode general-close--ml-modes)
-    (general-close-ml pps closer))
-   (t (general-close--intern orig closer pps))))
+  (let (done)
+    (cond
+     ((eq major-mode 'inferior-sml-mode)
+      (setq done (general-close-sml pps closer orig)))
+     ((eq major-mode 'php-mode)
+      (setq done (general-close--php-check pps closer)))
+     ((eq major-mode 'python-mode)
+      (setq done (general-close-python-close closer)))
+     ((eq major-mode 'ruby-mode)
+      (setq done (general-close-ruby-close closer)))
+     ((member major-mode general-close--ml-modes)
+      (setq done (general-close-ml)))
+     (t (setq done (general-close--intern orig closer pps))))
+    done))
 
 
 (defun general-close--travel-comments-maybe (pps)
@@ -349,10 +357,11 @@ See `general-close-command-separator-char'"
   (interactive "*")
   (let* ((beg (if (member major-mode general-close-known-comint-modes)
 		  (save-excursion
-		    (re-search-backward comint-prompt-regexp nil t 1))
+		    (when comint-prompt-regexp
+		      (re-search-backward comint-prompt-regexp nil t 1)))
 		(point-min)))
 	 (pps (parse-partial-sexp beg (point)))
-	 done erg orig)
+	 done orig closer)
     (general-close--travel-comments-maybe pps)
     (setq orig (point))
     ;; in string or list?
