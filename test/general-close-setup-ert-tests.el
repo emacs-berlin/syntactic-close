@@ -1,4 +1,4 @@
-;;; setup-ert-tests.el --- Provide needed forms
+;;; setup-ert-tests.el --- Provide needed forms -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -27,11 +27,7 @@
 
 (defvar general-close-debug-p nil
   "Avoid error")
-
 ;; (setq general-close-debug-p t)
-
-(defvar general-close-verbose-p t)
-;; (setq general-close-verbose-p t)
 
 (defmacro general-close-test (contents mode verbose &rest body)
   "Create temp buffer inserting CONTENTS.
@@ -102,7 +98,7 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (php-mode)
        (insert ,contents)
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
@@ -118,7 +114,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        ;; (message "ERT %s" (point))
        (goto-char (point-min))
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
@@ -132,7 +128,7 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (ruby-mode)
        (insert ,contents)
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
@@ -147,7 +143,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (ruby-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
@@ -163,7 +159,7 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (emacs-lisp-mode)
        (insert ,contents)
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ;; (message "ERT %s" (point))
@@ -180,7 +176,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (js-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
@@ -194,7 +190,7 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (js-mode)
        (insert ,contents)
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
@@ -207,7 +203,7 @@ BODY is code to be executed within the temp buffer.  Point is
   `(with-temp-buffer
      (let (hs-minor-mode)
        (insert ,contents)
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
@@ -221,7 +217,7 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
@@ -236,7 +232,7 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (nxml-mode)
        (insert ,contents)
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ;; (message "ERT %s" (point))
@@ -252,7 +248,7 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (html-mode)
        (insert ,contents)
-       (when general-close-verbose-p
+       (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ;; (message "ERT %s" (point))

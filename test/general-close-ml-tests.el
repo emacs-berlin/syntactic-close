@@ -1,4 +1,4 @@
-;;; general-close-ml-tests.el ---  Tests
+;;; general-close-ml-tests.el ---  Tests -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>

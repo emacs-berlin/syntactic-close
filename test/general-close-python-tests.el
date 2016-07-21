@@ -1,4 +1,4 @@
-;;; general-close-python-tests.el --- Python tests
+;;; general-close-python-tests.el --- Python tests -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -79,13 +79,8 @@
       "[1, 3] "
     (let ((general-close-delete-whitespace-backward-p t))
       (general-close)
-      ;; (message "(point): %s" (point))
-      ;; (message "(count-lines: %s" (count-lines (point-min) (point) ))
-      ;; (should (bolp))
-      ;; (should (eobp))
       (should (eq 8 (point)))
-      (should (eq 0 (current-indentation)))
-      )))
+      (should (eq 0 (current-indentation))))))
 
 (ert-deftest general-close-python-nested-paren-test ()
   (general-close-test-with-python-buffer
@@ -102,6 +97,7 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
+;; https://www.python.org/dev/peps/pep-0498/
 (ert-deftest general-close-python-string-interpolation-test-2 ()
   (general-close-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
       {'language"
@@ -148,12 +144,23 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
                       background_color=(0, 0, 1, 1)
                       font_size=150)
 if __name__ == \"__main__\""
-    (switch-to-buffer (current-buffer))
-    (font-lock-fontify-buffer)
     (general-close)
     (should (eq (char-before) ?:))
     (general-close)
     (should (eq 4 (current-indentation)))))
 
-(provide 'general-close-python-tests)
+(ert-deftest general-close-python-colon-test-3 ()
+  (general-close-test-with-python-buffer
+      "class TestInit(unittest.TestCase):
+    def setUp(self):
+        self.bot = bot.Bot(\"jid\", \"password\")"
+    (general-close)
+    (should (eq 8 (current-indentation)))))
+
+(ert-deftest general-close-python-dict-test-1 ()
+  (general-close-test-with-python-buffer
+      ;; "myExample = {'someItem': 2, 'otherItem': 20}"
+     "myExample = {'someItem': 2, 'otherItem': 20}"
+    (provide 'general-close-python-tests)))
+
 ;;; general-close-python-tests.el ends here

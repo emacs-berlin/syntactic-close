@@ -1,4 +1,4 @@
-;;; general-close-modes.el --- mode-specific functions
+;;; general-close-modes.el --- mode-specific functions -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -26,7 +26,7 @@
   "Contents like py-font-lock-keyword")
 
 ;; Ml
-(defun general-close-ml ()
+(defun general-close-ml (pps closer)
   (interactive "*")
   (let ((oldmode major-mode))
     (cond ((save-excursion
@@ -45,70 +45,99 @@
 	     (font-lock-fontify-buffer)
 	     (setq done t)))))
 
+(defun general-close-python-listclose (closer)
+  "If inside list, assume another item first. "
+  (cond ((eq (char-before) ?,)
+	 (delete-char -1)
+	 (insert closer)
+	 (setq done t))
+	((member (char-before) (list ?' ?\"))
+	 (insert ","))
+	(t (insert closer)
+	   (setq done t))))
+
 ;; Python
-(defun general-close-python-close ()
-  "Equivalent to py-dedent"
+(defun general-close-python-close (pps &optional closer)
+  "Might deliver equivalent to `py-dedent'"
   (interactive "*")
-  (when (eolp)
-    (ignore-errors (newline-and-indent))
-    (setq done t))
-  ;; (if (functionp 'py-dedent)
-  ;; (py-dedent 1)
-  ;; (python-indent-dedent-line-backspace 1))
-  )
+  (if closer
+      (general-close-python-listclose closer)
+    (let ((general-close-beginning-of-statement
+	   (if (ignore-errors (functionp 'py-backward-statement))
+	       'py-backward-statement
+	     (lambda ()(beginning-of-line)(back-to-indentation))))
+	  (general-close-beginning-of-block-re
+	   (if (ignore-errors (boundp 'py-block-re))
+	       py-block-re
+	     (python-rx block-start))))
+      (cond ((and (not (char-equal ?: (char-before)))
+		  (save-excursion
+		    (funcall general-close-beginning-of-statement)
+		    (looking-at general-close-beginning-of-block-re)))
+	     (insert ":")
+	     (setq done t))
+	    (t (eolp)
+	       (ignore-errors (newline-and-indent))
+	       (setq done t))))))
 
 ;; Ruby
-(defun general-close--ruby-fetch-delimiter-maybe ()
+(defun general-close--generic-fetch-delimiter-maybe ()
   (save-excursion
     (and (< 0 (abs (skip-syntax-backward "\\sw")))
 	 (eq 1 (car (syntax-after (1- (point)))))
-	 (char-before))))
+	 (char-to-string (char-before)))))
 
 (defun general-close--ruby-insert-end ()
-  (unless (or (looking-back ";[ \t]*" nil))
-    (unless (and (bolp)(eolp))
-      (newline))
-    (unless (looking-back "^[^ \t]*\\_<end" nil)
-      (insert "end")
-      (save-excursion
-	(back-to-indentation)
-	(indent-according-to-mode)))))
+  (let (done)
+    (unless (or (looking-back ";[ \t]*" nil))
+      (unless (and (bolp)(eolp))
+	(newline))
+      (unless (looking-back "^[^ \t]*\\_<end" nil)
+	(insert "end")
+	(setq done t)
+	(save-excursion
+	  (back-to-indentation)
+	  (indent-according-to-mode))))
+    done))
 
-(defun general-close-ruby-close (&optional arg)
-  "Equivalent to py-dedent"
-  (interactive "*")
-  (let ((orig (point))
-	(erg (general-close--ruby-fetch-delimiter-maybe)))
-    (if erg
+(defun general-close-ruby-close (pps orig &optional closer)
+  (let ((closer (or closer (general-close--generic-fetch-delimiter-maybe)))
+	done)
+    (if closer
 	(progn
-	  (insert (char-to-string erg))
+	  (insert closer)
 	  (setq done t))
-      (general-close--ruby-insert-end)
-      (setq done t))))
+      (setq done (general-close--ruby-insert-end))
+      done)))
+
 
 ;; Php
-(defun general-close--php-check (pps)
-  (let ((pps pps))
-    (unless (and (not (eq closer ?})) (nth 1 pps))
-      (save-excursion
-	(forward-char -1)
-	(setq pps (parse-partial-sexp (line-beginning-position) (point)))
-	(when (nth 1 pps)
-	  (save-excursion
-	    (goto-char (nth 1 pps))
-	    ;; just a single list
-	    (setq done (member (char-before) (list ?\t ?\n ?\ ?=)))
-	    (or done
-		(beginning-of-line)
-		(and (or (looking-at "function")(looking-at "public function"))
-		     (setq done t)))))))))
-
-(defun general-close-insert-closing-char (pps)
-  (when (eq major-mode 'php-mode)
-    (general-close--php-check pps))
-  (unless done
-    (insert general-close-command-separator-char)
-    (setq done t)))
+(defun general-close--php-check (pps closer)
+  (let ((orig (point)))
+    (cond ((and (eq closer ?})(general-close-empty-line-p))
+	   (insert closer)
+	   (setq done t)
+	   (indent-according-to-mode))
+	  ((eq closer ?})
+	   (if (or (eq (char-before) ?\;) (eq (char-before) closer))
+	       (progn
+		 (newline)
+		 (insert closer)
+		 (indent-according-to-mode))
+	     (insert ";"))
+	   (setq done t))
+	  ((eq closer ?\))
+	   (insert closer)
+	   (setq done t))
+	  ;; after asignement
+	  ((eq (char-before) ?\))
+	   (backward-list)
+	   (skip-chars-backward "^ \t\r\n\f")
+	   (skip-chars-backward " \t")
+	   (when (eq (char-before) ?=)
+	     (goto-char orig)
+	     (insert ";")
+	     (setq done t))))))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

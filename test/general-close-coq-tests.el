@@ -1,4 +1,4 @@
-;;; general-close-coq-tests.el ---
+;;; general-close-coq-tests.el --- -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -28,7 +28,7 @@
 (ert-deftest general-close-coq-comment-test ()
   (general-close-test "(* definition of nat"
     'coq-mode
-    'general-close-verbose-p
+    'general-close-debug-p
     (general-close)
     (should (eq (char-before) ?\)))))
 

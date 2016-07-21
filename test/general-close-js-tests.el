@@ -1,4 +1,4 @@
-;;; general-close-js-tests.el ---
+;;; general-close-js-tests.el --- -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>

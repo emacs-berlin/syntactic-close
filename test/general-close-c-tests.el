@@ -1,4 +1,4 @@
-;;; general-close-c-tests.el ---
+;;; general-close-c-tests.el --- -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -28,7 +28,7 @@
 ;; (ert-deftest general-close-c-nesting-comment-test ()
 ;;   (general-close-test "/* The open system call "
 ;;     'c-mode
-;;     'general-close-verbose-p
+;;     'general-close-debug-p
 ;;     (general-close)
 ;;     (should (eq (char-before) ?/))))
 

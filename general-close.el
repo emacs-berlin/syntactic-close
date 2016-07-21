@@ -1,4 +1,4 @@
-;;; general-close.el --- Insert closing delimiter
+;;; general-close.el --- Insert closing delimiter -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -104,7 +104,27 @@ Default is nil"
 conditionals closed by a colon for example. ")
 
 (defvar general-close-command-separator-char ?\;
-  "This char will be modified internally. ")
+  "This char might be modified internally. ")
+
+(defvar general-close-list-separator-char ?,
+  "This char might be modified internally. ")
+
+(defvar general-close-known-comint-modes (list 'inferior-sml-mode)
+  "`parse-partial-sexp' must scan only from last prompt. ")
+
+(defcustom general-closs-empty-line-p-chars "^[ \t\r]*$"
+  "empty-line-p-chars"
+  :type 'regexp
+  :group 'convenience)
+
+(defun general-close-empty-line-p (&optional iact)
+  "Returns t if cursor is at an empty line, nil otherwise."
+  (interactive "p")
+  (save-excursion
+    (beginning-of-line)
+    (when iact
+      (message "%s" (looking-at empty-line-p-chars)))
+    (looking-at empty-line-p-chars)))
 
 (defun general-close-toggle-verbosity ()
   "If `general-close-verbose-p' is nil, switch it on.
@@ -115,17 +135,21 @@ Otherwise switch it off. "
   (when (called-interactively-p 'any) (message "general-close-verbose-p: %s" general-close-verbose-p)))
 
 
-(defun general-close--return-compliment-char (erg)
+(defun general-close--return-compliment-char-maybe (erg)
+  "For example return \"}\" for \"{\" but keep \"\\\"\". "
   (cond ((eq erg ?\")
+	 erg)
+	((eq erg ?')
 	 erg)
 	((eq erg ?\[)
 	 ?\])
-	((eq erg ?\{)
+	((eq erg ?{)
 	 ?\})
 	((eq erg ?\()
 	 ?\))))
 
 (defun general-close--in-string-p-intern (pps)
+  "Returns start-position, delimiter-char, delimiter-lenth a list. "
   (goto-char (nth 8 pps))
   (list (point) (char-after)(skip-chars-forward (char-to-string (char-after)))))
 
@@ -164,7 +188,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	       (push (char-before) stack)
 	       (forward-char -1))
 	      ((member (char-before) (list ?\( ?\" ?{ ?\[))
-	       (setq closer (general-close--return-compliment-char (char-before)))
+	       (setq closer (general-close--return-compliment-char-maybe (char-before)))
 	       (if (eq (car stack) closer)
 		   (progn
 		     (pop stack)
@@ -173,30 +197,41 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	      (t (skip-chars-backward "^\"{\(\[\]\)}")))))
     (insert closer)))
 
-(defun general-close--in-string-interpolation-maybe ()
+(defun general-close--in-string-interpolation-maybe (pps)
   (and (< 0 (abs (skip-syntax-backward "\\sw")))
        (member (char-before) (list ?\( ?{ ?\[))
-       (general-close--return-compliment-char (char-before))))
+       (member (char-before (1- (point))) (list ?% ?#))
+       (< (nth 8 pps) (point))
+       (general-close--return-compliment-char-maybe (char-before))))
 
-(defun general-close--fetch-delimiter-char-maybe (pps-list)
+;; (defun general-close--in-string-interpolation-maybe (pps)
+;;   (cond ((and (ignore-errors (< (nth 1 pps) (nth 8 pps))))
+;; 	 (save-excursion
+;; 	   (goto-char (nth 8 pps))
+
+;; 	   (general-close--return-compliment-char-maybe (char-after))))))
+
+(defun general-close--fetch-delimiter-maybe (pps)
   (let (erg)
-    (cond ((nth 4 pps-list)
+    (cond ((nth 4 pps)
 	   (if (string= "" comment-end)
 	       (if (eq system-type 'windows-nt)
 		   "\r\n"
 		 "\n")
 	     comment-end))
-	  ((nth 3 pps-list)
+	  ((nth 3 pps)
 	   (save-excursion
 	     (or
 	      ;; sets closer to compliment character
-	      (setq closer (general-close--in-string-interpolation-maybe))
-	      (and (setq erg (general-close--in-string-p-intern pps-list))
-		   (setq closer (make-string (nth 2 erg)(nth 1 erg)))))))
-	  ((nth 1 pps-list)
+	      (setq closer (general-close--in-string-interpolation-maybe pps))
+	      ;; returns a list to construct TQS maybe
+	      (and (setq erg (general-close--in-string-p-intern pps))
+		   (setq closer (make-string (nth 2 erg)(nth 1 erg))))))
+	   closer)
+	  ((nth 1 pps)
 	   (save-excursion
-	     (goto-char (nth 1 pps-list))
-	     (general-close--return-compliment-char (char-after)))))))
+	     (goto-char (nth 1 pps))
+	     (general-close--return-compliment-char-maybe (char-after)))))))
 
 (defun general-close--insert-delimiter-char-maybe (orig closer)
   (when closer
@@ -259,6 +294,7 @@ See `general-close-command-separator-char'"
 	(closer
 	 (insert closer)
 	 closer)
+
 	(t (general-close--insert-separator-maybe orig))))
 
 (defun general-close--intern (orig closer pps)
@@ -269,48 +305,63 @@ See `general-close-command-separator-char'"
     (setq done (general-close--handle-separator-modes orig closer pps)))
    ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
     (setq general-close-command-separator-char ?\:)
-    (when (eq major-mode 'python-mode)
-      (let ((general-close-keywords general-close-python-keywords)
-	    general-close-electric-indent-p)
-	(setq done (general-close--handle-separator-modes orig closer pps)))))
+    (setq done (general-close--handle-separator-modes orig closer pps)))
    (t (setq done (general-close--insert-delimiter-char-maybe orig closer)))))
 
-(defun general-close--modes (pps)
+(defun general-close-sml (pps closer orig)
+  (cond (closer
+	 (insert closer)
+	 (setq done t))
+	((eq (char-before) general-close-command-separator-char)
+	 (comint-send-input)
+	 (goto-char (point-max))
+	 (setq done t))
+	(general-close--intern (orig closer pps)
+	(t (general-close-insert-closing-char pps)))))
+
+(defun general-close--modes (pps closer orig)
   (cond
+   ((eq major-mode 'inferior-sml-mode)
+    (general-close-sml pps closer orig))
    ((eq major-mode 'php-mode)
-    (general-close-insert-closing-char pps))
+    (general-close--php-check pps closer))
    ((eq major-mode 'python-mode)
-    (general-close-python-close))
+    (general-close-python-close pps closer))
    ((eq major-mode 'ruby-mode)
-    (general-close-ruby-close))
+    (general-close-ruby-close pps orig closer))
    ((member major-mode general-close--ml-modes)
-    (general-close-ml))))
+    (general-close-ml pps closer))
+   (t (general-close--intern orig closer pps))))
+
+
+(defun general-close--travel-comments-maybe (pps)
+  (end-of-line)
+  (skip-chars-backward " \t")
+  (when (ignore-errors (looking-at comment-start))
+    (goto-char (match-end 0))
+    ;; travel comments
+    (while (and (setq pps (parse-partial-sexp (point-min) (point))) (nth 4 pps) (nth 8 pps))
+      (goto-char (nth 8 pps))
+      (skip-chars-backward " \t\r\n\f"))))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
-  (let ((pps (parse-partial-sexp (point-min) (point))))
-    (when (ignore-errors (looking-at comment-start))
-      (goto-char (match-end 0))
-      ;; travel comments
-      (while (and (setq pps (parse-partial-sexp (point-min) (point))) (nth 4 pps) (nth 8 pps))
-	(goto-char (nth 8 pps))
-	(skip-chars-backward " \t\r\n\f")))
-    (let ((orig (point))
-	  (general-close-empty-line (and (looking-back "^[ \t]*" nil) (eolp)))
-	  ;; in string or list?
-	  (closer (general-close--fetch-delimiter-char-maybe pps))
-	  done erg)
-      (general-close--intern orig closer pps)
-      ;; other delimiter?
-      (unless done
-	;; (setq done (general-close--modes pps)))
-      	(general-close--modes pps))
-      (unless (or done 
-		  ;; (eolp)
-		  ) (newline))
-      (when general-close-electric-indent-p
-	(indent-according-to-mode)))))
+  (let* ((beg (if (member major-mode general-close-known-comint-modes)
+		  (save-excursion
+		    (re-search-backward comint-prompt-regexp nil t 1))
+		(point-min)))
+	 (pps (parse-partial-sexp beg (point)))
+	 done erg orig)
+    (general-close--travel-comments-maybe pps)
+    (setq orig (point))
+    ;; in string or list?
+    (setq closer (general-close--fetch-delimiter-maybe pps))
+    (setq done (general-close--modes pps closer orig))
+    (unless done (setq done (when closer (progn (insert closer) t))))
+    (unless done (newline))
+    (when general-close-electric-indent-p
+      (indent-according-to-mode))))
 
 (provide 'general-close)
 ;;; general-close.el ends here
