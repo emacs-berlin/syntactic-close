@@ -103,6 +103,10 @@ Default is nil"
 
 conditionals closed by a colon for example. ")
 
+(unless (boundp 'py-block-re)
+  (defvar py-block-re "[ \t]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n\t]*"
+  "Matches the beginning of a compound statement. "))
+
 (defvar general-close-command-separator-char ?\;
   "This char might be modified internally. ")
 
@@ -112,9 +116,9 @@ conditionals closed by a colon for example. ")
 (defvar general-close-known-comint-modes (list 'inferior-sml-mode)
   "`parse-partial-sexp' must scan only from last prompt. ")
 
-(defvar general-closs-empty-line-p-chars nil)
-(defcustom general-closs-empty-line-p-chars "^[ \t\r]*$"
-  "empty-line-p-chars"
+;; (defvar general-close-empty-line-p-chars nil)
+(defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
+  "general-close-empty-line-p-chars"
   :type 'regexp
   :group 'convenience)
 
@@ -124,8 +128,8 @@ conditionals closed by a colon for example. ")
   (save-excursion
     (beginning-of-line)
     (when iact
-      (message "%s" (looking-at empty-line-p-chars)))
-    (looking-at empty-line-p-chars)))
+      (message "%s" (looking-at general-close-empty-line-p-chars)))
+    (looking-at general-close-empty-line-p-chars)))
 
 (defun general-close-toggle-verbosity ()
   "If `general-close-verbose-p' is nil, switch it on.
@@ -134,7 +138,6 @@ Otherwise switch it off. "
   (interactive)
   (setq general-close-verbose-p (not general-close-verbose-p))
   (when (called-interactively-p 'any) (message "general-close-verbose-p: %s" general-close-verbose-p)))
-
 
 (defun general-close--return-compliment-char-maybe (erg)
   "For example return \"}\" for \"{\" but keep \"\\\"\". "
@@ -322,7 +325,7 @@ See `general-close-command-separator-char'"
 	   (setq done t))
 	  ;; (general-close--intern (orig closer pps))
 	  ;; (t (setq done (general-close-insert-closing-char pps)))
-)
+	  )
     done))
 
 (defun general-close--modes (pps closer orig)
@@ -341,16 +344,16 @@ See `general-close-command-separator-char'"
      (t (setq done (general-close--intern orig closer pps))))
     done))
 
-
 (defun general-close--travel-comments-maybe (pps)
-  (end-of-line)
-  (skip-chars-backward " \t")
-  (when (ignore-errors (looking-at comment-start))
-    (goto-char (match-end 0))
-    ;; travel comments
-    (while (and (setq pps (parse-partial-sexp (point-min) (point))) (nth 4 pps) (nth 8 pps))
-      (goto-char (nth 8 pps))
-      (skip-chars-backward " \t\r\n\f"))))
+  (let (done)
+    (if (and (nth 4 pps) (nth 8 pps) (not (string= "" comment-end)))
+	(progn
+	  (insert comment-end)
+	  (setq done t))
+      (while (and (setq pps (parse-partial-sexp (point-min) (point))) (nth 4 pps) (nth 8 pps))
+	(goto-char (nth 8 pps))
+	(skip-chars-backward " \t\r\n\f")))
+    done))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
@@ -362,13 +365,14 @@ See `general-close-command-separator-char'"
 		(point-min)))
 	 (pps (parse-partial-sexp beg (point)))
 	 done orig closer)
-    (general-close--travel-comments-maybe pps)
-    (setq orig (point))
-    ;; in string or list?
-    (setq closer (general-close--fetch-delimiter-maybe pps))
-    (setq done (general-close--modes pps closer orig))
-    (unless done (setq done (when closer (progn (insert closer) t))))
-    (unless done (newline))
+    (setq done (general-close--travel-comments-maybe pps))
+    (unless done
+      (setq orig (point))
+      ;; in string or list?
+      (setq closer (general-close--fetch-delimiter-maybe pps))
+      (setq done (general-close--modes pps closer orig))
+      (unless done (setq done (when closer (progn (insert closer) t))))
+      (unless done (newline)))
     (when general-close-electric-indent-p
       (indent-according-to-mode))))
 
