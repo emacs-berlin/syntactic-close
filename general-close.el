@@ -113,8 +113,9 @@ conditionals closed by a colon for example. ")
 (defvar general-close-list-separator-char ?,
   "This char might be modified internally. ")
 
-(defvar general-close-known-comint-modes (list 'inferior-sml-mode)
+(defvar general-close-known-comint-modes (list 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML)
   "`parse-partial-sexp' must scan only from last prompt. ")
+(setq general-close-known-comint-modes (list 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML))
 
 ;; (defvar general-close-empty-line-p-chars nil)
 (defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
@@ -314,25 +315,29 @@ See `general-close-command-separator-char'"
      (t (setq done (general-close--insert-delimiter-char-maybe orig closer))))
     done))
 
-(defun general-close-sml (pps closer orig)
+(defun general-close--comint-send ()
+  (let (done)
+    (comint-send-input)
+    (goto-char (point-max))
+    (setq done t)
+    done))
+
+(defun general-close-comint (pps closer orig)
   (let (done)
     (cond (closer
 	   (insert closer)
 	   (setq done t))
 	  ((eq (char-before) general-close-command-separator-char)
-	   (comint-send-input)
-	   (goto-char (point-max))
-	   (setq done t))
-	  ;; (general-close--intern (orig closer pps))
-	  ;; (t (setq done (general-close-insert-closing-char pps)))
-	  )
+	   (setq done (general-close--comint-send)))
+	  (t (insert general-close-command-separator-char)
+	     (setq done (general-close--comint-send))))
     done))
 
 (defun general-close--modes (pps closer orig)
   (let (done)
     (cond
-     ((eq major-mode 'inferior-sml-mode)
-      (setq done (general-close-sml pps closer orig)))
+     ((member major-mode general-close-known-comint-modes)
+      (setq done (general-close-comint pps closer orig)))
      ((eq major-mode 'php-mode)
       (setq done (general-close--php-check pps closer)))
      ((eq major-mode 'python-mode)
@@ -358,10 +363,13 @@ See `general-close-command-separator-char'"
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
-  (let* ((beg (if (member major-mode general-close-known-comint-modes)
+  (let* (gc-comint-p
+	 (beg (if (member major-mode general-close-known-comint-modes)
 		  (save-excursion
 		    (when comint-prompt-regexp
-		      (re-search-backward comint-prompt-regexp nil t 1)))
+		      (progn
+			(setq gc-comint-p t)
+			(re-search-backward comint-prompt-regexp nil t 1))))
 		(point-min)))
 	 (pps (parse-partial-sexp beg (point)))
 	 done orig closer)
@@ -372,7 +380,10 @@ See `general-close-command-separator-char'"
       (setq closer (general-close--fetch-delimiter-maybe pps))
       (setq done (general-close--modes pps closer orig))
       (unless done (setq done (when closer (progn (insert closer) t))))
-      (unless done (newline)))
+      (unless done
+	(if gc-comint-p
+	    (comint-send-input)
+	  (newline))))
     (when general-close-electric-indent-p
       (indent-according-to-mode))))
 

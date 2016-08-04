@@ -6,4 +6,6 @@
 (files "general-close.el" "general-close-modes.el")
 
 (development
- (depends-on "php-mode"))
+ (depends-on "php-mode")
+ (depends-on "sml-mode"))
+
