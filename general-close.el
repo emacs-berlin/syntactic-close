@@ -218,13 +218,8 @@ Does not require parenthesis syntax WRT \"{[(\" "
 
 (defun general-close--fetch-delimiter-maybe (pps)
   (let (erg closer)
-    (cond ((nth 4 pps)
-	   (if (string= "" comment-end)
-	       (if (eq system-type 'windows-nt)
-		   "\r\n"
-		 "\n")
-	     comment-end))
-	  ((nth 3 pps)
+
+    (cond ((nth 3 pps)
 	   (save-excursion
 	     (or
 	      ;; sets closer to compliment character
@@ -364,12 +359,16 @@ See `general-close-command-separator-char'"
       (goto-char (nth 8 pps))
       (general-close--comments-intern orig "{-" "-}")
       (setq done t))
-     ((or (eq major-mode 'c++-mode) (eq major-mode 'c-mode)) 
+     ((or (eq major-mode 'c++-mode) (eq major-mode 'c-mode))
       (goto-char (nth 8 pps))
       (general-close--comments-intern orig "/*" "*/")
       (setq done t))
-
-     )
+     (t (if (string= "" comment-end)
+	    (if (eq system-type 'windows-nt)
+		(insert "\r\n")
+	      (insert "\n"))
+	  (insert comment-end))
+	(setq done t) ))
     done))
 
 (defun general-close--travel-comments-maybe (pps)
@@ -377,9 +376,11 @@ See `general-close-command-separator-char'"
     (or (and (nth 4 pps) (nth 8 pps)
 	     ;; (not (string= "" comment-end))
 	     (setq done (general-close--insert-comment-end-maybe pps)))
-      (while (and (setq pps (parse-partial-sexp (point-min) (point))) (nth 4 pps) (nth 8 pps))
-	(goto-char (nth 8 pps))
-	(skip-chars-backward " \t\r\n\f")))
+	(while (and (setq pps (parse-partial-sexp (line-beginning-position) (point))) (nth 4 pps) (nth 8 pps))
+	  (unless (eobp)
+	    (forward-line 1)
+	    (end-of-line)
+	    (skip-chars-backward " \t\r\n\f" (line-beginning-position)))))
     done))
 
 (defun general-close ()
@@ -395,7 +396,7 @@ See `general-close-command-separator-char'"
 		(point-min)))
 	 (pps (parse-partial-sexp beg (point)))
 	 done orig closer)
-    ;; ml-modes use sgml-close-tag 
+    ;; ml-modes use sgml-close-tag
     (setq done (general-close--travel-comments-maybe pps))
     (unless done
       (setq orig (point))
