@@ -44,6 +44,9 @@
           (tests (list
 		  "general-close-ml-tests"
                   "general-close-c-tests"
+		  "general-close-c++-tests"
+		  "general-close-sml-tests"
+		  "general-close-haskell-tests"
                   "general-close-emacs-lisp-tests"
                   "general-close-js-tests"
                   "general-close-php-tests"

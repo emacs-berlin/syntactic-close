@@ -1,4 +1,4 @@
-;;; general-close-c-tests.el --- -*- lexical-binding: t; -*-
+;;; general-close-sml-tests.el --- -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -24,15 +24,15 @@
 
 ;;; Code:
 
-
 ;; Test succeeds at general-close-interactive-tests.el but fails in batch-mode
-
-(ert-deftest general-close-c-nesting-comment-test ()
-  (general-close-test "/* The open system call "
-    'c-mode
+(ert-deftest general-close-sml-comment-test ()
+  (general-close-test "(* definition of nat"
+    (if (featurep 'sml-mode) 'sml-mode
+      ;; an alternative sml-mode, not published yet maybe
+      (when (featurep 'asml-mode) 'asml-mode))
     'general-close-debug-p
     (general-close)
-    (should (eq (char-before) ?/))))
+    (should (eq (char-before) ?\)))))
 
-(provide 'general-close-c-tests)
-;;; general-close-c-tests.el ends here
+(provide 'general-close-sml-tests)
+;;; general-close-sml-tests.el ends here

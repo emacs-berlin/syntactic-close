@@ -36,8 +36,8 @@ BODY is code to be executed within the temp buffer "
   (declare (indent 1) (debug t))
   `(with-temp-buffer
      (let (hs-minor-mode)
-       (funcall ,mode)
        (insert ,contents)
+       (funcall ,mode)
        (when ,verbose
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))

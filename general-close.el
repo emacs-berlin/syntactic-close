@@ -349,12 +349,34 @@ See `general-close-command-separator-char'"
      (t (setq done (general-close--intern orig closer pps))))
     done))
 
+(defun general-close--comments-intern (orig start end)
+  (if (looking-at start)
+      (progn (goto-char orig)
+	     (insert end))
+    (goto-char orig)
+    (newline-and-indent)))
+
+(defun general-close--insert-comment-end-maybe (pps)
+  (let ((orig (point))
+	done)
+    (cond
+     ((eq major-mode 'haskell-mode)
+      (goto-char (nth 8 pps))
+      (general-close--comments-intern orig "{-" "-}")
+      (setq done t))
+     ((or (eq major-mode 'c++-mode) (eq major-mode 'c-mode)) 
+      (goto-char (nth 8 pps))
+      (general-close--comments-intern orig "/*" "*/")
+      (setq done t))
+
+     )
+    done))
+
 (defun general-close--travel-comments-maybe (pps)
   (let (done)
-    (if (and (nth 4 pps) (nth 8 pps) (not (string= "" comment-end)))
-	(progn
-	  (insert comment-end)
-	  (setq done t))
+    (or (and (nth 4 pps) (nth 8 pps)
+	     ;; (not (string= "" comment-end))
+	     (setq done (general-close--insert-comment-end-maybe pps)))
       (while (and (setq pps (parse-partial-sexp (point-min) (point))) (nth 4 pps) (nth 8 pps))
 	(goto-char (nth 8 pps))
 	(skip-chars-backward " \t\r\n\f")))
@@ -373,6 +395,7 @@ See `general-close-command-separator-char'"
 		(point-min)))
 	 (pps (parse-partial-sexp beg (point)))
 	 done orig closer)
+    ;; ml-modes use sgml-close-tag 
     (setq done (general-close--travel-comments-maybe pps))
     (unless done
       (setq orig (point))

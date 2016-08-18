@@ -54,5 +54,11 @@
     (skip-syntax-backward "w")
     (should (looking-at "PLANT"))))
 
+(ert-deftest general-close--nxml-close-comment-test ()
+  (general-close-test-with-nxml-buffer
+      "<!-- <CATALOG> "
+    (general-close)
+    (should (eq (char-before) ?>))))
+
 (provide 'general-close-ml-tests)
 ;;; general-close-emacs-lisp-tests.el ends here
