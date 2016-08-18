@@ -27,9 +27,7 @@
 ;; Test succeeds at general-close-interactive-tests.el but fails in batch-mode
 (ert-deftest general-close-sml-comment-test ()
   (general-close-test "(* definition of nat"
-    (if (featurep 'sml-mode) 'sml-mode
-      ;; an alternative sml-mode, not published yet maybe
-      (when (featurep 'asml-mode) 'asml-mode))
+    'sml-mode
     'general-close-debug-p
     (general-close)
     (should (eq (char-before) ?\)))))

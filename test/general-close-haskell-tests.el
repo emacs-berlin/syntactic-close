@@ -24,15 +24,12 @@
 
 ;;; Code:
 
-;; Test succeeds at general-close-interactive-tests.el but fails in batch-mode
 (ert-deftest general-close-haskell-comment-test ()
   (general-close-test "{- To explore this file: "
-    (if (featurep 'haskell-mode) 'haskell-mode
-      ;; an alternative haskell-mode, not published yet maybe
-      (when (featurep 'haskell-mode) 'haskell-mode))
+    'haskell-mode
     'general-close-debug-p
     (general-close)
-    (should (eq (char-before) ?}))))
+    (should (eq (char-before) ?\}))))
 
 (provide 'general-close-haskell-tests)
 ;;; general-close-haskell-tests.el ends here
