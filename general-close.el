@@ -117,7 +117,7 @@ conditionals closed by a colon for example. ")
   "`parse-partial-sexp' must scan only from last prompt. ")
 (setq general-close-known-comint-modes (list 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML))
 
-;; (defvar general-close-empty-line-p-chars nil)
+(defvar general-close-empty-line-p-chars "^[ \t\r]*$")
 (defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
   "general-close-empty-line-p-chars"
   :type 'regexp
@@ -317,7 +317,7 @@ See `general-close-command-separator-char'"
     (setq done t)
     done))
 
-(defun general-close-comint (pps closer orig)
+(defun general-close-comint (closer)
   (let (done)
     (cond (closer
 	   (insert closer)
@@ -332,9 +332,9 @@ See `general-close-command-separator-char'"
   (let (done)
     (cond
      ((member major-mode general-close-known-comint-modes)
-      (setq done (general-close-comint pps closer orig)))
+      (setq done (general-close-comint closer)))
      ((eq major-mode 'php-mode)
-      (setq done (general-close--php-check pps closer)))
+      (setq done (general-close--php-check closer)))
      ((eq major-mode 'python-mode)
       (setq done (general-close-python-close closer)))
      ((eq major-mode 'ruby-mode)

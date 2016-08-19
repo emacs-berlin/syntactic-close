@@ -72,7 +72,7 @@
 	   (if (ignore-errors (functionp 'py-backward-statement))
 	       'py-backward-statement
 	     (lambda ()(beginning-of-line)(back-to-indentation))))
-	  (general-close-beginning-of-block-re py-block-re)
+	  (general-close-beginning-of-block-re "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*")
 	  done)
       (cond ((and (not (char-equal ?: (char-before)))
 		  (save-excursion
@@ -116,7 +116,7 @@
       done)))
 
 ;; Php
-(defun general-close--php-check (pps closer)
+(defun general-close--php-check (closer)
   (let ((orig (point))
 	done)
     (cond ((and (eq closer ?})(general-close-empty-line-p))

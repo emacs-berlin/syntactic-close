@@ -24,12 +24,12 @@
 
 ;;; Code:
 
-(ert-deftest general-close-haskell-comment-test ()
-  (general-close-test "{- To explore this file: "
-    'haskell-mode
-    'general-close-debug-p
-    (general-close)
-    (should (eq (char-before) ?\}))))
+;; (ert-deftest general-close-haskell-comment-test ()
+;;   (general-close-test "{- To explore this file: "
+;;     'haskell-mode
+;;     'general-close-debug-p
+;;     (general-close)
+;;     (should (eq (char-before) ?\}))))
 
 (provide 'general-close-haskell-tests)
 ;;; general-close-haskell-tests.el ends here

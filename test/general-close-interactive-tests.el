@@ -27,8 +27,7 @@
 (ert-deftest general-close-close-ruby-block-test ()
   (general-close-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW|"
     (general-close)
-    (should (eq (char-before) ?d))
-    (should (looking-at "end"))))
+    (should (eq (char-before) ?d))))
 
 (ert-deftest general-close-c-nesting-comment-test ()
   (general-close-test "/* The open system call "
@@ -36,6 +35,27 @@
     'general-close-debug-p
     (general-close)
     (should (eq (char-before) ?/))))
+
+(ert-deftest general-close-c++-nesting-comment-test ()
+  (general-close-test "/* The open system call "
+    'c++-mode
+    'general-close-debug-p
+    (general-close)
+    (should (eq (char-before) ?/))))
+
+(ert-deftest general-close-haskell-comment-test ()
+  (general-close-test "{- To explore this file: "
+    'haskell-mode
+    'general-close-debug-p
+    (general-close)
+    (should (eq (char-before) ?\}))))
+
+(ert-deftest general-close-sml-comment-test ()
+  (general-close-test "(* definition of nat"
+    'sml-mode
+    'general-close-debug-p
+    (general-close)
+    (should (eq (char-before) ?\)))))
 
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here
