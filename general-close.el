@@ -217,6 +217,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 ;; 	   (general-close--return-compliment-char-maybe (char-after))))))
 
 (defun general-close--fetch-delimiter-maybe (pps)
+  "Close lists resp. strings if inside. "
   (let (erg closer)
 
     (cond ((nth 3 pps)
@@ -317,7 +318,7 @@ See `general-close-command-separator-char'"
     (setq done t)
     done))
 
-(defun general-close-comint (closer)
+(defun general-close-comint (&optional closer)
   (let (done)
     (cond (closer
 	   (insert closer)
@@ -328,11 +329,9 @@ See `general-close-command-separator-char'"
 	     (setq done (general-close--comint-send))))
     done))
 
-(defun general-close--modes (pps closer orig)
+(defun general-close--modes (pps orig &optional closer)
   (let (done)
     (cond
-     ((member major-mode general-close-known-comint-modes)
-      (setq done (general-close-comint closer)))
      ((eq major-mode 'php-mode)
       (setq done (general-close--php-check closer)))
      ((eq major-mode 'python-mode)
@@ -402,7 +401,9 @@ See `general-close-command-separator-char'"
       (setq orig (point))
       ;; in string or list?
       (setq closer (general-close--fetch-delimiter-maybe pps))
-      (setq done (general-close--modes pps closer orig))
+      (if (member major-mode general-close-known-comint-modes)
+	  (setq done (general-close-comint closer))
+	(setq done (general-close--modes pps orig closer)))
       (unless done (setq done (when closer (progn (insert closer) t))))
       (unless done
 	(if gc-comint-p
