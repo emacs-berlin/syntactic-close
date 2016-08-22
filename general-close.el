@@ -428,16 +428,14 @@ See `general-close-command-separator-char'"
 		(message "%s" (current-buffer))
 		(re-search-backward comint-prompt-regexp nil t 1)
 		(looking-at comint-prompt-regexp)
-		(message "%s" (match-end 0))
-		(setq gc-comint-p t)))
+		(message "%s" (match-end 0))))
 	 (match-end 0))
 	(t (point-min))))
 
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
-  (let* (gc-comint-p
-	 (beg (general-close--point-min))
+  (let* ((beg (general-close--point-min))
 	 (pps (parse-partial-sexp beg (point)))
 	 done orig closer)
     ;; ml-modes use sgml-close-tag
@@ -451,11 +449,11 @@ See `general-close-command-separator-char'"
 	(setq done (general-close--modes pps orig closer)))
       (unless done (setq done (when closer (progn (insert closer) t))))
       (unless done
-	(if gc-comint-p
-	    (comint-send-input)
-	  (newline))))
-    (when general-close-electric-indent-p
-      (indent-according-to-mode))))
+	(member major-mode general-close-known-comint-modes)
+	(comint-send-input)
+	(newline))))
+  (when general-close-electric-indent-p
+    (indent-according-to-mode)))
 
 (provide 'general-close)
 ;;; general-close.el ends here

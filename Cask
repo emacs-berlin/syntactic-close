@@ -6,8 +6,8 @@
 (files "general-close.el" "general-close-modes.el")
 
 (development
+ (depends-on "haskell")
  (depends-on "php-mode")
  (depends-on "sml-mode")
- (depends-on "haskell-mode")
  (depends-on "python-mode")
- (depends-on "haskell-mode"))
+ )

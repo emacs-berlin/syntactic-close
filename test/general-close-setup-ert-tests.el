@@ -21,6 +21,18 @@
 ;;; Commentary:
 
 ;;; Code:
+;; (defvar emacs-verzeichnis "~/emacs-25.1")
+;; (if (file-readable-p emacs-verzeichnis)
+;;   (add-to-list 'load-path (concat emacs-verzeichnis "/lisp/emacs-lisp/"))
+;;   (message "%s" "Maybe edit emacs-verzeichnis"))
+;; (require 'cl-preloaded)
+;; (if (file-readable-p "~/.emacs.d/elpa/")
+;;        (add-to-list 'load-path "~/.emacs.d/elpa/sml-mode-6.7")
+;;   (message "%s" "elpa archiv not found"))
+(require 'haskell)
+
+(load "~/werkstatt/misc/sml-mode.el" nil t)
+(require 'sml-mode)
 
 (setq general-close-install-directory default-directory)
 (sit-for 0.1 t)
