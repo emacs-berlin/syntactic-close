@@ -96,6 +96,24 @@ Default is nil"
   :tag "general-close--semicolon-separator-modes"
   :group 'general-close)
 
+
+(defvar general-close-comint-pre-assignment-re   "let [alpha][A-Za-z0-9_]")
+(defcustom general-close-comint-pre-assignment-re
+  "let [alpha][A-Za-z0-9_]"
+  "Insert \"=\" when looking back. "
+  :type 'string
+  :tag "general-close-comint-pre-assignment-re"
+  :group 'general-close)
+
+(defvar general-close-pre-assignment-re   "[alpha][A-Za-z0-9_]")
+;; (setq general-close-pre-assignment-re   "[alpha][A-Za-z0-9_]")
+(defcustom general-close-pre-assignment-re
+  "[alpha][A-Za-z0-9_]"
+  "Insert \"=\" when looking back. "
+  :type 'string
+  :tag "general-close-pre-assignment-re"
+  :group 'general-close)
+
 (defvar general-close-verbose-p nil)
 
 (defvar general-close-keywords nil
@@ -113,9 +131,9 @@ conditionals closed by a colon for example. ")
 (defvar general-close-list-separator-char ?,
   "This char might be modified internally. ")
 
-(defvar general-close-known-comint-modes (list 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML)
+(defvar general-close-known-comint-modes (list 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode)
   "`parse-partial-sexp' must scan only from last prompt. ")
-(setq general-close-known-comint-modes (list 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML))
+;; (setq general-close-known-comint-modes (list 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode))
 
 (defvar general-close-empty-line-p-chars "^[ \t\r]*$")
 (defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
@@ -308,7 +326,8 @@ See `general-close-command-separator-char'"
      ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
       (setq general-close-command-separator-char ?\:)
       (setq done (general-close--handle-separator-modes orig closer)))
-     (t (setq done (general-close--insert-delimiter-char-maybe orig closer))))
+     (closer (setq done (general-close--insert-delimiter-char-maybe orig closer)))
+     (t (setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re))))
     done))
 
 (defun general-close--comint-send ()
@@ -318,13 +337,33 @@ See `general-close-command-separator-char'"
     (setq done t)
     done))
 
-(defun general-close-comint (&optional closer)
+(defun general-close--insert-assignment ()
+  (fixup-whitespace)
+  (if (eq (char-before) ?\ )
+      (insert "= ")
+    (insert " = ")))
+
+(defun general-close--insert-assignment-maybe (beg regexp)
+  (let (done)
+    (when (save-excursion
+	    (goto-char beg)
+	    (skip-chars-forward " \t\r\n\f")
+	    (looking-at regexp))
+      (general-close--insert-assignment)
+      (setq done t))
+    done))
+
+(defun general-close-comint (beg &optional closer)
   (let (done)
     (cond (closer
 	   (insert closer)
 	   (setq done t))
 	  ((eq (char-before) general-close-command-separator-char)
 	   (setq done (general-close--comint-send)))
+	  ;; if looking back at "let myVar " assume "="
+
+	  ((general-close--insert-assignment-maybe beg general-close-comint-pre-assignment-re)
+	   (setq done t))
 	  (t (insert general-close-command-separator-char)
 	     (setq done (general-close--comint-send))))
     done))
@@ -382,17 +421,23 @@ See `general-close-command-separator-char'"
 	    (skip-chars-backward " \t\r\n\f" (line-beginning-position)))))
     done))
 
+(defun general-close--point-min ()
+  (cond ((and (eq major-mode 'haskell-interactive-mode) haskell-interactive-mode-prompt-start))
+	((save-excursion
+	   (and (member major-mode general-close-known-comint-modes) comint-prompt-regexp
+		(message "%s" (current-buffer))
+		(re-search-backward comint-prompt-regexp nil t 1)
+		(looking-at comint-prompt-regexp)
+		(message "%s" (match-end 0))
+		(setq gc-comint-p t)))
+	 (match-end 0))
+	(t (point-min))))
+
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
   (let* (gc-comint-p
-	 (beg (if (member major-mode general-close-known-comint-modes)
-		  (save-excursion
-		    (when comint-prompt-regexp
-		      (progn
-			(setq gc-comint-p t)
-			(re-search-backward comint-prompt-regexp nil t 1))))
-		(point-min)))
+	 (beg (general-close--point-min))
 	 (pps (parse-partial-sexp beg (point)))
 	 done orig closer)
     ;; ml-modes use sgml-close-tag
@@ -402,7 +447,7 @@ See `general-close-command-separator-char'"
       ;; in string or list?
       (setq closer (general-close--fetch-delimiter-maybe pps))
       (if (member major-mode general-close-known-comint-modes)
-	  (setq done (general-close-comint closer))
+	  (setq done (general-close-comint beg closer))
 	(setq done (general-close--modes pps orig closer)))
       (unless done (setq done (when closer (progn (insert closer) t))))
       (unless done
