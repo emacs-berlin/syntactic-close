@@ -115,6 +115,18 @@
       (setq done (general-close--ruby-insert-end))
       done)))
 
+(defun general-close-haskell-close (beg &optional closer)
+  (let (
+	;; (closer (or closer (general-close--generic-fetch-delimiter-maybe)))
+	done)
+    (if closer
+	(progn
+	  (insert closer)
+	  (setq done t))
+      (or (setq done (general-close--right-arrow-maybe beg general-close-pre-right-arrow-re))
+	  (setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
+      done)))
+
 ;; Php
 (defun general-close--php-check (closer)
   (let ((orig (point))

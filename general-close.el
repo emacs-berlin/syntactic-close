@@ -114,6 +114,23 @@ Default is nil"
   :tag "general-close-pre-assignment-re"
   :group 'general-close)
 
+(defvar general-close-comint-pre-right-arrow-re   "let [alpha][A-Za-z0-9_] +::")
+(defcustom general-close-comint-pre-right-arrow-re
+  "let [alpha][A-Za-z0-9_] +::"
+  "Insert \"=\" when looking back. "
+  :type 'string
+  :tag "general-close-comint-pre-right-arrow-re"
+  :group 'general-close)
+
+(defvar general-close-pre-right-arrow-re   "[alpha][A-Za-z0-9_]+ +::")
+;; (setq general-close-pre-right-arrow-re   "[alpha][A-Za-z0-9_]+ +::")
+(defcustom general-close-pre-right-arrow-re
+  "[alpha][A-Za-z0-9_]+ +::"
+  "Insert \"=\" when looking back. "
+  :type 'string
+  :tag "general-close-pre-right-arrow-re"
+  :group 'general-close)
+
 (defvar general-close-verbose-p nil)
 
 (defvar general-close-keywords nil
@@ -337,11 +354,11 @@ See `general-close-command-separator-char'"
     (setq done t)
     done))
 
-(defun general-close--insert-assignment ()
+(defun general-close--insert-and-fixup (char)
   (fixup-whitespace)
   (if (eq (char-before) ?\ )
-      (insert "= ")
-    (insert " = ")))
+      (insert (concat char " "))
+      (insert (concat " " char " "))))
 
 (defun general-close--insert-assignment-maybe (beg regexp)
   (let (done)
@@ -349,7 +366,17 @@ See `general-close-command-separator-char'"
 	    (goto-char beg)
 	    (skip-chars-forward " \t\r\n\f")
 	    (looking-at regexp))
-      (general-close--insert-assignment)
+      (general-close--insert-and-fixup "=")
+      (setq done t))
+    done))
+
+(defun general-close--right-arrow-maybe (beg regexp)
+  (let (done)
+    (when (save-excursion
+	    (goto-char beg)
+	    (skip-chars-forward " \t\r\n\f")
+	    (looking-at regexp))
+      (general-close--insert-and-fixup "->")
       (setq done t))
     done))
 
@@ -368,7 +395,7 @@ See `general-close-command-separator-char'"
 	     (setq done (general-close--comint-send))))
     done))
 
-(defun general-close--modes (pps orig &optional closer)
+(defun general-close--modes (beg pps orig &optional closer)
   (let (done)
     (cond
      ((eq major-mode 'php-mode)
@@ -379,6 +406,8 @@ See `general-close-command-separator-char'"
       (setq done (general-close-ruby-close closer)))
      ((member major-mode general-close--ml-modes)
       (setq done (general-close-ml)))
+     ((eq major-mode 'haskell-mode)
+      (setq done (general-close-haskell-close beg closer)))
      (t (setq done (general-close--intern orig closer pps))))
     done))
 
@@ -446,7 +475,7 @@ See `general-close-command-separator-char'"
       (setq closer (general-close--fetch-delimiter-maybe pps))
       (if (member major-mode general-close-known-comint-modes)
 	  (setq done (general-close-comint beg closer))
-	(setq done (general-close--modes pps orig closer)))
+	(setq done (general-close--modes beg pps orig closer)))
       (unless done (setq done (when closer (progn (insert closer) t))))
       (unless done
 	(member major-mode general-close-known-comint-modes)
