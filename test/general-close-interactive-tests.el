@@ -50,6 +50,14 @@
     (general-close)
     (should (eq (char-before) ?\}))))
 
+(ert-deftest general-close-haskell-assignment-test ()
+  (general-close-test "asdf "
+    'haskell-mode
+    'general-close-debug-p
+    (general-close)
+    (skip-chars-backward " \t\r\n\f") 
+    (should (eq (char-before) ?=))))
+
 (ert-deftest general-close-sml-comment-test ()
   (general-close-test "(* definition of nat"
     'sml-mode

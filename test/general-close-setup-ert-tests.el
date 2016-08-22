@@ -29,10 +29,10 @@
 ;; (if (file-readable-p "~/.emacs.d/elpa/")
 ;;        (add-to-list 'load-path "~/.emacs.d/elpa/sml-mode-6.7")
 ;;   (message "%s" "elpa archiv not found"))
-(require 'haskell)
+;; (require 'haskell)
 
-(load "~/werkstatt/misc/sml-mode.el" nil t)
-(require 'sml-mode)
+;; (load "~/werkstatt/misc/sml-mode.el" nil t)
+;; (require 'sml-mode)
 
 (setq general-close-install-directory default-directory)
 (sit-for 0.1 t)
