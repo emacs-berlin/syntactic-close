@@ -42,5 +42,16 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
+
+(ert-deftest general-close--char-class-test ()
+  (general-close-test-with-elisp-buffer
+    "(string-match \"[[:alpha:]"
+    (general-close)
+    (should (eq (char-before) ?\]))
+    (general-close)
+    (should (eq (char-before) ?\"))))
+
+
+
 (provide 'general-close-emacs-lisp-tests)
 ;;; general-close-emacs-lisp-tests.el ends here

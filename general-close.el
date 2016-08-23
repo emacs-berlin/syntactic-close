@@ -64,6 +64,15 @@ Default is nil"
   :tag "general-close-electric-indent-p"
   :group 'general-close)
 
+(defcustom general-close-electric-newline-p nil
+  "Insert a newline if feasible.
+
+Default is nil"
+
+  :type 'boolean
+  :tag "general-close-electric-newline-p"
+  :group 'general-close)
+
 (defcustom general-close--semicolon-separator-modes
   (list
    'js-mode
@@ -110,10 +119,10 @@ Default is nil"
   :tag "general-close-comint-pre-assignment-re"
   :group 'general-close)
 
-(defvar general-close-pre-assignment-re   "[alpha][A-Za-z0-9_]")
-;; (setq general-close-pre-assignment-re   "[alpha][A-Za-z0-9_]")
+(defvar general-close-pre-assignment-re   "[alpha][A-Za-z0-9_]+")
+;; (setq general-close-pre-assignment-re   "[alpha][A-Za-z0-9_]+[ \t]+[^\:]*")
 (defcustom general-close-pre-assignment-re
-  "[alpha][A-Za-z0-9_]"
+  "[alpha][A-Za-z0-9_]+"
   "Insert \"=\" when looking back. "
   :type 'string
   :tag "general-close-pre-assignment-re"
@@ -257,33 +266,29 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	      (t (skip-chars-backward "^\"{\(\[\]\)}")))))
     (insert closer)))
 
-(defun general-close--in-string-interpolation-maybe (pps)
-  (and (< 0 (abs (skip-syntax-backward "\\sw")))
-       (member (char-before) (list ?\( ?{ ?\[))
-       (member (char-before (1- (point))) (list ?% ?#))
-       (< (nth 8 pps) (point))
-       (general-close--return-compliment-char-maybe (char-before))))
+(defun general-close--list-inside-string-maybe (strg)
+  (with-temp-buffer
+    (insert strg)
+    ;; (switch-to-buffer (current-buffer))
+    (let ((pps (parse-partial-sexp (point-min) (point))))
+      (when (nth 1 pps)
+	(save-excursion
+	  (goto-char (nth 1 pps))
+	  (general-close--return-compliment-char-maybe (char-after)))))))
 
-;; (defun general-close--in-string-interpolation-maybe (pps)
-;;   (cond ((and (ignore-errors (< (nth 1 pps) (nth 8 pps))))
-;; 	 (save-excursion
-;; 	   (goto-char (nth 8 pps))
-
-;; 	   (general-close--return-compliment-char-maybe (char-after))))))
 
 (defun general-close--fetch-delimiter-maybe (pps)
-  "Close lists resp. strings if inside. "
-  (let (erg closer)
-
+  "Close the innermost list resp. string. "
+  (let (erg closer strg done)
     (cond ((nth 3 pps)
 	   (save-excursion
-	     (or
-	      ;; sets closer to compliment character
-	      (setq closer (general-close--in-string-interpolation-maybe pps))
-	      ;; returns a list to construct TQS maybe
-	      (and (setq erg (general-close--in-string-p-intern pps))
-		   (setq closer (make-string (nth 2 erg)(nth 1 erg))))))
-	   closer)
+	     (setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
+	     (if (setq closer (general-close--list-inside-string-maybe strg))
+		 closer
+	       ;; returns a list to construct TQS maybe
+	       (and (setq erg (general-close--in-string-p-intern pps))
+		    (setq closer (make-string (nth 2 erg)(nth 1 erg)))))
+	     closer))
 	  ((nth 1 pps)
 	   (save-excursion
 	     (goto-char (nth 1 pps))
@@ -423,7 +428,7 @@ See `general-close-command-separator-char'"
 (defun general-close--modes (beg pps orig &optional closer)
   (let (done)
     (cond
-     ((eq major-mode 'php-mode)
+     ((or (eq major-mode 'php-mode) (eq major-mode 'js-mode))
       (setq done (general-close--php-check closer)))
      ((eq major-mode 'python-mode)
       (setq done (general-close-python-close closer)))
@@ -486,6 +491,16 @@ See `general-close-command-separator-char'"
 	 (match-end 0))
 	(t (point-min))))
 
+(defun general-close--in-known-comint (beg &optional closer)
+  (let (done)
+    (setq done (general-close-comint beg closer))
+    (unless done
+      ;; maybe no char, but input to send
+      (comint-send-input)
+      (newline)
+      (setq done t))
+    done))
+
 (defun general-close ()
   "Command will insert closing delimiter whichever needed. "
   (interactive "*")
@@ -496,20 +511,21 @@ See `general-close-command-separator-char'"
     (setq done (general-close--travel-comments-maybe pps))
     (unless done
       (setq orig (point))
-      ;; in string or list?
+      ;; mode-independent in string or list?
       (setq closer (general-close--fetch-delimiter-maybe pps))
+      (when closer
+	(unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
+	  (setq done t)
+	  (insert closer))))
+    (unless done 
       (if (member major-mode general-close-known-comint-modes)
-	  (setq done (general-close-comint beg closer))
-	(setq done (general-close--modes beg pps orig closer)))
-      (unless done (setq done (when closer (progn (insert closer) t))))
-      (unless done
-	(when
-	    ;; maybe no char, but input to send
-	    (member major-mode general-close-known-comint-modes)
-	  (comint-send-input)
-	  (newline)))))
-  (when general-close-electric-indent-p
-    (indent-according-to-mode)))
+	  (setq done (general-close--in-known-comint beg closer))
+	(setq done (general-close--modes beg pps orig closer))))
+    (unless done
+      (and general-close-electric-newline-p (not (general-close-empty-line-p))
+	   (newline))
+      (when general-close-electric-indent-p
+	(indent-according-to-mode)))))
 
 (provide 'general-close)
 ;;; general-close.el ends here
