@@ -34,5 +34,13 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
+(ert-deftest general-close--elisp-list-test ()
+  (general-close-test-with-elisp-buffer
+    "(member (list 'asdf"
+    (general-close)
+    (should (eq (char-before) ?\)))
+    (general-close)
+    (should (eq (char-before) ?\)))))
+
 (provide 'general-close-emacs-lisp-tests)
 ;;; general-close-emacs-lisp-tests.el ends here

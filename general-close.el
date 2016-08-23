@@ -49,6 +49,12 @@ Default is nil"
   :tag "general-close-delete-whitespace-backward-p"
   :group 'general-close)
 
+(defcustom general-close-guess-p nil
+  "When non-nil, guess default arguments, list-separators etc. "
+  :type 'boolean
+  :tag "general-close-guess-p"
+  :group 'general-close)
+
 (defcustom general-close-electric-indent-p nil
   "When `t', after insert at empty line indent according to mode.
 
@@ -129,6 +135,20 @@ Default is nil"
   "Insert \"=\" when looking back. "
   :type 'string
   :tag "general-close-pre-right-arrow-re"
+  :group 'general-close)
+
+(defcustom general-close-default-argument-1
+  "x"
+  "Insert a \"x\" maybe when general-close-guess-p is `t'. "
+  :type 'string
+  :tag "general-close-default-argument-1"
+  :group 'general-close)
+
+(defcustom general-close-default-argument-2
+  "y"
+  "Insert an \"y\" maybe when general-close-guess-p is `t'. "
+  :type 'string
+  :tag "general-close-default-argument-2"
   :group 'general-close)
 
 (defvar general-close-verbose-p nil)
