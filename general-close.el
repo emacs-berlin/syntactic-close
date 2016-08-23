@@ -503,9 +503,11 @@ See `general-close-command-separator-char'"
 	(setq done (general-close--modes beg pps orig closer)))
       (unless done (setq done (when closer (progn (insert closer) t))))
       (unless done
-	(member major-mode general-close-known-comint-modes)
-	(comint-send-input)
-	(newline))))
+	(when
+	    ;; maybe no char, but input to send
+	    (member major-mode general-close-known-comint-modes)
+	  (comint-send-input)
+	  (newline)))))
   (when general-close-electric-indent-p
     (indent-according-to-mode)))
 
