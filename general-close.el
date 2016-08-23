@@ -96,7 +96,6 @@ Default is nil"
   :tag "general-close--semicolon-separator-modes"
   :group 'general-close)
 
-
 (defvar general-close-comint-pre-assignment-re   "let [alpha][A-Za-z0-9_]")
 (defcustom general-close-comint-pre-assignment-re
   "let [alpha][A-Za-z0-9_]"
@@ -114,9 +113,10 @@ Default is nil"
   :tag "general-close-pre-assignment-re"
   :group 'general-close)
 
-(defvar general-close-comint-pre-right-arrow-re   "let [alpha][A-Za-z0-9_] +::")
+(defvar general-close-comint-pre-right-arrow-re   "let [alpha][A-Za-z0-9_]+ +::")
+;; (setq general-close-comint-pre-right-arrow-re   "let [alpha][A-Za-z0-9_]+ +::")
 (defcustom general-close-comint-pre-right-arrow-re
-  "let [alpha][A-Za-z0-9_] +::"
+  "let [alpha][A-Za-z0-9_]+ +::"
   "Insert \"=\" when looking back. "
   :type 'string
   :tag "general-close-comint-pre-right-arrow-re"
@@ -380,17 +380,22 @@ See `general-close-command-separator-char'"
       (setq done t))
     done))
 
+(defun general-close--which-right-arrow-regex ()
+  (cond ((member major-mode  (list 'haskell-interactive-mode 'inferior-haskell-mode))
+	 general-close-comint-haskell-pre-right-arrow-re)
+	(t general-close-comint-pre-right-arrow-re)))
+
 (defun general-close-comint (beg &optional closer)
-  (let (done)
+  (let ((right-arrow-re (general-close--which-right-arrow-regex))
+	done)
     (cond (closer
 	   (insert closer)
 	   (setq done t))
 	  ((eq (char-before) general-close-command-separator-char)
 	   (setq done (general-close--comint-send)))
+	  ((setq done (general-close--right-arrow-maybe beg right-arrow-re)))
 	  ;; if looking back at "let myVar " assume "="
-
-	  ((general-close--insert-assignment-maybe beg general-close-comint-pre-assignment-re)
-	   (setq done t))
+	  ((setq done (general-close--insert-assignment-maybe beg general-close-pre-assignment-re)))
 	  (t (insert general-close-command-separator-char)
 	     (setq done (general-close--comint-send))))
     done))
@@ -451,7 +456,7 @@ See `general-close-command-separator-char'"
     done))
 
 (defun general-close--point-min ()
-  (cond ((and (eq major-mode 'haskell-interactive-mode) haskell-interactive-mode-prompt-start))
+  (cond ((and (member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode)) haskell-interactive-mode-prompt-start))
 	((save-excursion
 	   (and (member major-mode general-close-known-comint-modes) comint-prompt-regexp
 		(message "%s" (current-buffer))

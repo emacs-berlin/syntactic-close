@@ -28,6 +28,15 @@
 (require 'sgml-mode)
 (require 'comint)
 
+(defvar general-close-comint-haskell-pre-right-arrow-re   "let [alpha][A-Za-z0-9_]+ +::")
+;; (setq general-close-comint-haskell-pre-right-arrow-re   "let [alpha][A-Za-z0-9_]+ +::")
+(defcustom general-close-comint-haskell-pre-right-arrow-re
+  "let [alpha][A-Za-z0-9_]+ +::"
+  "Insert \"=\" when looking back. "
+  :type 'string
+  :tag "general-close-comint-haskell-pre-right-arrow-re"
+  :group 'general-close)
+
 ;; Ml
 (defun general-close-ml ()
   (interactive "*")
