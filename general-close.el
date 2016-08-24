@@ -19,17 +19,23 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary: A still naive implementation of a general-close
-;;  command. A first draft was published at emacs-devel list:
-;;
-;; http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
+;;; Commentary: Should close any syntactic element in code.
 
-;;
+;; With optional `general-close-electric-listify-p' set to `t':
 
-;;; Code:
+;; ['a','a   ==> ['a','a'
+;; ['a','a'  ==> ['a','a',
+
+;; With `C-u'
+;; ['a','a', ==> ['a','a']
 
 ;; Some valid Emacs Lisp suitable for testing
 ;; (setq foo (list "([{123}])"))
+
+;; A first draft was published at emacs-devel list:
+;; http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
+
+;;; Code:
 
 (require 'general-close-modes)
 (require 'sgml-mode)
@@ -47,6 +53,46 @@ Default is nil"
 
   :type 'boolean
   :tag "general-close-delete-whitespace-backward-p"
+  :group 'general-close)
+
+(defcustom general-close-electric-listify-p nil
+  "When inside a list, assume list-separator.
+
+If after list-separator, replace it by closing the list
+Default is nil"
+
+  :type 'boolean
+  :tag "general-close-electric-listify-p"
+  :group 'general-close)
+
+(defcustom general-close-list-separator-char 44
+  "Char separating elements of a list.
+
+Only takes effect if `general-close-electric-listify-p' is `t'
+Default is `,'"
+
+  :type 'character
+  :tag "general-close-list-separator-char"
+  :group 'general-close)
+
+(defcustom general-close-list-element-delimiter-1 39
+  "Char delimiting elements of a list.
+
+Only takes effect if `general-close-electric-listify-p' is `t'
+Default is `''"
+
+  :type 'character
+  :tag "general-close-list-element-delimiter-1"
+  :group 'general-close)
+
+(defcustom general-close-list-element-delimiter-2 34
+  "Char delimiting elements of a list.
+
+Only takes effect if `general-close-electric-listify-p' is `t'
+Default is `\"'"
+
+  :type 'character
+  :tag "general-close-list-element-delimiter-2"
   :group 'general-close)
 
 (defcustom general-close-guess-p nil
@@ -276,7 +322,6 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	  (goto-char (nth 1 pps))
 	  (general-close--return-compliment-char-maybe (char-after)))))))
 
-
 (defun general-close--fetch-delimiter-maybe (pps)
   "Close the innermost list resp. string. "
   (let (erg closer strg done)
@@ -501,11 +546,54 @@ See `general-close-command-separator-char'"
       (setq done t))
     done))
 
-(defun general-close ()
-  "Command will insert closing delimiter whichever needed. "
-  (interactive "*")
+(defun general-close--common (&optional closer)
+  (when closer
+    (unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
+      (insert closer)
+      (setq done t))))
+
+(defun general-close--guess-list-element-delimiter ()
+  (save-excursion
+    (forward-char -1)
+    (cond
+     ((eq (char-before) general-close-list-element-delimiter-1)
+      general-close-list-element-delimiter-1)
+     ((eq (char-before) general-close-list-element-delimiter-2)
+      general-close-list-element-delimiter-2))))
+
+(defun general-close--electric (closer &optional force)
+  (let (done separator pps)
+    (if (and closer force)
+	(progn
+	  (when (eq (char-before) general-close-list-separator-char)
+	    (delete-char -1))
+	  (insert closer)
+	  (setq done t))
+      (setq pps (parse-partial-sexp (point-min) (point)))
+      (cond ((nth 3 pps)
+	     (insert (nth 3 pps))
+	     (setq done t))
+	    ((eq (char-before) general-close-list-separator-char)
+	     ;; open a new list element
+	     (if (setq separator (general-close--guess-list-element-delimiter))
+		 (progn
+		   (insert separator)
+		   (setq done t))
+	       (delete-char -1)
+	       (insert closer)
+	       (setq done t)))
+	    (t (insert general-close-list-separator-char)
+	       (setq done t))))
+    done))
+
+(defun general-close (&optional arg)
+  "Command will insert closing delimiter whichever needed.
+
+With \\[universal-argument]: close a list in electric modes. "
+  (interactive "P*")
   (let* ((beg (general-close--point-min))
 	 (pps (parse-partial-sexp beg (point)))
+	 (force (eq 4 (prefix-numeric-value arg)))
 	 done orig closer)
     ;; ml-modes use sgml-close-tag
     (setq done (general-close--travel-comments-maybe pps))
@@ -513,11 +601,10 @@ See `general-close-command-separator-char'"
       (setq orig (point))
       ;; mode-independent in string or list?
       (setq closer (general-close--fetch-delimiter-maybe pps))
-      (when closer
-	(unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
-	  (setq done t)
-	  (insert closer))))
-    (unless done 
+      (if (and closer general-close-electric-listify-p)
+	  (setq done (general-close--electric closer force))
+	(setq done (general-close--common closer))))
+    (unless done
       (if (member major-mode general-close-known-comint-modes)
 	  (setq done (general-close--in-known-comint beg closer))
 	(setq done (general-close--modes beg pps orig closer))))

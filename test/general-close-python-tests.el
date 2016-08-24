@@ -159,8 +159,37 @@ if __name__ == \"__main__\""
 
 (ert-deftest general-close-python-dict-test-1 ()
   (general-close-test-with-python-buffer
-      ;; "myExample = {'someItem': 2, 'otherItem': 20}"
      "myExample = {'someItem': 2, 'otherItem': 20}"
     (provide 'general-close-python-tests)))
+
+(ert-deftest general-close-python-electric-test-1 ()
+  (general-close-test-with-python-buffer
+      "['a"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?')))))
+
+(ert-deftest general-close-python-electric-test-2 ()
+  (general-close-test-with-python-buffer
+      "['a'"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?,)))))
+
+(ert-deftest general-close-python-electric-test-3 ()
+  (general-close-test-with-python-buffer
+      "['a',"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?')))))
+
+(ert-deftest general-close-python-electric-test-4 ()
+  (general-close-test-with-python-buffer
+      "['a','b',"
+    (let ((general-close-electric-listify-p t))
+      (general-close '(4))
+      (should (eq (char-before) ?\])))))
+
+(provide 'general-close-python-tests)
 
 ;;; general-close-python-tests.el ends here
