@@ -119,6 +119,16 @@ Default is nil"
   :tag "general-close-electric-newline-p"
   :group 'general-close)
 
+(defcustom general-close-auto-p nil
+  "Enable auto-close.
+
+If `t', M-x general-close will remove the auto-inserted.
+Default is nil"
+
+  :type 'boolean
+  :tag "general-close-auto-p"
+  :group 'general-close)
+
 (defcustom general-close--semicolon-separator-modes
   (list
    'js-mode
