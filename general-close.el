@@ -29,9 +29,6 @@
 ;; With `C-u'
 ;; ['a','b', ==> ['a','b']
 
-;; With `general-close-auto-p' after initializing a list for example
-;; like [" user has to type only the element-contents.
-
 ;; An explicit M-x general-close RET will then revert the
 ;; timer-triggered auto-closed, allowing to continue with contents
 
@@ -132,9 +129,9 @@ Default is nil"
   :group 'general-close)
 
 (defcustom general-close-auto-p nil
-  "Enable auto-close.
+  "Enable auto-close. Experienced users only.
 
-If `t', M-x general-close will remove the auto-inserted.
+If `t', lists will be auto-filled.
 Default is nil"
 
   :type 'boolean
@@ -596,17 +593,24 @@ See `general-close-command-separator-char'"
   (when (eq (char-before) general-close-list-separator-char)
     (delete-char -1)))
 
-(defun general-close--electric (closer orig &optional force)
-  (let (
-	done separator pps)
+(defun general-close-fetch-delimiter (pps)
+  "In some cases in (nth 3 pps only returns `t'. "
+  (save-excursion
+    (goto-char (nth 8 pps))
+    (char-after)))
+
+(defun general-close--electric (pps closer orig &optional force)
+  (let (done separator)
     (if (and closer force)
 	(progn
 	  ;; (general-close--cleanup-inserts)
 	  (insert closer)
 	  (setq done t))
-      (setq pps (parse-partial-sexp (point-min) (point)))
       (cond ((nth 3 pps)
-	     (insert (nth 3 pps))
+	     (if
+		 (eq t (nth 3 pps))
+		 (insert (char-to-string (general-close-fetch-delimiter pps)))
+	       (insert (nth 3 pps)))
 	     (setq done t))
 	    ((eq (char-before) general-close-list-separator-char)
 	     ;; open a new list element
@@ -629,7 +633,10 @@ With \\[universal-argument]: close a list in electric modes. "
   (let* ((beg (general-close--point-min))
 	 (force (eq 4 (prefix-numeric-value arg)))
 	 (orig (point))
+	 (counter 1)
 	 done closer pps)
+    (if (or (not general-close-auto-p) (and general-close-auto-p (eq general-close-auto-buffer (current-buffer))))
+	(progn 
     (when force (general-close--cleanup-inserts orig))
     (setq pps (parse-partial-sexp beg (point)))
     ;; ml-modes use sgml-close-tag
@@ -639,7 +646,7 @@ With \\[universal-argument]: close a list in electric modes. "
       ;; mode-independent in string or list?
       (setq closer (general-close--fetch-delimiter-maybe pps))
       (if (and closer general-close-electric-listify-p)
-	  (setq done (general-close--electric closer orig force))
+	  (setq done (general-close--electric pps closer orig force))
 	(setq done (general-close--common closer)))
       (unless done
 	(if (member major-mode general-close-known-comint-modes)
@@ -649,7 +656,9 @@ With \\[universal-argument]: close a list in electric modes. "
 	  (and general-close-electric-newline-p (not (general-close-empty-line-p))
 	       (newline))
 	  (when general-close-electric-indent-p
-	    (indent-according-to-mode)))))))
+	    (indent-according-to-mode))))))
+      (message "autoclose in wrong buffer %s" counter)
+      (setq counter (1+ counter)))))
 
 (provide 'general-close)
 ;;; general-close.el ends here
