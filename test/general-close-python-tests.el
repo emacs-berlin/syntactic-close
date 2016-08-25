@@ -190,6 +190,27 @@ if __name__ == \"__main__\""
       (general-close '(4))
       (should (eq (char-before) ?\])))))
 
+(ert-deftest general-close-python-electric-test-5 ()
+  (general-close-test-with-python-buffer
+      "[\"a\""
+    (let (general-close-electric-listify-p)
+      (general-close)
+      (should (eq (char-before) ?\])))))
+
+(ert-deftest general-close-python-electric-test-5 ()
+  (general-close-test-with-python-buffer
+      "[\"a\""
+    (let (general-close-electric-listify-p)
+      (general-close)
+      (should (eq (char-before) ?\])))))
+
+(ert-deftest general-close-python-electric-test-6 ()
+  (general-close-test-with-python-buffer
+      "[\"a\",\""
+    (let ((general-close-electric-listify-p t))
+      (general-close '(4)) 
+      (should (eq (char-before) ?\])))))
+
 (provide 'general-close-python-tests)
 
 ;;; general-close-python-tests.el ends here

@@ -19,15 +19,21 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary: Should close any syntactic element in code.
+;;; Commentary: M-x general-close RET: close any syntactic element.
 
 ;; With optional `general-close-electric-listify-p' set to `t':
 
-;; ['a','a   ==> ['a','a'
-;; ['a','a'  ==> ['a','a',
+;; ['a','b   ==> ['a','b'
+;; ['a','b'  ==> ['a','b',
 
 ;; With `C-u'
-;; ['a','a', ==> ['a','a']
+;; ['a','b', ==> ['a','b']
+
+;; With `general-close-auto-p' after initializing a list for example
+;; like [" user has to type only the element-contents.
+
+;; An explicit M-x general-close RET will then revert the
+;; timer-triggered auto-closed, allowing to continue with contents
 
 ;; Some valid Emacs Lisp suitable for testing
 ;; (setq foo (list "([{123}])"))
@@ -577,12 +583,18 @@ See `general-close-command-separator-char'"
      ((eq (char-before) general-close-list-element-delimiter-2)
       general-close-list-element-delimiter-2))))
 
-(defun general-close--electric (closer &optional force)
-  (let (done separator pps)
+(defun general-close--cleanup-inserts (orig)
+  (when (< 0 (abs (skip-chars-backward (concat "^" (char-to-string general-close-list-separator-char)))))
+    (delete-region (point) orig))
+  (when (eq (char-before) general-close-list-separator-char)
+    (delete-char -1)))
+
+(defun general-close--electric (closer orig &optional force)
+  (let (
+	done separator pps)
     (if (and closer force)
 	(progn
-	  (when (eq (char-before) general-close-list-separator-char)
-	    (delete-char -1))
+	  ;; (general-close--cleanup-inserts)
 	  (insert closer)
 	  (setq done t))
       (setq pps (parse-partial-sexp (point-min) (point)))
@@ -608,9 +620,11 @@ See `general-close-command-separator-char'"
 With \\[universal-argument]: close a list in electric modes. "
   (interactive "P*")
   (let* ((beg (general-close--point-min))
-	 (pps (parse-partial-sexp beg (point)))
 	 (force (eq 4 (prefix-numeric-value arg)))
-	 done orig closer)
+	 (orig (point))
+	 done closer pps)
+    (when force (general-close--cleanup-inserts orig))
+    (setq pps (parse-partial-sexp beg (point)))
     ;; ml-modes use sgml-close-tag
     (setq done (general-close--travel-comments-maybe pps))
     (unless done
@@ -618,17 +632,17 @@ With \\[universal-argument]: close a list in electric modes. "
       ;; mode-independent in string or list?
       (setq closer (general-close--fetch-delimiter-maybe pps))
       (if (and closer general-close-electric-listify-p)
-	  (setq done (general-close--electric closer force))
-	(setq done (general-close--common closer))))
-    (unless done
-      (if (member major-mode general-close-known-comint-modes)
-	  (setq done (general-close--in-known-comint beg closer))
-	(setq done (general-close--modes beg pps orig closer))))
-    (unless done
-      (and general-close-electric-newline-p (not (general-close-empty-line-p))
-	   (newline))
-      (when general-close-electric-indent-p
-	(indent-according-to-mode)))))
+	  (setq done (general-close--electric closer orig force))
+	(setq done (general-close--common closer)))
+      (unless done
+	(if (member major-mode general-close-known-comint-modes)
+	    (setq done (general-close--in-known-comint beg closer))
+	  (setq done (general-close--modes beg pps orig closer)))
+	(unless done
+	  (and general-close-electric-newline-p (not (general-close-empty-line-p))
+	       (newline))
+	  (when general-close-electric-indent-p
+	    (indent-according-to-mode)))))))
 
 (provide 'general-close)
 ;;; general-close.el ends here
