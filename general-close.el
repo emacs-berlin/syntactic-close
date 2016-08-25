@@ -233,6 +233,12 @@ conditionals closed by a colon for example. ")
   :type 'regexp
   :group 'convenience)
 
+(defun general-close-toggle-electric-listify ()
+  "Switch the value of `general-close-electric-listify-p' in current session. "
+  (interactive)
+  (setq general-close-electric-listify-p (not general-close-electric-listify-p))
+  (when (called-interactively-p 'any) (message "general-close-electric-listify-p: %s" general-close-electric-listify-p)))
+
 (defun general-close-empty-line-p (&optional iact)
   "Returns t if cursor is at an empty line, nil otherwise."
   (interactive "p")
