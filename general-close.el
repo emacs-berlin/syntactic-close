@@ -70,6 +70,7 @@ Default is nil"
   :type 'boolean
   :tag "general-close-electric-listify-p"
   :group 'general-close)
+(make-variable-buffer-local 'general-close-electric-listify-p)
 
 (defcustom general-close-list-separator-char 44
   "Char separating elements of a list.
@@ -80,6 +81,7 @@ Default is `,'"
   :type 'character
   :tag "general-close-list-separator-char"
   :group 'general-close)
+(make-variable-buffer-local 'general-close-list-separator-char)
 
 (defcustom general-close-list-element-delimiter-1 39
   "Char delimiting elements of a list.
@@ -90,6 +92,7 @@ Default is `''"
   :type 'character
   :tag "general-close-list-element-delimiter-1"
   :group 'general-close)
+(make-variable-buffer-local 'general-close-list-element-delimiter-1)
 
 (defcustom general-close-list-element-delimiter-2 34
   "Char delimiting elements of a list.
@@ -100,12 +103,14 @@ Default is `\"'"
   :type 'character
   :tag "general-close-list-element-delimiter-2"
   :group 'general-close)
+(make-variable-buffer-local 'general-close-list-element-delimiter-2)
 
 (defcustom general-close-guess-p nil
   "When non-nil, guess default arguments, list-separators etc. "
   :type 'boolean
   :tag "general-close-guess-p"
   :group 'general-close)
+(make-variable-buffer-local 'general-close-guess-p)
 
 (defcustom general-close-electric-indent-p nil
   "When `t', after insert at empty line indent according to mode.
@@ -115,6 +120,7 @@ Default is nil"
   :type 'boolean
   :tag "general-close-electric-indent-p"
   :group 'general-close)
+(make-variable-buffer-local 'general-close-electric-indent-p)
 
 (defcustom general-close-electric-newline-p nil
   "Insert a newline if feasible.
@@ -134,6 +140,7 @@ Default is nil"
   :type 'boolean
   :tag "general-close-auto-p"
   :group 'general-close)
+(make-variable-buffer-local 'general-close-auto-p)
 
 (defcustom general-close--semicolon-separator-modes
   (list
