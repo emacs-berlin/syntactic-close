@@ -164,6 +164,7 @@
 	     (goto-char orig)
 	     (insert ";")
 	     (setq done t))))
+    (unless done (goto-char orig)) 
     done))
 
 (provide 'general-close-modes)
