@@ -58,6 +58,7 @@ Default is nil"
   :tag "general-close-delete-whitespace-backward-p"
   :group 'general-close)
 
+(defvar general-close-electric-listify-p nil)
 (defcustom general-close-electric-listify-p nil
   "When inside a list, assume list-separator.
 
@@ -69,6 +70,7 @@ Default is nil"
   :group 'general-close)
 (make-variable-buffer-local 'general-close-electric-listify-p)
 
+(defvar general-close-list-separator-char 44)
 (defcustom general-close-list-separator-char 44
   "Char separating elements of a list.
 
@@ -364,7 +366,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 
 (defun general-close--fetch-delimiter-maybe (pps)
   "Close the innermost list resp. string. "
-  (let (erg closer strg done)
+  (let (erg closer strg)
     (cond ((nth 3 pps)
 	   (save-excursion
 	     (setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
@@ -571,10 +573,12 @@ See `general-close-command-separator-char'"
     done))
 
 (defun general-close--common (&optional closer)
-  (when closer
-    (unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
-      (insert closer)
-      (setq done t))))
+  (let (done)
+    (when closer
+      (unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
+	(insert closer)
+	(setq done t)))
+    done))
 
 (defun general-close--guess-list-element-delimiter ()
   (save-excursion
@@ -588,7 +592,7 @@ See `general-close-command-separator-char'"
 (defun general-close--cleanup-inserts (orig)
   ;; (when (< 0 (abs (skip-chars-backward (concat "^" (char-to-string general-close-list-separator-char)))))
   ;;   (delete-region (point) orig))
-  (skip-chars-backward " \t\r\n\f") 
+  (skip-chars-backward " \t\r\n\f")
   (when (eq (char-before) general-close-list-separator-char)
     (delete-char -1)))
 
@@ -638,7 +642,7 @@ With \\[universal-argument]: close a list in electric modes. "
   (let* ((beg (general-close--point-min))
 	 (force (eq 4 (prefix-numeric-value arg)))
 	 (orig (point))
-	 (counter 1)
+	 ;; (counter 1)
 	 done closer pps)
     ;; (if (or (not general-close-auto-p) (and general-close-auto-p (eq general-close-auto-buffer (current-buffer))))
     ;; (progn

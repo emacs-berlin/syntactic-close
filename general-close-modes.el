@@ -60,7 +60,7 @@
 
 (defun general-close-python-listclose (closer force pps)
   "If inside list, assume another item first. "
-  (let (done thispps)
+  (let (done)
     (cond ((and force (eq (char-before) general-close-list-separator-char))
 	   (delete-char -1)
 	   (insert closer)
@@ -182,8 +182,8 @@
 	  (setq done t))
       (cond ((setq done (general-close--right-arrow-maybe beg general-close-pre-right-arrow-re)))
 	    ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
-	    ((setq done (general-close--insert-string-concat-op-maybe)))
-	    done))))
+	    ((setq done (general-close--insert-string-concat-op-maybe)))))
+    done))
 
 ;; Php
 (defun general-close--php-check (closer)
