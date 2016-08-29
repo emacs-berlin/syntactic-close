@@ -40,7 +40,6 @@
 
 ;;; Code:
 
-(require 'general-close-modes)
 (require 'sgml-mode)
 
 (defgroup general-close nil
@@ -589,7 +588,7 @@ See `general-close-command-separator-char'"
      ((eq (char-before) general-close-list-element-delimiter-2)
       general-close-list-element-delimiter-2))))
 
-(defun general-close--cleanup-inserts (orig)
+(defun general-close--cleanup-inserts ()
   ;; (when (< 0 (abs (skip-chars-backward (concat "^" (char-to-string general-close-list-separator-char)))))
   ;;   (delete-region (point) orig))
   (skip-chars-backward " \t\r\n\f")
@@ -602,7 +601,7 @@ See `general-close-command-separator-char'"
     (goto-char (nth 8 pps))
     (char-after)))
 
-(defun general-close--electric (pps closer orig &optional force)
+(defun general-close--electric (pps closer &optional force)
   (let (done separator)
     (if (and closer force)
 	(progn
@@ -634,6 +633,8 @@ See `general-close-command-separator-char'"
   (let ((general-close-electric-listify-p t))
     (general-close arg)))
 
+(require 'general-close-modes)
+
 (defun general-close (&optional arg)
   "Command will insert closing delimiter whichever needed.
 
@@ -646,7 +647,7 @@ With \\[universal-argument]: close a list in electric modes. "
 	 done closer pps)
     ;; (if (or (not general-close-auto-p) (and general-close-auto-p (eq general-close-auto-buffer (current-buffer))))
     ;; (progn
-    (when force (general-close--cleanup-inserts orig))
+    (when force (general-close--cleanup-inserts))
     (setq pps (parse-partial-sexp beg (point)))
     ;; ml-modes use sgml-close-tag
     (setq done (general-close--travel-comments-maybe pps))
@@ -658,7 +659,7 @@ With \\[universal-argument]: close a list in electric modes. "
 	;; mode-independent in string or list?
 	(setq closer (general-close--fetch-delimiter-maybe pps))
 	(if (and closer general-close-electric-listify-p)
-	    (setq done (general-close--electric pps closer orig force))
+	    (setq done (general-close--electric pps closer force))
 	  (setq done (general-close--common closer)))
 	(unless done
 	  (if (member major-mode general-close-known-comint-modes)
