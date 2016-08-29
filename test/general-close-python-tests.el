@@ -124,8 +124,9 @@
 
 (ert-deftest colon-after-arguments-list-test ()
   (general-close-test-with-python-buffer "def datei(datei, verzeichnis)"
-    (general-close)
-    (should (eq (char-before) ?:))))
+    (let (general-close-electric-listify-p)
+      (general-close)
+      (should (eq (char-before) ?:)))))
 
 (ert-deftest general-close-python-colon-test ()
   (general-close-test-with-python-buffer
@@ -174,7 +175,7 @@ if __name__ == \"__main__\""
       "['a'"
     (let ((general-close-electric-listify-p t))
       (general-close)
-      (should (eq (char-before) ?,)))))
+      (should (eq (char-before) ?')))))
 
 (ert-deftest general-close-python-electric-test-3 ()
   (general-close-test-with-python-buffer
@@ -195,20 +196,21 @@ if __name__ == \"__main__\""
       "[\"a\""
     (let (general-close-electric-listify-p)
       (general-close)
-      (should (eq (char-before) ?\])))))
-
-(ert-deftest general-close-python-electric-test-5 ()
-  (general-close-test-with-python-buffer
-      "[\"a\""
-    (let (general-close-electric-listify-p)
-      (general-close)
-      (should (eq (char-before) ?\])))))
+      (should (eq (char-before) ?,)))))
 
 (ert-deftest general-close-python-electric-test-6 ()
   (general-close-test-with-python-buffer
       "[\"a\",\""
     (let ((general-close-electric-listify-p t))
-      (general-close '(4)) 
+      (general-close '(4))
+      (should (eq (char-before) ?\])))))
+
+
+(ert-deftest general-close-python-electric-test-7 ()
+  (general-close-test-with-python-buffer
+      "[\"a\""
+    (let (general-close-electric-listify-p)
+      (general-close '(4))
       (should (eq (char-before) ?\])))))
 
 (provide 'general-close-python-tests)

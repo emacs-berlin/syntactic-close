@@ -153,6 +153,20 @@ Default is nil"
   :tag "general-close--semicolon-separator-modes"
   :group 'general-close)
 
+(defcustom general-close--known-modes
+  (list
+   'haskell-mode
+   'js-mode
+   'php-mode
+   'python-mode
+   'ruby-mode
+   )
+  "List of modes with known special treatment. "
+
+  :type 'list
+  :tag "general-close--known-modes"
+  :group 'general-close)
+
 (defcustom general-close--colon-separator-modes
   (list
    'python-mode
@@ -203,10 +217,10 @@ Default is nil"
   :tag "general-close-comint-pre-right-arrow-re"
   :group 'general-close)
 
-(defvar general-close-pre-right-arrow-re   "[alpha][A-Za-z0-9_]+ +::")
-;; (setq general-close-pre-right-arrow-re   "[alpha][A-Za-z0-9_]+ +::")
+(defvar general-close-pre-right-arrow-re   "[alpha][A-Za-z0-9_]+ +::\\|(\\\\")
+;; (setq general-close-pre-right-arrow-re   "[alpha][A-Za-z0-9_]+ +:::\\|(\\\\")
 (defcustom general-close-pre-right-arrow-re
-  "[alpha][A-Za-z0-9_]+ +::"
+  "[alpha][A-Za-z0-9_]+ +::\\|(\\\\"
   "Insert \"=\" when looking back. "
   :type 'string
   :tag "general-close-pre-right-arrow-re"
@@ -496,22 +510,6 @@ See `general-close-command-separator-char'"
 	     (setq done (general-close--comint-send))))
     done))
 
-(defun general-close--modes (beg pps orig &optional closer)
-  (let (done)
-    (cond
-     ((or (eq major-mode 'php-mode) (eq major-mode 'js-mode))
-      (setq done (general-close--php-check closer)))
-     ((eq major-mode 'python-mode)
-      (setq done (general-close-python-close closer)))
-     ((eq major-mode 'ruby-mode)
-      (setq done (general-close-ruby-close closer)))
-     ((member major-mode general-close--ml-modes)
-      (setq done (general-close-ml)))
-     ((eq major-mode 'haskell-mode)
-      (setq done (general-close-haskell-close beg closer)))
-     (t (setq done (general-close--intern orig closer pps))))
-    done))
-
 (defun general-close--comments-intern (orig start end)
   (if (looking-at start)
       (progn (goto-char orig)
@@ -588,8 +586,9 @@ See `general-close-command-separator-char'"
       general-close-list-element-delimiter-2))))
 
 (defun general-close--cleanup-inserts (orig)
-  (when (< 0 (abs (skip-chars-backward (concat "^" (char-to-string general-close-list-separator-char)))))
-    (delete-region (point) orig))
+  ;; (when (< 0 (abs (skip-chars-backward (concat "^" (char-to-string general-close-list-separator-char)))))
+  ;;   (delete-region (point) orig))
+  (skip-chars-backward " \t\r\n\f") 
   (when (eq (char-before) general-close-list-separator-char)
     (delete-char -1)))
 
@@ -625,6 +624,12 @@ See `general-close-command-separator-char'"
 	       (setq done t))))
     done))
 
+(defun general-close-electric (&optional arg)
+  "Call `general-close-electric-listify-p' set to `t'. "
+    (interactive "P*")
+  (let ((general-close-electric-listify-p t))
+    (general-close arg)))
+
 (defun general-close (&optional arg)
   "Command will insert closing delimiter whichever needed.
 
@@ -635,30 +640,36 @@ With \\[universal-argument]: close a list in electric modes. "
 	 (orig (point))
 	 (counter 1)
 	 done closer pps)
-    (if (or (not general-close-auto-p) (and general-close-auto-p (eq general-close-auto-buffer (current-buffer))))
-	(progn 
+    ;; (if (or (not general-close-auto-p) (and general-close-auto-p (eq general-close-auto-buffer (current-buffer))))
+    ;; (progn
     (when force (general-close--cleanup-inserts orig))
     (setq pps (parse-partial-sexp beg (point)))
     ;; ml-modes use sgml-close-tag
     (setq done (general-close--travel-comments-maybe pps))
     (unless done
       (setq orig (point))
-      ;; mode-independent in string or list?
-      (setq closer (general-close--fetch-delimiter-maybe pps))
-      (if (and closer general-close-electric-listify-p)
-	  (setq done (general-close--electric pps closer orig force))
-	(setq done (general-close--common closer)))
+      (when (member major-mode general-close--known-modes)
+	(setq done (general-close--modes beg pps orig closer force)))
       (unless done
-	(if (member major-mode general-close-known-comint-modes)
-	    (setq done (general-close--in-known-comint beg closer))
-	  (setq done (general-close--modes beg pps orig closer)))
+	;; mode-independent in string or list?
+	(setq closer (general-close--fetch-delimiter-maybe pps))
+	(if (and closer general-close-electric-listify-p)
+	    (setq done (general-close--electric pps closer orig force))
+	  (setq done (general-close--common closer)))
 	(unless done
-	  (and general-close-electric-newline-p (not (general-close-empty-line-p))
-	       (newline))
-	  (when general-close-electric-indent-p
-	    (indent-according-to-mode))))))
-      (message "autoclose in wrong buffer %s" counter)
-      (setq counter (1+ counter)))))
+	  (if (member major-mode general-close-known-comint-modes)
+	      (setq done (general-close--in-known-comint beg closer))
+	    (setq done (general-close--modes beg pps orig closer)))
+	  (unless done
+	    (and general-close-electric-newline-p (not (general-close-empty-line-p))
+		 (newline))
+	    (when general-close-electric-indent-p
+	      (indent-according-to-mode))))))
+    ;; (message "autoclose in wrong buffer %s" counter)
+    ;; (setq counter (1+ counter))
+    ;;)
+    ))
+
 
 (provide 'general-close)
 ;;; general-close.el ends here

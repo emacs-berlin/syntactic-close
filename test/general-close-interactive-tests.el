@@ -54,9 +54,10 @@
   (general-close-test "asdf "
     'haskell-mode
     'general-close-debug-p
-    (general-close)
-    (skip-chars-backward " \t\r\n\f") 
-    (should (eq (char-before) ?=))))
+    (let (general-close-electric-listify-p)
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?=)))))
 
 (ert-deftest general-close-sml-comment-test ()
   (general-close-test "(* definition of nat"
@@ -69,11 +70,12 @@
   (general-close-test "add :: (Int,Int"
     'haskell-mode
     'general-close-debug-p
-    (general-close)
-    (should (eq (char-before) ?\)))
-    (general-close)
-    (skip-chars-backward " \t\r\n\f")
-    (should (eq (char-before) ?>))))
+    (let (general-close-electric-listify-p)
+      (general-close)
+      (should (eq (char-before) ?\)))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?>)))))
 
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here
