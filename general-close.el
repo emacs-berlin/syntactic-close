@@ -638,8 +638,15 @@ See `general-close-command-separator-char'"
 (defun general-close (&optional arg)
   "Command will insert closing delimiter whichever needed.
 
+With optional ARG 2, close everything at point
 With \\[universal-argument]: close a list in electric modes. "
   (interactive "P*")
+  (if
+      (eq 2 (prefix-numeric-value arg))
+      (while (general-close-intern))
+    (general-close-intern arg)))
+
+(defun general-close-intern (&optional arg)
   (let* ((beg (general-close--point-min))
 	 (force (eq 4 (prefix-numeric-value arg)))
 	 (orig (point))
@@ -673,7 +680,7 @@ With \\[universal-argument]: close a list in electric modes. "
     ;; (message "autoclose in wrong buffer %s" counter)
     ;; (setq counter (1+ counter))
     ;;)
-    ))
+    (< orig (point))))
 
 
 (provide 'general-close)
