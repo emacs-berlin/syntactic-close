@@ -1,4 +1,4 @@
-;;; setup-ert-tests.el --- Provide needed forms -*- lexical-binding: t; -*-
+;;; general-close-setup-ert-tests.el --- Provide needed forms -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -265,5 +265,5 @@ BODY is code to be executed within the temp buffer.  Point is
        ;; (message "ERT %s" (point))
        ,@body)))
 
-(provide 'setup-ert-tests)
-;; setup-ert-tests.el ends here
+(provide 'general-close-setup-ert-tests)
+;; general-close-setup-ert-tests.el ends here
