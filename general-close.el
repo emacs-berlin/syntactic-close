@@ -192,36 +192,36 @@ Default is nil"
   :tag "general-close--semicolon-separator-modes"
   :group 'general-close)
 
-(defvar general-close-comint-pre-assignment-re   "let [alpha][A-Za-z0-9_]")
+(defvar general-close-comint-pre-assignment-re   "let [[:alpha:]][A-Za-z0-9_]")
 (defcustom general-close-comint-pre-assignment-re
-  "let [alpha][A-Za-z0-9_]"
+  "let [[:alpha:]][A-Za-z0-9_]"
   "Insert \"=\" when looking back. "
   :type 'string
   :tag "general-close-comint-pre-assignment-re"
   :group 'general-close)
 
-(defvar general-close-pre-assignment-re   "[alpha][A-Za-z0-9_]+")
-;; (setq general-close-pre-assignment-re   "[alpha][A-Za-z0-9_]+[ \t]+[^\:]*")
+(defvar general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+")
+;; (setq general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]+[^\:]*")
 (defcustom general-close-pre-assignment-re
-  "[alpha][A-Za-z0-9_]+"
+  "[[:alpha:]][A-Za-z0-9_]+"
   "Insert \"=\" when looking back. "
   :type 'string
   :tag "general-close-pre-assignment-re"
   :group 'general-close)
 
-(defvar general-close-comint-pre-right-arrow-re   "let [alpha][A-Za-z0-9_]+ +::")
-;; (setq general-close-comint-pre-right-arrow-re   "let [alpha][A-Za-z0-9_]+ +::")
+(defvar general-close-comint-pre-right-arrow-re   "let [[:alpha:]][A-Za-z0-9_]+ +::")
+;; (setq general-close-comint-pre-right-arrow-re   "let [[:alpha:]][A-Za-z0-9_]+ +::")
 (defcustom general-close-comint-pre-right-arrow-re
-  "let [alpha][A-Za-z0-9_]+ +::"
+  "let [[:alpha:]][A-Za-z0-9_]+ +::"
   "Insert \"=\" when looking back. "
   :type 'string
   :tag "general-close-comint-pre-right-arrow-re"
   :group 'general-close)
 
-(defvar general-close-pre-right-arrow-re   "[alpha][A-Za-z0-9_]+ +::\\|(\\\\")
-;; (setq general-close-pre-right-arrow-re   "[alpha][A-Za-z0-9_]+ +:::\\|(\\\\")
+(defvar general-close-pre-right-arrow-re   "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\")
+;; (setq general-close-pre-right-arrow-re   "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\")
 (defcustom general-close-pre-right-arrow-re
-  "[alpha][A-Za-z0-9_]+ +::\\|(\\\\"
+  "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\"
   "Insert \"=\" when looking back. "
   :type 'string
   :tag "general-close-pre-right-arrow-re"

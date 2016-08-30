@@ -180,7 +180,7 @@
 	(progn
 	  (insert closer)
 	  (setq done t))
-      (cond ((setq done (general-close--right-arrow-maybe beg general-close-pre-right-arrow-re)))
+      (cond ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
 	    ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
 	    ((setq done (general-close--insert-string-concat-op-maybe)))))
     done))
