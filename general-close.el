@@ -43,7 +43,7 @@
 (require 'sgml-mode)
 (require 'comint)
 ;; (require 'haskell)
-(require 'haskell-mode)
+;; (require 'haskell-mode)
 (require 'sh-script)
 
 (defgroup general-close nil
