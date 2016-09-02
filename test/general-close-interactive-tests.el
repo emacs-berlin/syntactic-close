@@ -50,15 +50,6 @@
     (general-close)
     (should (eq (char-before) ?\}))))
 
-(ert-deftest general-close-haskell-assignment-test ()
-  (general-close-test "asdf "
-    'haskell-mode
-    'general-close-debug-p
-    (let (general-close-electric-listify-p)
-      (general-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?=)))))
-
 (ert-deftest general-close-sml-comment-test ()
   (general-close-test "(* definition of nat"
     'sml-mode
@@ -83,8 +74,18 @@
     'general-close-debug-p
     (let (general-close-electric-listify-p)
       (general-close)
-      (skip-chars-backward " \t\r\n\f") 
+      (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?>)))))
+
+(ert-deftest general-close-haskell-assign-test-1 ()
+  (general-close-test "asdf "
+    'haskell-mode
+    'general-close-debug-p
+    (let (general-close-electric-listify-p)
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?=)))))
+
 
 (ert-deftest general-close-haskell-asign-test-2 ()
   (general-close-test "asdf :: Int -> Int
@@ -93,7 +94,7 @@ asdf n"
     'general-close-debug-p
     (let (general-close-electric-listify-p)
       (general-close)
-      (skip-chars-backward " \t\r\n\f") 
+      (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?=)))))
 
 (ert-deftest general-close-haskell-concat-test ()
@@ -102,7 +103,7 @@ asdf n"
     'haskell-mode
     'general-close-debug-p
     (general-close)
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?\+))))
 
 (provide 'general-close-interactive-tests)

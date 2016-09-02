@@ -200,10 +200,11 @@ Default is nil"
   :tag "general-close-comint-pre-assignment-re"
   :group 'general-close)
 
-(defvar general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+")
-;; (setq general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]+[^\:]*")
+(defvar general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$")
+(setq general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$")
+
 (defcustom general-close-pre-assignment-re
-  "[[:alpha:]][A-Za-z0-9_]+"
+  "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$"
   "Insert \"=\" when looking back. "
   :type 'string
   :tag "general-close-pre-assignment-re"
@@ -218,8 +219,10 @@ Default is nil"
   :tag "general-close-comint-pre-right-arrow-re"
   :group 'general-close)
 
-(defvar general-close-pre-right-arrow-re   "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\")
-;; (setq general-close-pre-right-arrow-re   "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\")
+(defvar general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
+(setq general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
+
+
 (defcustom general-close-pre-right-arrow-re
   "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\"
   "Insert \"=\" when looking back. "
@@ -481,6 +484,18 @@ See `general-close-command-separator-char'"
       (setq done t))
     done))
 
+(defun general-close--repeat-type-maybe (beg regexp)
+  (let (done erg)
+    (when (save-excursion
+	    (skip-chars-backward " \t\r\n\f")
+	    (and (looking-back "->" beg)
+	    (goto-char beg)
+	    (looking-at regexp)))
+      (unless (eq (char-after) ?\ )
+	(insert 32))
+      (insert (match-string-no-properties 2))
+      (setq done t)))) 
+	    
 (defun general-close--right-arrow-maybe (beg regexp)
   (let (done)
     (when (save-excursion
@@ -494,7 +509,7 @@ See `general-close-command-separator-char'"
 (defun general-close--which-right-arrow-regex ()
   (cond ((member major-mode  (list 'haskell-interactive-mode 'inferior-haskell-mode))
 	 general-close-comint-haskell-pre-right-arrow-re)
-	(t general-close-comint-pre-right-arrow-re)))
+	(t general-close-pre-right-arrow-re)))
 
 (defun general-close-comint (beg &optional closer)
   (let ((right-arrow-re (general-close--which-right-arrow-regex))
