@@ -41,6 +41,10 @@
 ;;; Code:
 
 (require 'sgml-mode)
+(require 'comint)
+(require 'haskell)
+(require 'haskell-mode)
+(require 'sh-script)
 
 (defgroup general-close nil
   "Insert closing delimiter whichever needed. "
@@ -485,7 +489,7 @@ See `general-close-command-separator-char'"
     done))
 
 (defun general-close--repeat-type-maybe (beg regexp)
-  (let (done erg)
+  (let (done)
     (when (save-excursion
 	    (skip-chars-backward " \t\r\n\f")
 	    (and (looking-back "->" beg)
@@ -494,7 +498,8 @@ See `general-close-command-separator-char'"
       (unless (eq (char-after) ?\ )
 	(insert 32))
       (insert (match-string-no-properties 2))
-      (setq done t)))) 
+      (setq done t))
+    done)) 
 	    
 (defun general-close--right-arrow-maybe (beg regexp)
   (let (done)
@@ -508,7 +513,7 @@ See `general-close-command-separator-char'"
 
 (defun general-close--which-right-arrow-regex ()
   (cond ((member major-mode  (list 'haskell-interactive-mode 'inferior-haskell-mode))
-	 general-close-comint-haskell-pre-right-arrow-re)
+	 general-close-comint-pre-right-arrow-re)
 	(t general-close-pre-right-arrow-re)))
 
 (defun general-close-comint (beg &optional closer)
@@ -648,8 +653,6 @@ See `general-close-command-separator-char'"
   (let ((general-close-electric-listify-p t))
     (general-close arg)))
 
-(require 'general-close-modes)
-
 (defun general-close (&optional arg)
   "Command will insert closing delimiter whichever needed.
 
@@ -696,6 +699,8 @@ With \\[universal-argument]: close a list in electric modes. "
     ;; (setq counter (1+ counter))
     ;;)
     (< orig (point))))
+
+(require 'general-close-modes)
 
 
 (provide 'general-close)
