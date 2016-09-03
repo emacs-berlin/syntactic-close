@@ -92,6 +92,28 @@
 	     (setq done t)))
     done))
 
+(defvar general-close-emacs-lisp-block-re "(if\\|(cond\\|when\\|unless")
+
+(defun general-close-just-one-space ()
+  (fixup-whitespace)
+  (cond
+   ((eq (char-before) ?\ ))
+   ((eq (char-after) ?\ )
+    (forward-char 1))
+   (insert 32)))
+
+;; Emacs-lisp
+(defun general-close-emacs-lisp-close (closer pps force)
+  (let (done)
+    (cond ((save-excursion
+	     (skip-chars-backward " \t\r\n\f")
+	     (looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
+	   (general-close-just-one-space)
+	   (insert ?\()
+	   (setq done t)))
+    done))
+
+
 ;; Python
 (defun general-close-python-close (closer pps force)
   "Might deliver equivalent to `py-dedent'"
@@ -180,7 +202,7 @@
 	(progn
 	  (insert closer)
 	  (setq done t))
-      (cond ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re))) 
+      (cond ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
 	    ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
 	    ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
 	    ((setq done (general-close--insert-string-concat-op-maybe)))))
@@ -224,6 +246,8 @@
       (setq done (general-close--php-check closer)))
      ((eq major-mode 'python-mode)
       (setq done (general-close-python-close closer pps force)))
+     ((eq major-mode 'emacs-lisp-mode)
+      (setq done (general-close-emacs-lisp-close closer pps force)))
      ((eq major-mode 'ruby-mode)
       (setq done (general-close-ruby-close closer pps)))
      ((member major-mode general-close--ml-modes)
@@ -232,6 +256,39 @@
       (setq done (general-close-haskell-close beg closer pps)))
      (t (setq done (general-close--intern orig closer pps))))
     done))
+
+(defvar general-close-haskell-listcomprh-vars nil)
+
+(defvar general-close-haskell-listcomprh-startpos nil)
+(defvar general-close-haskell-listcomprh-counter nil)
+
+(defun general-close-set-listcomprh-update (orig pps)
+  (let (pos varlist)
+    (setq general-close-haskell-listcomprh-counter 0)
+    (cond ((save-excursion (and (nth 0 pps) (goto-char (nth 1 pps))(eq (char-after) ?\[))(setq pos (point)))
+	   ;; (nth 1 pps) (save-excursion (goto-char (nth 2 pps))(eq (char-after) ?\()))
+	   (goto-char pos)
+	   (while (re-search-forward haskell-var-re orig t 1)
+	     (unless (member (match-string-no-properties 0) varlist)
+	       (push (match-string-no-properties 0) varlist)))
+	   (goto-char orig) 
+	   (nreverse varlist))
+	  (t (self-insert-command)))))
+
+(defun general-close-in-listcomprh (&optional pps)
+  (interactive)
+  (let ((orig (point))
+	(pps (or pps (parse-partial-sexp (line-beginning-position) (point)))))
+    (unless (eq (nth 1 pps) general-close-haskell-listcomprh-startpos)
+      (setq  general-close-haskell-listcomprh-vars (general-close-set-listcomprh-update orig pps)))
+    (cond
+     ((eq 0 general-close-haskell-listcomprh-counter)
+      (insert (nth 0 general-close-haskell-listcomprh-vars))))))
+
+
+
+
+
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

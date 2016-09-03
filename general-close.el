@@ -160,6 +160,7 @@ Default is nil"
 
 (defcustom general-close--known-modes
   (list
+   'emacs-lisp-mode
    'haskell-mode
    'js-mode
    'php-mode
