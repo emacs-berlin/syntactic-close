@@ -47,6 +47,9 @@
 (require 'sh-script)
 ;; (require 'python-mode)
 
+(defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
+  "Defined in haskell-interactive-mode.el, silence warnings. ")
+
 (defgroup general-close nil
   "Insert closing delimiter whichever needed. "
   :group 'languages
@@ -580,7 +583,8 @@ See `general-close-command-separator-char'"
     done))
 
 (defun general-close--point-min ()
-  (cond ((and (member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode)) haskell-interactive-mode-prompt-start))
+  (cond ((and (member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode)))
+	 haskell-interactive-mode-prompt-start)
 	((save-excursion
 	   (and (member major-mode general-close-known-comint-modes) comint-prompt-regexp
 		(message "%s" (current-buffer))
@@ -688,22 +692,15 @@ With \\[universal-argument]: close a list in electric modes. "
 (defun general-close-intern (&optional arg)
   (let* ((beg (general-close--point-min))
 	 (force (eq 4 (prefix-numeric-value arg)))
-	 ;; (orig (point))
+	 (orig (point))
 	 ;; (counter 1)
 	 done closer pps)
-    ;; (if (or (not general-close-auto-p) (and general-close-auto-p (eq general-close-auto-buffer (current-buffer))))
-    ;; (progn
     (when force (general-close--cleanup-inserts))
     (setq pps (parse-partial-sexp beg (point)))
-    ;; ml-modes use sgml-close-tag
     (setq done (general-close--travel-comments-maybe pps))
     (unless done
       (setq orig (point))
       (setq done (general-close--modes beg pps orig closer force))
-      ;; this belong into the mode
-	    ;; (if (and closer general-close-electric-listify-p)
-	    ;; 	(setq done (general-close--electric pps closer force))
-	    ;;   (setq done (general-close--common beg pps)))
       (unless done
 	(setq done (general-close--common beg pps))
 	(unless done

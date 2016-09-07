@@ -100,7 +100,7 @@
    ((eq (char-before) ?\ ))
    ((eq (char-after) ?\ )
     (forward-char 1))
-   (insert 32)))
+   (t (insert 32))))
 
 ;; Emacs-lisp
 (defun general-close-emacs-lisp-close (closer pps force)
@@ -112,10 +112,6 @@
 	   (insert ?\()
 	   (setq done t)))
     done))
-
-
-(defun general-close-fetch-delimiter (pps))
-
 
 ;; Python
 (defun general-close-python-close (&optional closer pps force delimiter done b-of-st b-of-bl)
@@ -251,7 +247,7 @@
   (let ((closer (or closer
 		    (and pps (general-close--fetch-delimiter-maybe pps))
 		    (general-close--generic-fetch-delimiter-maybe)))
-	done erg symbol)
+	done)
 
     (cond
      ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
@@ -337,8 +333,8 @@
 	   ;; (nth 1 pps) (save-excursion (goto-char (nth 2 pps))(eq (char-after) ?\()))
 	   (goto-char pos)
 	   (while (re-search-forward haskell-var-re orig t 1)
-	     (unless (member (match-string-no-properties 0) varlist)
-	       (push (match-string-no-properties 0) varlist)))
+	     ;; (unless (member (match-string-no-properties 0) varlist)
+	       (cl-pushnew (match-string-no-properties 0) varlist))
 	   (goto-char orig)
 	   (nreverse varlist))
 	  (t (self-insert-command)))))
@@ -352,11 +348,6 @@
     (cond
      ((eq 0 general-close-haskell-listcomprh-counter)
       (insert (nth 0 general-close-haskell-listcomprh-vars))))))
-
-
-
-
-
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here
