@@ -220,28 +220,38 @@
 	(insert " ++ ")))
     done))
 
-(defun general-close--listcompr-fetch-symbol ()
-  (let ((erg
-	 (save-excursion
-	   (forward-char -1)
-	   (buffer-substring-no-properties (point) (progn (skip-chars-backward "[[:alnum:]]") (point))))))
-    (if (< 1 (length erg))
-	erg
-      (setq erg (string-to-char erg))
-      (cond
-       ((eq 122 erg)
-	;; if at char `z', follow up with `a'
-	97)
-       ((eq erg 90)
-	65)
-       ((< 96 erg)
-	(1+ erg))
-       ((< 64 erg)
-	(1+ erg))
-       ;; raise until number 9
-       ((< erg 57)
-	(1+ erg))
-       (t erg)))))
+(defun general-close--listcompr-fetch-symbol (&optional arg)
+  (let ((erg (when arg
+	       (progn (goto-char arg)
+		      (char-after)))))
+    (unless erg
+      (setq erg
+	    (save-excursion
+	      (progn
+		(forward-char -1)
+		(buffer-substring-no-properties (point) (progn (skip-chars-backward "[[:alnum:]]") (point)))))))
+
+    (unless
+	(or (characterp erg)(< 1 (length erg)))
+      (setq erg (string-to-char erg)))
+
+    (setq erg
+	  (cond
+	   ((stringp erg)
+	    erg)
+	   ((eq 122 erg)
+	    ;; if at char `z', follow up with `a'
+	    97)
+	   ((eq erg 90)
+	    65)
+	   ((< 96 erg)
+	    (1+ erg))
+	   ((< 64 erg)
+	    (1+ erg))
+	   ;; raise until number 9
+	   ((< erg 57)
+	    (1+ erg))
+	   (t erg)))))
 
 (defun general-close-haskell-close (beg &optional closer pps)
   (let ((closer (or closer
@@ -255,13 +265,20 @@
       ;; translate a single char into its successor
       ;; if multi-char symbol, repeat
       (insert (general-close--listcompr-fetch-symbol))
-      (setq done t) )
+      (setq done t))
+     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
+	   (not (eq 1 (car (syntax-after (1- (point)))))))
+      ;; works but not needed (?)
+      (save-excursion
+      	(goto-char (nth 1 pps))
+      	(setq closer (general-close--return-complement-char-maybe (char-after)))) 
+      (insert closer)
+      (setq done t))
      ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps)))
       ;; Inside a list-comprehension
       (when (eq 2 (car (syntax-after (1- (point)))))
 	(insert general-close-list-separator-char)
 	(setq done t)))
-
      (closer
       (insert closer)
       (setq done t))

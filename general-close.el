@@ -303,7 +303,7 @@ Otherwise switch it off. "
   (setq general-close-verbose-p (not general-close-verbose-p))
   (when (called-interactively-p 'any) (message "general-close-verbose-p: %s" general-close-verbose-p)))
 
-(defun general-close--return-compliment-char-maybe (erg)
+(defun general-close--return-complement-char-maybe (erg)
   "For example return \"}\" for \"{\" but keep \"\\\"\". "
   (cond ((eq erg ?\")
 	 erg)
@@ -356,7 +356,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	       (push (char-before) stack)
 	       (forward-char -1))
 	      ((member (char-before) (list ?\( ?\" ?{ ?\[))
-	       (setq closer (general-close--return-compliment-char-maybe (char-before)))
+	       (setq closer (general-close--return-complement-char-maybe (char-before)))
 	       (if (eq (car stack) closer)
 		   (progn
 		     (pop stack)
@@ -373,7 +373,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
       (when (nth 1 pps)
 	(save-excursion
 	  (goto-char (nth 1 pps))
-	  (general-close--return-compliment-char-maybe (char-after)))))))
+	  (general-close--return-complement-char-maybe (char-after)))))))
 
 (defun general-close--fetch-delimiter-maybe (pps &optional force)
   "Close the innermost list resp. string. "
@@ -396,7 +396,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	  ((nth 1 pps)
 	   (save-excursion
 	     (goto-char (nth 1 pps))
-	     (general-close--return-compliment-char-maybe (char-after)))))))
+	     (general-close--return-complement-char-maybe (char-after)))))))
 
 (defun general-close--insert-delimiter-char-maybe (orig closer)
   (when closer

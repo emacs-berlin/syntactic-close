@@ -5,8 +5,27 @@
 ;;     'haskell-mode
 ;;     'general-close-debug-p
 ;;     (general-close)
-;;     (skip-chars-backward " \t\r\n\f") 
+;;     (skip-chars-backward " \t\r\n\f")
 ;;     (should (eq (char-before) ?+))))
+
+(ert-deftest general-close-list-comprehension-test-1 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test "[(asdb,"
+    'haskell-mode
+    'general-close-debug-p
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?b)))))
+
+(ert-deftest general-close-list-comprehension-test-2 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test "[(asdb,cdfg"
+    'haskell-mode
+    'general-close-debug-p
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?\))))))
+
 
 
 (provide 'general-close-haskell-tests)
