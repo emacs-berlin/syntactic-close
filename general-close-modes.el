@@ -334,10 +334,9 @@
 	   (goto-char pos)
 	   (while (re-search-forward haskell-var-re orig t 1)
 	     ;; (unless (member (match-string-no-properties 0) varlist)
-	       (cl-pushnew (match-string-no-properties 0) varlist))
+	     (cl-pushnew (match-string-no-properties 0) varlist))
 	   (goto-char orig)
-	   (nreverse varlist))
-	  (t (self-insert-command)))))
+	   (nreverse varlist)))))
 
 (defun general-close-in-listcomprh (&optional pps)
   (interactive)

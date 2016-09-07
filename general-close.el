@@ -40,6 +40,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'sgml-mode)
 (require 'comint)
 ;; (require 'haskell)
