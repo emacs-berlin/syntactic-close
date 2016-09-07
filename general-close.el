@@ -45,6 +45,7 @@
 ;; (require 'haskell)
 ;; (require 'haskell-mode)
 (require 'sh-script)
+;; (require 'python-mode)
 
 (defgroup general-close nil
   "Insert closing delimiter whichever needed. "
@@ -227,7 +228,6 @@ Default is nil"
 (defvar general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
 (setq general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
 
-
 (defcustom general-close-pre-right-arrow-re
   "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\"
   "Insert \"=\" when looking back. "
@@ -371,7 +371,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	  (goto-char (nth 1 pps))
 	  (general-close--return-compliment-char-maybe (char-after)))))))
 
-(defun general-close--fetch-delimiter-maybe (pps)
+(defun general-close--fetch-delimiter-maybe (pps &optional force)
   "Close the innermost list resp. string. "
   (let (erg closer strg)
     (cond ((nth 3 pps)
@@ -383,6 +383,12 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	       (and (setq erg (general-close--in-string-p-intern pps))
 		    (setq closer (make-string (nth 2 erg)(nth 1 erg)))))
 	     closer))
+	  ((and (not force) general-close-electric-listify-p (eq (char-before) general-close-list-separator-char))
+	   (save-excursion
+	     (forward-char -1)
+	     (char-before (point))))
+	  ((and (not force) (nth 1 pps) general-close-electric-listify-p (not (eq (char-before) general-close-list-separator-char)))
+	   general-close-list-separator-char)
 	  ((nth 1 pps)
 	   (save-excursion
 	     (goto-char (nth 1 pps))
@@ -496,14 +502,14 @@ See `general-close-command-separator-char'"
 	    (and (looking-back "->" beg)
 	    (goto-char beg)
 	    (looking-at regexp)))
-      (fixup-whitespace) 
+      (fixup-whitespace)
       (if (eq (char-after) ?\ )
 	  (forward-char 1)
 	(insert 32))
       (insert (match-string-no-properties 2))
       (setq done t))
-    done)) 
-	    
+    done))
+
 (defun general-close--right-arrow-maybe (beg regexp)
   (let (done)
     (when (save-excursion
@@ -594,12 +600,16 @@ See `general-close-command-separator-char'"
       (setq done t))
     done))
 
-(defun general-close--common (&optional closer)
-  (let (done)
-    (when closer
-      (unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
-	(insert closer)
-	(setq done t)))
+(defun general-close--common (beg pps)
+  (let ((closer (general-close--fetch-delimiter-maybe pps))
+	done)
+    (when (member major-mode general-close-known-comint-modes)
+      (setq done (general-close--in-known-comint beg closer)))
+    (unless done
+      (when closer
+	(unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
+	  (insert closer)
+	  (setq done t))))
     done))
 
 (defun general-close--guess-list-element-delimiter ()
@@ -615,8 +625,16 @@ See `general-close-command-separator-char'"
   ;; (when (< 0 (abs (skip-chars-backward (concat "^" (char-to-string general-close-list-separator-char)))))
   ;;   (delete-region (point) orig))
   (skip-chars-backward " \t\r\n\f")
-  (when (eq (char-before) general-close-list-separator-char)
-    (delete-char -1)))
+  (let ((orig (point))
+	(pps (parse-partial-sexp (point-min) (point))))
+    (cond ((eq (char-before) general-close-list-separator-char)
+	   (delete-char -1)
+	   (when (< (point) orig)
+	     (general-close--cleanup-inserts)))
+	  ((and (nth 3 pps)(eq 1 (nth 0 pps))(eq 7 (syntax-class (syntax-after (1- (point))))))
+	   (delete-char -1)
+	   (when (< (point) orig)
+	     (general-close--cleanup-inserts))))))
 
 (defun general-close-fetch-delimiter (pps)
   "In some cases in (nth 3 pps only returns `t'. "
@@ -670,7 +688,7 @@ With \\[universal-argument]: close a list in electric modes. "
 (defun general-close-intern (&optional arg)
   (let* ((beg (general-close--point-min))
 	 (force (eq 4 (prefix-numeric-value arg)))
-	 (orig (point))
+	 ;; (orig (point))
 	 ;; (counter 1)
 	 done closer pps)
     ;; (if (or (not general-close-auto-p) (and general-close-auto-p (eq general-close-auto-buffer (current-buffer))))
@@ -681,30 +699,21 @@ With \\[universal-argument]: close a list in electric modes. "
     (setq done (general-close--travel-comments-maybe pps))
     (unless done
       (setq orig (point))
-      (when (member major-mode general-close--known-modes)
-	(setq done (general-close--modes beg pps orig closer force)))
+      (setq done (general-close--modes beg pps orig closer force))
+      ;; this belong into the mode
+	    ;; (if (and closer general-close-electric-listify-p)
+	    ;; 	(setq done (general-close--electric pps closer force))
+	    ;;   (setq done (general-close--common beg pps)))
       (unless done
-	;; mode-independent in string or list?
-	(setq closer (general-close--fetch-delimiter-maybe pps))
-	(if (and closer general-close-electric-listify-p)
-	    (setq done (general-close--electric pps closer force))
-	  (setq done (general-close--common closer)))
+	(setq done (general-close--common beg pps))
 	(unless done
-	  (if (member major-mode general-close-known-comint-modes)
-	      (setq done (general-close--in-known-comint beg closer))
-	    (setq done (general-close--modes beg pps orig closer)))
-	  (unless done
-	    (and general-close-electric-newline-p (not (general-close-empty-line-p))
-		 (newline))
-	    (when general-close-electric-indent-p
-	      (indent-according-to-mode))))))
-    ;; (message "autoclose in wrong buffer %s" counter)
-    ;; (setq counter (1+ counter))
-    ;;)
+	  (and general-close-electric-newline-p (not (general-close-empty-line-p))
+	       (newline)))))
+    (when general-close-electric-indent-p
+      (indent-according-to-mode))
     (< orig (point))))
 
 (require 'general-close-modes)
-
 
 (provide 'general-close)
 ;;; general-close.el ends here

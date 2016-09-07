@@ -148,7 +148,7 @@ if __name__ == \"__main__\""
     (general-close)
     (should (eq (char-before) ?:))
     (general-close)
-    (should (eq 4 (current-indentation)))))
+    (should (eq 8 (current-indentation)))))
 
 (ert-deftest general-close-python-colon-test-3 ()
   (general-close-test-with-python-buffer
@@ -175,7 +175,9 @@ if __name__ == \"__main__\""
       "['a'"
     (let ((general-close-electric-listify-p t))
       (general-close)
-      (should (eq (char-before) ?')))))
+      (should (eq (char-before (1- (point))) ?,))
+      (should (eq (char-before) ?'))
+      )))
 
 (ert-deftest general-close-python-electric-test-3 ()
   (general-close-test-with-python-buffer
@@ -188,6 +190,7 @@ if __name__ == \"__main__\""
   (general-close-test-with-python-buffer
       "['a','b',"
     (let ((general-close-electric-listify-p t))
+      ;; force final closing
       (general-close '(4))
       (should (eq (char-before) ?\])))))
 

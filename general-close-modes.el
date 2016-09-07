@@ -1,4 +1,4 @@
-;;; general-close-modes.el --- mode-specific functions -*- lexical-binding: t; -*-
+;; general-close-modes.el --- mode-specific functions -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -114,34 +114,65 @@
     done))
 
 
+(defun general-close-fetch-delimiter (pps))
+
+
 ;; Python
-(defun general-close-python-close (closer pps force)
+(defun general-close-python-close (&optional closer pps force delimiter done b-of-st b-of-bl)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
-  (let (
-	;; (closer closer)
-	done)
-    (unless closer (setq closer (general-close--fetch-delimiter-maybe pps)))
-    (if closer
-	(setq done (general-close-python-listclose closer force pps))
-      (setq done
-	    (let ((general-close-beginning-of-statement
-		   (if (ignore-errors (functionp 'py-backward-statement))
-		       'py-backward-statement
-		     (lambda ()(beginning-of-line)(back-to-indentation))))
-		  (general-close-beginning-of-block-re "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*")
-		  done)
-	      (cond ((and (not (char-equal ?: (char-before)))
-			  (save-excursion
-			    (funcall general-close-beginning-of-statement)
-			    (looking-at general-close-beginning-of-block-re)))
-		     (insert ":")
-		     (setq done t))
-		    (t (eolp)
-		       (ignore-errors (newline-and-indent))
-		       (setq done t)))
-	      done))
-      done)))
+    (let* ((closer (or closer
+		       (general-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))) force)))
+	   (pps (parse-partial-sexp (point-min) (point)))
+	   ;; (delimiter (or delimiter (general-close-fetch-delimiter pps)))
+	   (general-close-beginning-of-statement
+	    (or b-of-st
+		(if (ignore-errors (functionp 'py-backward-statement))
+		    'py-backward-statement
+		  (lambda ()(beginning-of-line)(back-to-indentation)))))
+	   (general-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
+	   done)
+      (cond
+       ;; nested lists,
+       ;; Inside a list-comprehension
+       ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
+	     (eq 1 (car (syntax-after (1- (point))))))
+	(insert (general-close--listcompr-fetch-symbol))
+	(setq done t))
+       ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps)))
+	(when (eq 2 (car (syntax-after (1- (point)))))
+	  (insert general-close-list-separator-char)
+	  (setq done t)))
+       ;; simple lists
+       ((and closer general-close-electric-listify-p (eq (char-before) general-close-list-separator-char))
+	(insert closer)
+	(setq done t))
+       ((and closer general-close-electric-listify-p
+	     (not (eq (char-before) closer)))
+	(insert closer)
+	(setq done t)
+	(unless force
+	  (general-close-python-close nil nil force nil t)))
+       ((and closer general-close-electric-listify-p
+	     (not (eq (char-before) general-close-list-separator-char)))
+	(insert general-close-list-separator-char)
+	(general-close-python-close closer pps force))
+       ((and closer general-close-electric-listify-p)
+	(setq done (general-close--electric pps closer force))
+	(unless (eq (char-before) general-close-list-separator-char)
+	  (general-close-python-close closer pps force)))
+       (closer
+	(setq done (general-close-python-listclose closer force pps)))
+       ((and (not (char-equal ?: (char-before)))
+	     (save-excursion
+	       (funcall general-close-beginning-of-statement)
+	       (looking-at general-close-beginning-of-block-re)))
+	(insert ":")
+	(setq done t))
+       (t (eolp)
+	  (ignore-errors (newline-and-indent))
+	  (setq done t)))
+      done))
 
 ;; Ruby
 (defun general-close--generic-fetch-delimiter-maybe ()
@@ -193,24 +224,61 @@
 	(insert " ++ ")))
     done))
 
+(defun general-close--listcompr-fetch-symbol ()
+  (let ((erg
+	 (save-excursion
+	   (forward-char -1)
+	   (buffer-substring-no-properties (point) (progn (skip-chars-backward "[[:alnum:]]") (point))))))
+    (if (< 1 (length erg))
+	erg
+      (setq erg (string-to-char erg))
+      (cond
+       ((eq 122 erg)
+	;; if at char `z', follow up with `a'
+	97)
+       ((eq erg 90)
+	65)
+       ((< 96 erg)
+	(1+ erg))
+       ((< 64 erg)
+	(1+ erg))
+       ;; raise until number 9
+       ((< erg 57)
+	(1+ erg))
+       (t erg)))))
+
 (defun general-close-haskell-close (beg &optional closer pps)
   (let ((closer (or closer
 		    (and pps (general-close--fetch-delimiter-maybe pps))
 		    (general-close--generic-fetch-delimiter-maybe)))
-	done)
-    (if closer
-	(progn
-	  (insert closer)
-	  (setq done t))
-      (cond ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
-	    ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
-	    ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
-	    ((setq done (general-close--insert-string-concat-op-maybe)))))
+	done erg symbol)
+
+    (cond
+     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
+	   (eq 1 (car (syntax-after (1- (point))))))
+      ;; translate a single char into its successor
+      ;; if multi-char symbol, repeat
+      (insert (general-close--listcompr-fetch-symbol))
+      (setq done t) )
+     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps)))
+      ;; Inside a list-comprehension
+      (when (eq 2 (car (syntax-after (1- (point)))))
+	(insert general-close-list-separator-char)
+	(setq done t)))
+
+     (closer
+      (insert closer)
+      (setq done t))
+     ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
+     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
+     ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
+     ((setq done (general-close--insert-string-concat-op-maybe))))
     done))
 
 ;; Php
-(defun general-close--php-check (closer)
-  (let ((orig (point))
+(defun general-close--php-check (pps &optional closer)
+  (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
+	(orig (point))
 	done)
     (cond ((and (eq closer ?})(general-close-empty-line-p))
 	   (insert closer)
@@ -242,8 +310,8 @@
 (defun general-close--modes (beg pps orig &optional closer force)
   (let (done)
     (cond
-     ((or (eq major-mode 'php-mode) (eq major-mode 'js-mode))
-      (setq done (general-close--php-check closer)))
+     ((member major-mode (list 'php-mode 'js-mode 'web-mode))
+      (setq done (general-close--php-check pps closer)))
      ((eq major-mode 'python-mode)
       (setq done (general-close-python-close closer pps force)))
      ((eq major-mode 'emacs-lisp-mode)
@@ -252,7 +320,7 @@
       (setq done (general-close-ruby-close closer pps)))
      ((member major-mode general-close--ml-modes)
       (setq done (general-close-ml)))
-     ((eq major-mode 'haskell-mode)
+     ((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
       (setq done (general-close-haskell-close beg closer pps)))
      (t (setq done (general-close--intern orig closer pps))))
     done))
@@ -271,7 +339,7 @@
 	   (while (re-search-forward haskell-var-re orig t 1)
 	     (unless (member (match-string-no-properties 0) varlist)
 	       (push (match-string-no-properties 0) varlist)))
-	   (goto-char orig) 
+	   (goto-char orig)
 	   (nreverse varlist))
 	  (t (self-insert-command)))))
 
