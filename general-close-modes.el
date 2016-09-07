@@ -267,6 +267,12 @@
       (insert (general-close--listcompr-fetch-symbol))
       (setq done t))
      ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
+	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[[:alnum:]]")(eq (char-before) general-close-list-separator-char)))))
+      ;; translate a single char into its successor
+      ;; if multi-char symbol, repeat
+      (insert closer)
+      (setq done t))
+     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
 	   (not (eq 1 (car (syntax-after (1- (point)))))))
       ;; works but not needed (?)
       (save-excursion
