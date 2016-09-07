@@ -137,19 +137,6 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
     (general-close)
     (should (eq (char-before) 32))))
 
-(ert-deftest general-close-python-colon-test-2 ()
-  (general-close-test-with-python-buffer
-      "class TutorialApp(App):
-    def build(self):
-        return Button(text=\"Hello!\",
-                      background_color=(0, 0, 1, 1)
-                      font_size=150)
-if __name__ == \"__main__\""
-    (general-close)
-    (should (eq (char-before) ?:))
-    (general-close)
-    (should (eq 8 (current-indentation)))))
-
 (ert-deftest general-close-python-colon-test-3 ()
   (general-close-test-with-python-buffer
       "class TestInit(unittest.TestCase):
@@ -176,8 +163,7 @@ if __name__ == \"__main__\""
     (let ((general-close-electric-listify-p t))
       (general-close)
       (should (eq (char-before (1- (point))) ?,))
-      (should (eq (char-before) ?'))
-      )))
+      (should (eq (char-before) ?')))))
 
 (ert-deftest general-close-python-electric-test-3 ()
   (general-close-test-with-python-buffer

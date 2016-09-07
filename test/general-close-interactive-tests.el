@@ -114,5 +114,18 @@ asdf n"
     (skip-chars-backward " \t\r\n\f") 
     (should (eq (char-before) ?t))))
 
+(ert-deftest general-close-python-colon-test-2 ()
+  (general-close-test-with-python-buffer
+      "class TutorialApp(App):
+    def build(self):
+        return Button(text=\"Hello!\",
+                      background_color=(0, 0, 1, 1)
+                      font_size=150)
+if __name__ == \"__main__\""
+    (general-close)
+    (should (eq (char-before) ?:))
+    (general-close)
+    (should (eq 8 (current-indentation)))))
+
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here
