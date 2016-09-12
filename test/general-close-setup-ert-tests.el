@@ -34,7 +34,15 @@
 ;; (load "~/werkstatt/misc/sml-mode.el" nil t)
 ;; (require 'sml-mode)
 
-(add-to-list 'load-path "../.cask/24.4/elpa/haskell-mode-20160818.437")
+(add-to-list 'load-path ".cask/24.4/elpa/haskell-mode-20160818.437")
+
+(if (file-readable-p
+     ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
+    (progn
+      (message "Lade %s" ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
+      (load ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el" nil t))
+  (message "Nicht gefunden: %s" "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
+
 (require 'haskell)
 (require 'haskell-mode)
 
