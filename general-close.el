@@ -160,6 +160,7 @@ Default is nil"
 
 (defcustom general-close--semicolon-separator-modes
   (list
+   'inferior-sml-mode
    'js-mode
    'js2-mode
    'perl-mode

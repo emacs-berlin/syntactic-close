@@ -45,10 +45,11 @@
   ;; (dired ".cask/24.4/elpa/haskell-mode-20160818.437")
   )
 
-(require 'haskell)
-(require 'haskell-mode)
+;; (require 'haskell)
+;; (require 'haskell-mode)
 
 (setq general-close-install-directory default-directory)
+(message "default-directory: %s" default-directory)
 (sit-for 0.1 t)
 
 (defvar general-close-debug-p nil
