@@ -91,5 +91,14 @@
       (skip-chars-backward " \t\r\n\f")
       (should (looking-back "<-")))))
 
+(ert-deftest general-close-list-comprehension-test-12 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(asdb, asdb"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\))))))
+
+
 (provide 'general-close-haskell-tests)
 ;;; general-close-haskell-tests.el ends here

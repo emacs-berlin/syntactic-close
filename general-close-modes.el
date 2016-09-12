@@ -271,21 +271,26 @@
 
 (defun general-close-insert-var-in-listcomprh (pps closer orig &optional sorted splitpos)
   ;; which var of sorted to insert?
-  (let* (done
-	 (sorted sorted)
-	 (splitpos (or splitpos (save-excursion (and (skip-chars-backward "^|" (line-beginning-position))(eq (char-before) ?|)(1- (point))))))
-	 (vars-at-point (general-closer-uniq-varlist splitpos (line-end-position) pps))
-	 (vars-at-point (nreverse vars-at-point))
-	 (candidate
-	  (if vars-at-point
-	      (cond ((and (not (eq 2 (nth 1 pps)))
-			  (eq (member (car vars-at-point) sorted)
-			      sorted))
-		     "<-")
-		    (t (car (member (car vars-at-point) sorted))))
-	    (car sorted))))
-    (when candidate
-      (general-close-insert-with-padding-maybe candidate)
+  (let* (done vars-at-point candidate
+	      (sorted sorted)
+	      (splitpos (or splitpos (save-excursion (and (skip-chars-backward "^|" (line-beginning-position))(eq (char-before) ?|)(1- (point)))))))
+    (if splitpos
+	(progn
+	  (setq vars-at-point
+		(general-closer-uniq-varlist splitpos (line-end-position) pps))
+	  (setq vars-at-point (nreverse vars-at-point))
+	  (setq candidate
+		(if vars-at-point
+		    (cond ((and (not (eq 2 (nth 1 pps)))
+				(eq (member (car vars-at-point) sorted)
+				    sorted))
+			   "<-")
+			  (t (car (member (car vars-at-point) sorted))))
+		  (car sorted)))
+	  (when candidate
+	    (general-close-insert-with-padding-maybe candidate)
+	    (setq done t)))
+      (insert closer)
       (setq done t))
     done))
 
@@ -302,7 +307,7 @@
       (insert (general-close--listcompr-guess-symbol))
       (setq done t))
      ((and closer general-close-electric-listify-p
-	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[[:alnum:]]")(eq (char-before) general-close-list-separator-char)))))
+	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[[:alnum:]]")(skip-chars-backward " \t\r\n\f")(eq (char-before) general-close-list-separator-char)))))
       ;; translate a single char into its successor
       ;; if multi-char symbol, repeat
       (insert closer)

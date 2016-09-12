@@ -271,7 +271,6 @@ BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
   (declare (indent 1) (debug t))
   `(with-temp-buffer
-     (and (featurep 'haskell) (unload-feature 'haskell))
      (let (hs-minor-mode)
        (insert ,contents)
        (haskell-mode)
@@ -285,7 +284,6 @@ BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
   (declare (indent 1) (debug t))
   `(with-temp-buffer
-     (and (featurep 'haskell) (unload-feature 'haskell))
      (let (hs-minor-mode)
        (insert ,contents)
        (haskell-mode)
