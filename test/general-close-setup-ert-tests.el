@@ -42,7 +42,8 @@
       (message "Lade %s" ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
       (load ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el" nil t))
   (message "Nicht gefunden: %s" ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
-  (dired ".cask/24.4/elpa/haskell-mode-20160818.437"))
+  ;; (dired ".cask/24.4/elpa/haskell-mode-20160818.437")
+  )
 
 (require 'haskell)
 (require 'haskell-mode)

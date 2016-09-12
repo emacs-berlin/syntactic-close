@@ -164,6 +164,7 @@ Default is nil"
    'js2-mode
    'perl-mode
    'php-mode
+   'sml-mode
    'web-mode
    )
   "List of modes which commands must be closed by `general-close-command-separator-char. "
@@ -172,19 +173,15 @@ Default is nil"
   :tag "general-close--semicolon-separator-modes"
   :group 'general-close)
 
-(defcustom general-close--known-modes
+(defcustom general-close--singlequote-modes
   (list
-   'emacs-lisp-mode
    'haskell-mode
-   'js-mode
-   'php-mode
-   'python-mode
-   'ruby-mode
+   'inferior-haskell
    )
-  "List of modes with known special treatment. "
+  "List of modes using singlequote as delimiters without string-syntax. "
 
   :type 'list
-  :tag "general-close--known-modes"
+  :tag "general-close--singlequote-modes"
   :group 'general-close)
 
 (defcustom general-close--colon-separator-modes
@@ -376,7 +373,7 @@ If non-nil, return a list composed of
 	   (erg (when (nth 3 pps)
 		  (general-close--in-string-p-intern pps))))
       (unless erg
-	(when (looking-at "\"\\|'")
+	(when (looking-at "\"")
 	  (forward-char 1)
 	  (setq pps (parse-partial-sexp (line-beginning-position) (point)))
 	  (when (nth 3 pps)
@@ -429,13 +426,34 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	       (and (setq erg (general-close--in-string-p-intern pps))
 		    (setq closer (make-string (nth 2 erg)(nth 1 erg)))))
 	     closer))
-	  ((and (not force) general-close-electric-listify-p (eq (char-before) general-close-list-separator-char))
-	   (save-excursion
-	     (forward-char -1)
-	     (char-before (point))))
-	  ((and (not force) (nth 1 pps) general-close-electric-listify-p (not (eq (char-before) general-close-list-separator-char)))
+	  ((and (member major-mode general-close--singlequote-modes) (eq (char-before (1- (point))) ?'))
+	   "'")
+	  ((and (nth 1 pps)(not force)
+		general-close-electric-listify-p
+		(save-excursion
+		  (progn
+		    (skip-chars-backward " \t\r\n\f")
+		    (eq (char-before) general-close-list-separator-char))))
+	   (char-before (1- (point))))
+	  ((and (nth 1 pps)
+		(save-excursion
+		  (goto-char (nth 1 pps))
+		  (eq ?\] (setq erg (general-close--return-complement-char-maybe (char-after))))))
+	   erg)
+	  ((and (not force)
+		general-close-electric-listify-p
+		(save-excursion
+		  (progn
+		    (skip-chars-backward " \t\r\n\f")
+		    (eq (char-before) general-close-list-separator-char))))
+	   (char-before (point)))
+	  ((and (not force) (nth 1 pps)
+		general-close-electric-listify-p
+		(save-excursion
+		  (progn (skip-chars-backward " \t\r\n\f")
+			 (not (eq (char-before) general-close-list-separator-char)))))
 	   general-close-list-separator-char)
-	  ((nth 1 pps)
+ 	  ((nth 1 pps)
 	   (save-excursion
 	     (goto-char (nth 1 pps))
 	     (general-close--return-complement-char-maybe (char-after)))))))
@@ -507,6 +525,9 @@ See `general-close-command-separator-char'"
 (defun general-close--intern (orig closer pps)
   (let (done)
     (cond
+     ((and (nth 3 pps)(eq 34 (nth 3 pps)))
+		     ;; is there a case where this string isn't closed now?
+		     (setq done (progn (insert 34) t)))
      ;; a command separator may precede closing delimiter
      ((member major-mode general-close--semicolon-separator-modes)
       (setq general-close-command-separator-char ?\;)
@@ -574,15 +595,12 @@ When `general-close-insert-with-padding-p' is `t', the default "
 
 (defun general-close--right-arrow-maybe (beg regexp &optional closer)
   (let (done)
-    (cond (closer
-	   (insert closer)
-	   (setq done t))
-	  ((save-excursion
-	     (goto-char beg)
-	     (skip-chars-forward " \t\r\n\f")
-	     (looking-at regexp))
-	   (general-close-insert-with-padding-maybe "->")
-	   (setq done t)))
+    (when (save-excursion
+	    (goto-char beg)
+	    (skip-chars-forward " \t\r\n\f")
+	    (looking-at regexp))
+      (general-close-insert-with-padding-maybe "->")
+      (setq done t))
     done))
 
 (defun general-close--which-right-arrow-regex ()

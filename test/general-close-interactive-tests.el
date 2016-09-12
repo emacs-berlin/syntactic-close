@@ -44,8 +44,8 @@
     (should (eq (char-before) ?/))))
 
 (ert-deftest general-close-haskell-comment-test ()
-  (general-close-test "{- To explore this file: "
-    'haskell-mode
+  (general-close-test-with-haskell-buffer
+      "{- To explore this file: "
     'general-close-debug-p
     (general-close)
     (should (eq (char-before) ?\}))))
@@ -58,35 +58,28 @@
     (should (eq (char-before) ?\)))))
 
 (ert-deftest general-close-haskell-right-arrow-test-1 ()
-  (general-close-test "add :: (Int,Int"
-    'haskell-mode
-    'general-close-debug-p
+  (general-close-test-with-haskell-buffer
+      "add :: (Int,Int"
     (let (general-close-electric-listify-p)
       (general-close)
       (should (eq (char-before) ?\))))))
 
 (ert-deftest general-close-haskell-right-arrow-test-2 ()
-  (general-close-test "asdf :: Int"
-    'haskell-mode
-    'general-close-debug-p
+  (general-close-test-with-haskell-buffer "asdf :: Int"
     (let (general-close-electric-listify-p)
       (general-close)
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?>)))))
 
 (ert-deftest general-close-haskell-right-arrow-test-3 ()
-  (general-close-test "add :: (Int,Int)"
-    'haskell-mode
-    'general-close-debug-p
+  (general-close-test-with-haskell-buffer "add :: (Int,Int)"
     (let (general-close-electric-listify-p)
       (general-close)
       (skip-chars-backward " \t\r\n\f") 
       (should (eq (char-before) ?>)))))
 
 (ert-deftest general-close-haskell-assign-test-1 ()
-  (general-close-test "asdf "
-    'haskell-mode
-    'general-close-debug-p
+  (general-close-test-with-haskell-buffer "asdf "
     (let (general-close-electric-listify-p)
       (general-close)
       (skip-chars-backward " \t\r\n\f")
@@ -94,10 +87,8 @@
 
 
 (ert-deftest general-close-haskell-asign-test-2 ()
-  (general-close-test "asdf :: Int -> Int
+  (general-close-test-with-haskell-buffer "asdf :: Int -> Int
 asdf n"
-    'haskell-mode
-    'general-close-debug-p
     (let (general-close-electric-listify-p)
       (general-close)
       (skip-chars-backward " \t\r\n\f")
@@ -105,17 +96,13 @@ asdf n"
 
 (ert-deftest general-close-haskell-concat-test ()
   ;; indent s = "    " ++ s
-  (general-close-test "indent s = \"asdf\""
-    'haskell-mode
-    'general-close-debug-p
+  (general-close-test-with-haskell-buffer "indent s = \"asdf\""
     (general-close)
     (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?\+))))
 
 (ert-deftest general-close-haskell-typedef-test ()
-  (general-close-test "signum :: Int ->"
-    'haskell-mode
-    'general-close-debug-p
+  (general-close-test-with-haskell-buffer "signum :: Int ->"
     (general-close)
     (skip-chars-backward " \t\r\n\f") 
     (should (eq (char-before) ?t))))
@@ -132,6 +119,140 @@ if __name__ == \"__main__\""
     (should (eq (char-before) ?:))
     (general-close)
     (should (eq 8 (current-indentation)))))
+
+
+(ert-deftest general-close-list-comprehension-test-1 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(asdb,"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?b)))))
+
+(ert-deftest general-close-list-comprehension-test-2 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(asdb,cdfg"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?\))))))
+
+(ert-deftest general-close-list-comprehension-test-3 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?,)))))
+
+(ert-deftest general-close-list-comprehension-test-4 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x,"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?y)))))
+
+(ert-deftest general-close-list-comprehension-test-5 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(a,"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?b)))))
+
+(ert-deftest general-close-list-comprehension-test-6 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(a,b)] |"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?a)))))
+
+(ert-deftest general-close-list-comprehension-test-7 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x,y)] |"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?x)))))
+
+(ert-deftest general-close-list-comprehension-test-8 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(abd,def)] |"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (looking-back "abd")))))
+
+(ert-deftest general-close-list-comprehension-test-9 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(a,b)] | a"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (looking-back "<-")))))
+
+(ert-deftest general-close-list-comprehension-test-10 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x,y)] | x"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (looking-back "<-")))))
+
+(ert-deftest general-close-list-comprehension-test-11 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(abd,def)] | abd"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (looking-back "<-")))))
+
+(ert-deftest general-close-list-comprehension-test-12 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(asdb, asdb"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\))))))
+
+
+(ert-deftest general-close-list-comprehension-test-13 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(abd,def)] | abd <- "
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\[)))))
+
+(ert-deftest general-close-list-comprehension-test-14 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(abd,def)] | abd <- [1..3 "
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\]))))) 
+
+(ert-deftest general-close-list-comprehension-test-15 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x,y)] | x <-[1..3]"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?,)))))
+
+(ert-deftest general-close-list-comprehension-test-16 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x,y)] | x <-[1..3],"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?y)))))
+
+(ert-deftest general-close-list-comprehension-test-17 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x,y)] | x <-[1..3], y"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (looking-back "<-"))))) 
+
 
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here

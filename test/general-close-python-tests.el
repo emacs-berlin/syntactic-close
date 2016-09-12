@@ -162,8 +162,7 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
       "['a'"
     (let ((general-close-electric-listify-p t))
       (general-close)
-      (should (eq (char-before (1- (point))) ?,))
-      (should (eq (char-before) ?')))))
+      (should (eq (char-before (point)) ?,)))))
 
 (ert-deftest general-close-python-electric-test-3 ()
   (general-close-test-with-python-buffer
@@ -193,7 +192,6 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
     (let ((general-close-electric-listify-p t))
       (general-close '(4))
       (should (eq (char-before) ?\])))))
-
 
 (ert-deftest general-close-python-electric-test-7 ()
   (general-close-test-with-python-buffer

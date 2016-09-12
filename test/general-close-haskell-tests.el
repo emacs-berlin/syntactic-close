@@ -106,7 +106,39 @@
     (let ((general-close-electric-listify-p t))
       (general-close)
       (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\[)))))
+
+(ert-deftest general-close-list-comprehension-test-14 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(abd,def)] | abd <- [1..3] "
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?\[))))) 
+
+(ert-deftest general-close-list-comprehension-test-15 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x,y)] | x <-[1..3]"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?,)))))
+
+(ert-deftest general-close-list-comprehension-test-16 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x,y)] | x <-[1..3],"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (looking-back "<-"))))) 
+
+(ert-deftest general-close-list-comprehension-test-17 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "[(x,y)] | x <-[1..3], y"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\[)))))
 
 (provide 'general-close-haskell-tests)
 ;;; general-close-haskell-tests.el ends here
