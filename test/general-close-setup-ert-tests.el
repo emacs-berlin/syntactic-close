@@ -34,6 +34,10 @@
 ;; (load "~/werkstatt/misc/sml-mode.el" nil t)
 ;; (require 'sml-mode)
 
+(add-to-list 'load-path "../.cask/24.4/elpa/haskell-mode-20160818.437")
+(require 'haskell)
+(require 'haskell-mode)
+
 (setq general-close-install-directory default-directory)
 (sit-for 0.1 t)
 

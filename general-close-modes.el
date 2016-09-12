@@ -284,7 +284,9 @@
 		    (cond ((and (not (eq 2 (nth 1 pps)))
 				(eq (member (car vars-at-point) sorted)
 				    sorted))
-			   "<-")
+			   (if (looking-back "<-[ \t]+")
+			       "["
+			     "<-"))
 			  (t (car (member (car vars-at-point) sorted))))
 		  (car sorted)))
 	  (when candidate

@@ -572,7 +572,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
       (setq done t))
     done))
 
-(defun general-close--right-arrow-maybe (beg regexp closer)
+(defun general-close--right-arrow-maybe (beg regexp &optional closer)
   (let (done)
     (cond (closer
 	   (insert closer)
