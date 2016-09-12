@@ -94,24 +94,48 @@
 
 (defvar general-close-emacs-lisp-block-re "(if\\|(cond\\|when\\|unless")
 
-(defun general-close-just-one-space ()
-  (fixup-whitespace)
-  (cond
-   ((eq (char-before) ?\ ))
-   ((eq (char-after) ?\ )
-    (forward-char 1))
-   (t (insert 32))))
-
 ;; Emacs-lisp
 (defun general-close-emacs-lisp-close (closer pps force)
   (let (done)
     (cond ((save-excursion
 	     (skip-chars-backward " \t\r\n\f")
 	     (looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
-	   (general-close-just-one-space)
-	   (insert ?\()
+	   (general-close-insert-with-padding-maybe (char-to-string 40))
 	   (setq done t)))
     done))
+
+(defun general-close--listcompr-guess-symbol (&optional arg)
+  (let ((erg (when arg
+	       (progn (goto-char arg)
+		      (char-after)))))
+    (unless erg
+      (setq erg
+	    (save-excursion
+	      (progn
+		(forward-char -1)
+		(buffer-substring-no-properties (point) (progn (skip-chars-backward "[[:alnum:]]") (point)))))))
+
+    (unless
+	(or (characterp erg)(< 1 (length erg)))
+      (setq erg (string-to-char erg)))
+
+    (setq erg
+	  (cond
+	   ((stringp erg)
+	    erg)
+	   ((eq 122 erg)
+	    ;; if at char `z', follow up with `a'
+	    97)
+	   ((eq erg 90)
+	    65)
+	   ((< 96 erg)
+	    (1+ erg))
+	   ((< 64 erg)
+	    (1+ erg))
+	   ;; raise until number 9
+	   ((< erg 57)
+	    (1+ erg))
+	   (t erg)))))
 
 ;; Python
 (defun general-close-python-close (&optional closer pps force delimiter done b-of-st b-of-bl)
@@ -133,7 +157,7 @@
        ;; Inside a list-comprehension
        ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
 	     (eq 1 (car (syntax-after (1- (point))))))
-	(insert (general-close--listcompr-fetch-symbol))
+	(insert (general-close--listcompr-guess-symbol))
 	(setq done t))
        ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps)))
 	(when (eq 2 (car (syntax-after (1- (point)))))
@@ -220,78 +244,119 @@
 	(insert " ++ ")))
     done))
 
-(defun general-close--listcompr-fetch-symbol (&optional arg)
-  (let ((erg (when arg
-	       (progn (goto-char arg)
-		      (char-after)))))
-    (unless erg
-      (setq erg
-	    (save-excursion
-	      (progn
-		(forward-char -1)
-		(buffer-substring-no-properties (point) (progn (skip-chars-backward "[[:alnum:]]") (point)))))))
+(defun general-closer-forward-sexp-maybe (pos)
+  (ignore-errors (forward-sexp))
+  (when (< pos (point))(point)))
 
-    (unless
-	(or (characterp erg)(< 1 (length erg)))
-      (setq erg (string-to-char erg)))
+(defun general-closer-uniq-varlist (&optional beg end pps)
+  "Return a list of variables existing in buffer-substring. "
+  (save-excursion
+    (let* (sorted
+	   (pos (point))
+	   (beg (or beg (ignore-errors (nth 1 pps))
+		    (or (nth 1 pps)
+			(nth 1 (parse-partial-sexp (point-min) (point))))))
+	   (end (or end
+		    (save-excursion
+		      (goto-char beg)
+		      (or (general-closer-forward-sexp-maybe pos))
+			  pos)))
 
-    (setq erg
-	  (cond
-	   ((stringp erg)
-	    erg)
-	   ((eq 122 erg)
-	    ;; if at char `z', follow up with `a'
-	    97)
-	   ((eq erg 90)
-	    65)
-	   ((< 96 erg)
-	    (1+ erg))
-	   ((< 64 erg)
-	    (1+ erg))
-	   ;; raise until number 9
-	   ((< erg 57)
-	    (1+ erg))
-	   (t erg)))))
+	   (varlist (split-string (buffer-substring-no-properties beg end) "[[:punct:][0-9 \r\n\f\t]" t)))
+      (dolist (elt varlist)
+	(unless (member elt sorted)
+	  (push elt sorted)))
+      (setq sorted (nreverse sorted))
+      sorted)))
 
-(defun general-close-haskell-close (beg &optional closer pps)
-  (let ((closer (or closer
-		    (and pps (general-close--fetch-delimiter-maybe pps))
-		    (general-close--generic-fetch-delimiter-maybe)))
-	done)
+(defun general-close-insert-var-in-listcomprh (pps closer orig &optional sorted splitpos)
+  ;; which var of sorted to insert?
+  (let* (done
+	 (sorted sorted)
+	 (splitpos (or splitpos (save-excursion (and (skip-chars-backward "^|" (line-beginning-position))(eq (char-before) ?|)(1- (point))))))
+	 (vars-at-point (general-closer-uniq-varlist splitpos (line-end-position) pps))
+	 (vars-at-point (nreverse vars-at-point))
+	 (candidate
+	  (if vars-at-point
+	      (cond ((and (not (eq 2 (nth 1 pps)))
+			  (eq (member (car vars-at-point) sorted)
+			      sorted))
+		     "<-")
+		    (t (car (member (car vars-at-point) sorted))))
+	    (car sorted))))
+    (when candidate
+      (general-close-insert-with-padding-maybe candidate)
+      (setq done t))
+    done))
 
+(defun general-close-haskell-twofold-list-cases (pps &optional closer orig)
+  (let* ((sorted (save-excursion (general-closer-uniq-varlist nil nil pps)))
+	 done)
+    ;; [(a*b+a) |a<-[1..3],b<-[4..5]]
     (cond
-     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
+     (;; after a punct-character
+      (and closer general-close-electric-listify-p
 	   (eq 1 (car (syntax-after (1- (point))))))
       ;; translate a single char into its successor
       ;; if multi-char symbol, repeat
-      (insert (general-close--listcompr-fetch-symbol))
+      (insert (general-close--listcompr-guess-symbol))
       (setq done t))
-     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
+     ((and closer general-close-electric-listify-p
 	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[[:alnum:]]")(eq (char-before) general-close-list-separator-char)))))
       ;; translate a single char into its successor
       ;; if multi-char symbol, repeat
       (insert closer)
       (setq done t))
-     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
+     ((and closer general-close-electric-listify-p
 	   (not (eq 1 (car (syntax-after (1- (point)))))))
       ;; works but not needed (?)
       (save-excursion
-      	(goto-char (nth 1 pps))
-      	(setq closer (general-close--return-complement-char-maybe (char-after)))) 
+	(goto-char (nth 1 pps))
+	(setq closer (general-close--return-complement-char-maybe (char-after))))
       (insert closer)
       (setq done t))
-     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps)))
+     ((and closer general-close-electric-listify-p)
       ;; Inside a list-comprehension
       (when (eq 2 (car (syntax-after (1- (point)))))
 	(insert general-close-list-separator-char)
 	(setq done t)))
+     (t (setq done (general-close-insert-var-in-listcomprh pps closer orig sorted))))
+    done))
+
+(defun general-close-haskell-close-in-list-comprehension (pps closer orig)
+  (let ((splitpos
+	 (+ (line-beginning-position)
+	    ;; position in substring
+	    (string-match "|" (buffer-substring-no-properties (line-beginning-position) (point)))))
+	sorted done)
+    (skip-chars-backward "^)" (line-beginning-position))
+    (and (eq (char-before) ?\))(forward-char -1))
+    (setq sorted (general-closer-uniq-varlist nil (point) (parse-partial-sexp (line-beginning-position) (point))))
+    (goto-char orig)
+    (setq done
+	  (general-close-insert-var-in-listcomprh pps closer orig sorted splitpos))
+    done))
+
+(defun general-close-haskell-close (beg &optional closer pps orig)
+  (let ((closer (or closer
+		    (and pps (general-close--fetch-delimiter-maybe pps))
+		    (general-close--generic-fetch-delimiter-maybe)))
+	done sorted splitpos)
+    (cond
+     ((eq 2 (nth 0 pps))
+      (setq done (general-close-haskell-twofold-list-cases pps closer orig)))
+     ((eq 1 (count-matches "|" (line-beginning-position) (point)))
+      ;; in list-comprehension
+      ;; [(a,b) |
+      (setq done (general-close-haskell-close-in-list-comprehension pps closer orig)))
+     ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
+     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re closer)))
+     ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
+     ((setq done (general-close--insert-string-concat-op-maybe)))
      (closer
       (insert closer)
       (setq done t))
-     ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
-     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
-     ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
-     ((setq done (general-close--insert-string-concat-op-maybe))))
+)
     done))
 
 ;; Php
@@ -340,7 +405,7 @@
      ((member major-mode general-close--ml-modes)
       (setq done (general-close-ml)))
      ((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
-      (setq done (general-close-haskell-close beg closer pps)))
+      (setq done (general-close-haskell-close beg closer pps orig)))
      (t (setq done (general-close--intern orig closer pps))))
     done))
 
@@ -360,16 +425,6 @@
 	     (cl-pushnew (match-string-no-properties 0) varlist))
 	   (goto-char orig)
 	   (nreverse varlist)))))
-
-(defun general-close-in-listcomprh (&optional pps)
-  (interactive)
-  (let ((orig (point))
-	(pps (or pps (parse-partial-sexp (line-beginning-position) (point)))))
-    (unless (eq (nth 1 pps) general-close-haskell-listcomprh-startpos)
-      (setq  general-close-haskell-listcomprh-vars (general-close-set-listcomprh-update orig pps)))
-    (cond
-     ((eq 0 general-close-haskell-listcomprh-counter)
-      (insert (nth 0 general-close-haskell-listcomprh-vars))))))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

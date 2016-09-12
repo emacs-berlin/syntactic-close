@@ -63,10 +63,7 @@
     'general-close-debug-p
     (let (general-close-electric-listify-p)
       (general-close)
-      (should (eq (char-before) ?\)))
-      (general-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?>)))))
+      (should (eq (char-before) ?\))))))
 
 (ert-deftest general-close-haskell-right-arrow-test-2 ()
   (general-close-test "asdf :: Int"
@@ -75,6 +72,15 @@
     (let (general-close-electric-listify-p)
       (general-close)
       (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?>)))))
+
+(ert-deftest general-close-haskell-right-arrow-test-3 ()
+  (general-close-test "add :: (Int,Int)"
+    'haskell-mode
+    'general-close-debug-p
+    (let (general-close-electric-listify-p)
+      (general-close)
+      (skip-chars-backward " \t\r\n\f") 
       (should (eq (char-before) ?>)))))
 
 (ert-deftest general-close-haskell-assign-test-1 ()

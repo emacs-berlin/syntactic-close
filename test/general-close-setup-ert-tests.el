@@ -265,5 +265,35 @@ BODY is code to be executed within the temp buffer.  Point is
        ;; (message "ERT %s" (point))
        ,@body)))
 
+(defmacro general-close-test-with-haskell-buffer (contents &rest body)
+  "Create temp buffer in `haskell-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (and (featurep 'haskell) (unload-feature 'haskell))
+     (let (hs-minor-mode)
+       (insert ,contents)
+       (haskell-mode)
+       (when general-close-debug-p (switch-to-buffer (current-buffer))
+	     (font-lock-fontify-buffer))
+       ,@body)))
+
+(defmacro general-close-test-with-haskell-buffer-point-min (contents &rest body)
+  "Create temp buffer in `haskell-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (and (featurep 'haskell) (unload-feature 'haskell))
+     (let (hs-minor-mode)
+       (insert ,contents)
+       (haskell-mode)
+       ;; (message "fill-paragraph-function: %s" fill-paragraph-function)
+       (goto-char (point-min))
+       (when general-close-debug-p (switch-to-buffer (current-buffer))
+	     (font-lock-fontify-buffer))
+       ,@body)))
+
 (provide 'general-close-setup-ert-tests)
 ;; general-close-setup-ert-tests.el ends here

@@ -66,6 +66,15 @@ Default is nil"
   :tag "general-close-delete-whitespace-backward-p"
   :group 'general-close)
 
+(defcustom general-close-insert-with-padding-p t
+  "Ensure a whitespace character before point.
+
+Default is t"
+
+  :type 'boolean
+  :tag "general-close-insert-with-padding-p"
+  :group 'general-close)
+
 (defvar general-close-electric-listify-p nil)
 (defcustom general-close-electric-listify-p nil
   "When inside a list, assume list-separator.
@@ -229,15 +238,48 @@ Default is nil"
   :tag "general-close-comint-pre-right-arrow-re"
   :group 'general-close)
 
-(defvar general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
-(setq general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
+(defcustom general-close-pre-right-arrow-re-raw
+  (concat
+   ;; asdf :: Int
+   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)"
+   "\\|"
+   ;; [(x,y)|x<-[1..3],y<-[4,5]]
+   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: +\\([[:alpha:]]+[A-Za-z0-9_]*\\),\\([[:alpha:]]+[A-Za-z0-9_]*\\) +|")
+  ""
+  ;; :type '(repeat string)
+  :type '(repeat regexp)
+  :tag "general-close-pre-right-arrow-re-raw"
+  :group 'python-mode)
 
-(defcustom general-close-pre-right-arrow-re
-  "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\"
-  "Insert \"=\" when looking back. "
-  :type 'string
-  :tag "general-close-pre-right-arrow-re"
-  :group 'general-close)
+(defvar general-close-pre-right-arrow-re ""
+  "Content of this var is controlled by customizable `general-close-pre-right-arrow-re-raw'")
+
+(setq general-close-pre-right-arrow-re-raw
+      (concat
+       ;; asdf :: Int
+       "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)"
+       "\\|"
+       ;; add :: (Int,Int)
+       "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: +\\([[:alpha:]]+[A-Za-z0-9_]*\\),\\([[:alpha:]]+[A-Za-z0-9_]*\\) +|")
+      ;; [(x,y)|x<-[1..3],y<-[4,5]]
+
+      )
+
+(setq general-close-pre-right-arrow-re
+  (concat
+   "[ \t]*\\_<"
+   general-close-pre-right-arrow-re-raw
+   "\\_>[ \t]*"))
+
+;; (defvar general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
+;; (setq general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
+
+;; (defcustom general-close-pre-right-arrow-re
+;;   "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\"
+;;   "Insert \"=\" when looking back. "
+;;   :type 'string
+;;   :tag "general-close-pre-right-arrow-re"
+;;   :group 'general-close)
 
 (defcustom general-close-default-argument-1
   "x"
@@ -483,11 +525,27 @@ See `general-close-command-separator-char'"
     (setq done t)
     done))
 
-(defun general-close--insert-and-fixup (char)
-  (fixup-whitespace)
+(defun general-close--insert-and-fixup (strg)
   (if (eq (char-before) ?\ )
-      (insert (concat char " "))
-      (insert (concat " " char " "))))
+      (insert (concat strg " "))
+      (insert (concat " " strg " "))))
+
+(defun general-close-insert-with-padding-maybe (strg)
+  "Takes a string. Insert a space before and after maybe.
+
+When `general-close-insert-with-padding-p' is `t', the default "
+  (when general-close-insert-with-padding-p
+    (unless (and (eq (char-before) ?\ )(eq (char-after) ?\ ))
+      (cond
+       ((not (eq (char-before) ?\ ))
+	(insert ?\ ))
+       ((not (eq (char-after) ?\ ))
+	(insert ?\ )
+	(forward-char -1))))
+    (insert strg)
+    (when general-close-insert-with-padding-p
+      (unless (eq (char-after) ?\ )
+	(insert ?\ )))))
 
 (defun general-close--insert-assignment-maybe (beg regexp)
   (let (done)
@@ -495,7 +553,7 @@ See `general-close-command-separator-char'"
 	    (goto-char beg)
 	    (skip-chars-forward " \t\r\n\f")
 	    (looking-at regexp))
-      (general-close--insert-and-fixup "=")
+      (general-close-insert-with-padding-maybe "=")
       (setq done t))
     done))
 
@@ -514,14 +572,17 @@ See `general-close-command-separator-char'"
       (setq done t))
     done))
 
-(defun general-close--right-arrow-maybe (beg regexp)
+(defun general-close--right-arrow-maybe (beg regexp closer)
   (let (done)
-    (when (save-excursion
-	    (goto-char beg)
-	    (skip-chars-forward " \t\r\n\f")
-	    (looking-at regexp))
-      (general-close--insert-and-fixup "->")
-      (setq done t))
+    (cond (closer
+	   (insert closer)
+	   (setq done t))
+	  ((save-excursion
+	     (goto-char beg)
+	     (skip-chars-forward " \t\r\n\f")
+	     (looking-at regexp))
+	   (general-close-insert-with-padding-maybe "->")
+	   (setq done t)))
     done))
 
 (defun general-close--which-right-arrow-regex ()
