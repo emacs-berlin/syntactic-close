@@ -530,7 +530,7 @@ See `general-close-command-separator-char'"
 		     ;; is there a case where this string isn't closed now?
 		     (setq done (progn (insert 34) t)))
      ;; a command separator may precede closing delimiter
-     ((member major-mode general-close--semicolon-separator-modes)
+     ((and (nth 1 pps)(member major-mode general-close--semicolon-separator-modes))
       (setq general-close-command-separator-char ?\;)
       (setq done (general-close--handle-separator-modes orig closer)))
      ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))

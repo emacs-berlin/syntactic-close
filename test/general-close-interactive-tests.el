@@ -57,6 +57,14 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
+(ert-deftest general-close-sml-assignment-test ()
+  (general-close-test "val z"
+    'sml-mode
+    'general-close-debug-p
+    (general-close)
+    (skip-chars-backward " \t\r\n\f") 
+    (should (eq (char-before) ?=))))
+
 (ert-deftest general-close-haskell-right-arrow-test-1 ()
   (general-close-test-with-haskell-buffer
       "add :: (Int,Int"

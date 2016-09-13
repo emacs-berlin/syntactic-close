@@ -281,9 +281,9 @@
 
 (defun general-close-insert-var-in-listcomprh (pps closer orig &optional sorted splitpos)
   ;; which var of sorted to insert?
-  (let* (done vars-at-point candidate
-	      (sorted sorted)
-	      (splitpos (or splitpos (save-excursion (and (skip-chars-backward "^|" (line-beginning-position))(eq (char-before) ?|)(1- (point)))))))
+  (let* ((sorted sorted)
+	 (splitpos (or splitpos (save-excursion (and (skip-chars-backward "^|" (line-beginning-position))(eq (char-before) ?|)(1- (point))))))
+	 done vars-at-point candidate)
     (if splitpos
 	(progn
 	  (setq vars-at-point
@@ -291,20 +291,22 @@
 	  (setq vars-at-point (nreverse vars-at-point))
 	  (setq candidate
 		(if vars-at-point
-		    (cond ((and (not (eq 2 (nth 1 pps)))
-				(eq (member (car vars-at-point) sorted)
-				    sorted))
-			   (cond ((looking-back "<-[ \t]+")
-				  "[")
-				 ((string-match (car (member (car vars-at-point) sorted)) (buffer-substring-no-properties splitpos (point)))
-				  "<-")
-				 (t (car (member (car vars-at-point) sorted))))))
-		  (car sorted)))
-	  (when candidate
-	    (general-close-insert-with-padding-maybe candidate)
-	    (setq done t)))
-      (insert closer)
+		    (cond ((not (or (eq 2 (nth 1 pps))
+				    (eq (length vars-at-point) (length sorted))))
+			   ;; (eq (member (car vars-at-point) sorted)
+			   (nth (length vars-at-point) sorted)))
+		  ;; sorted))
+		  (cond ((looking-back "<-[ \t]*" (line-beginning-position))
+			 "[")
+			((looking-back "|[ \t]*" (line-beginning-position))
+			 (car sorted))
+			(t "<-"))))))
+
+    (when candidate
+      (general-close-insert-with-padding-maybe candidate)
       (setq done t))
+    ;; (insert closer)
+    ;; (setq done t)
     done))
 
 (defun general-close-haskell-twofold-list-cases (pps &optional closer orig)
@@ -374,6 +376,7 @@
       (setq done t))
      ;; in list-comprehension
      ;; [(a,b) |
+     ;; not just after pipe
      ((and splitter (not closer)
 	   (not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| general-close-list-separator-char))))))
       (cond ((looking-back "<-[ \t]*")
@@ -383,6 +386,7 @@
 	    (t (general-close-insert-with-padding-maybe "<-")))
       (setq done t))
      (splitter
+      ;; after pipe fetch a var
       (setq done (general-close-haskell-close-in-list-comprehension pps closer orig)))
      ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
      ((and (eq 1 (nth 0 pps)) (eq ?\) closer))
