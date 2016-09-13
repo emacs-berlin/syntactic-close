@@ -33,5 +33,6 @@
 ;;     (general-close)
 ;;     (should (eq (char-before) ?\)))))
 
+
 (provide 'general-close-sml-tests)
 ;;; general-close-sml-tests.el ends here

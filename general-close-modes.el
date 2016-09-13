@@ -454,9 +454,9 @@ If at char `z', follow up with `a'"
 	   (nreverse varlist)))))
 
 (defun general-close--semicolon-separator-modes-dispatch (orig closer pps)
-  (let ((closer (or closer (nth-1-pps-complement-char-maybe pps)))
+  (let ((closer (or closer (and (nth 1 pps) (nth-1-pps-complement-char-maybe pps))))
 	done erg)
-    (cond ((and (eq closer ?\))(progn (save-excursion (skip-chars-backward " \t\r\n\f")(looking-back general-close-command-operator-chars (line-beginning-position)))))
+    (cond ((and closer (eq closer ?\))(progn (save-excursion (skip-chars-backward " \t\r\n\f")(looking-back general-close-command-operator-chars (line-beginning-position)))))
 	   (setq erg (car (general-closer-uniq-varlist (nth 1 pps) orig)))
 	   (cond ((and (stringp erg)(< 1 (length erg)))
 		  (general-close-insert-with-padding-maybe erg)
@@ -465,6 +465,9 @@ If at char `z', follow up with `a'"
 		  (general-close-insert-with-padding-maybe
 		   (general-close--raise-symbol (string-to-char erg)))
 		  (setq done t))))
+	  ((progn (save-excursion (beginning-of-line) (looking-at general-close-pre-assignment-re)))
+	   (general-close-insert-with-padding-maybe "=")
+	   (setq done t)) 
 	  (t (setq general-close-command-separator-char 59)
 	     (setq done (general-close--handle-separator-modes orig closer))))
     done))

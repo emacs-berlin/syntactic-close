@@ -217,8 +217,9 @@ Default is nil"
   :tag "general-close-comint-pre-assignment-re"
   :group 'general-close)
 
-(defvar general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$")
-(setq general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$")
+(defvar general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$\\|[[:alpha:]][A-Za-z0-9_]+[ \t][[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$")
+
+(setq general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$\\|[[:alpha:]][A-Za-z0-9_]+[ \t][[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$")
 
 (defcustom general-close-pre-assignment-re
   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$"
@@ -529,6 +530,7 @@ See `general-close-command-separator-char'"
 	;;  (insert general-close-command-separator-char)
 	;;  closer)
 	(closer
+	 (skip-chars-backward " \t\r\n\f")
 	 (insert closer)
 	 closer)
 
@@ -541,7 +543,9 @@ See `general-close-command-separator-char'"
 		     ;; is there a case where this string isn't closed now?
 		     (setq done (progn (insert 34) t)))
      ;; a command separator may precede closing delimiter
-     ((and (nth 1 pps)(member major-mode general-close--semicolon-separator-modes))
+     ((and   
+       ;; (nth 1 pps)
+       (member major-mode general-close--semicolon-separator-modes))
       (setq done (general-close--semicolon-separator-modes-dispatch orig closer pps)))
      ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
       (setq general-close-command-separator-char ?\:)
@@ -562,22 +566,27 @@ See `general-close-command-separator-char'"
       (insert (concat strg " "))
       (insert (concat " " strg " "))))
 
-(defun general-close-insert-with-padding-maybe (strg)
+(defun general-close-insert-with-padding-maybe (strg &optional nbefore nafter)
   "Takes a string. Insert a space before and after maybe.
 
 When `general-close-insert-with-padding-p' is `t', the default "
-  (when general-close-insert-with-padding-p
-    (unless (and (eq (char-before) ?\ )(eq (char-after) ?\ ))
-      (cond
-       ((not (eq (char-before) ?\ ))
-	(insert ?\ ))
-       ((not (eq (char-after) ?\ ))
-	(insert ?\ )
-	(forward-char -1))))
-    (insert strg)
-    (when general-close-insert-with-padding-p
-      (unless (eq (char-after) ?\ )
-	(insert ?\ )))))
+  (skip-chars-backward " \t\r\n\f")
+  (if general-close-insert-with-padding-p
+      (progn
+	(unless nbefore (insert " "))
+	(insert strg)
+	(unless (or
+		 (eq 5 (car (syntax-after (point))))
+		 ;; (eq (char-after) ?\))
+		 nafter) (insert " ")))
+    ;; (unless (and (eq (char-before) ?\ )(eq (char-after) ?\ ))
+    ;;   (cond
+    ;;    ((not (eq (char-before) ?\ ))
+    ;; 	(insert ?\ ))
+    ;;    ((not (eq (char-after) ?\ ))
+    ;; 	(insert ?\ )
+    ;; 	(forward-char -1))))
+    (insert strg)))
 
 (defun general-close--insert-assignment-maybe (beg regexp)
   (let (done)

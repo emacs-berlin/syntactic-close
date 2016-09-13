@@ -50,21 +50,6 @@
     (general-close)
     (should (eq (char-before) ?\}))))
 
-(ert-deftest general-close-sml-comment-test ()
-  (general-close-test "(* definition of nat"
-    'sml-mode
-    'general-close-debug-p
-    (general-close)
-    (should (eq (char-before) ?\)))))
-
-(ert-deftest general-close-sml-assignment-test ()
-  (general-close-test "val z"
-    'sml-mode
-    'general-close-debug-p
-    (general-close)
-    (skip-chars-backward " \t\r\n\f") 
-    (should (eq (char-before) ?=))))
-
 (ert-deftest general-close-haskell-right-arrow-test-1 ()
   (general-close-test-with-haskell-buffer
       "add :: (Int,Int"
@@ -261,6 +246,38 @@ if __name__ == \"__main__\""
       (skip-chars-backward " \t\r\n\f")
       (should (looking-back "<-"))))) 
 
+;; SML
+(ert-deftest general-close-sml-comment-test ()
+  (general-close-test "(* definition of nat"
+    'sml-mode
+    'general-close-debug-p
+    (general-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest general-close-sml-assignment-test-1 ()
+  (general-close-test "val z"
+    'sml-mode
+    'general-close-debug-p
+    (general-close)
+    (skip-chars-backward " \t\r\n\f") 
+    (should (eq (char-before) ?=))))
+
+
+(ert-deftest general-close-sml-no-pad-after-test ()
+  (general-close-test "val z = (x + y) (a +)"
+    'sml-mode
+    'general-close-debug-p
+    (forward-char -1)
+    (general-close)
+    (should (eq (char-before) ?b))
+    (should (eq (char-after) ?\)))))
+
+(ert-deftest general-close-sml-assignment-1 ()
+  (general-close-test "val z = (x + y) (a + b)"
+    'sml-mode
+    'general-close-debug-p
+    (general-close)
+    (should (eq (char-before) ?\;))))
 
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here
