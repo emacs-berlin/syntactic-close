@@ -217,9 +217,9 @@ Default is nil"
   :tag "general-close-comint-pre-assignment-re"
   :group 'general-close)
 
-(defvar general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$\\|[[:alpha:]][A-Za-z0-9_]+[ \t][[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$")
+(defvar general-close-pre-assignment-re "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
 
-(setq general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$\\|[[:alpha:]][A-Za-z0-9_]+[ \t][[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$")
+(setq general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
 
 (defcustom general-close-pre-assignment-re
   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$"
@@ -543,7 +543,7 @@ See `general-close-command-separator-char'"
 		     ;; is there a case where this string isn't closed now?
 		     (setq done (progn (insert 34) t)))
      ;; a command separator may precede closing delimiter
-     ((and   
+     ((and
        ;; (nth 1 pps)
        (member major-mode general-close--semicolon-separator-modes))
       (setq done (general-close--semicolon-separator-modes-dispatch orig closer pps)))
@@ -572,21 +572,22 @@ See `general-close-command-separator-char'"
 When `general-close-insert-with-padding-p' is `t', the default "
   (skip-chars-backward " \t\r\n\f")
   (if general-close-insert-with-padding-p
-      (progn
-	(unless nbefore (insert " "))
-	(insert strg)
-	(unless (or
-		 (eq 5 (car (syntax-after (point))))
-		 ;; (eq (char-after) ?\))
-		 nafter) (insert " ")))
-    ;; (unless (and (eq (char-before) ?\ )(eq (char-after) ?\ ))
-    ;;   (cond
-    ;;    ((not (eq (char-before) ?\ ))
-    ;; 	(insert ?\ ))
-    ;;    ((not (eq (char-after) ?\ ))
-    ;; 	(insert ?\ )
-    ;; 	(forward-char -1))))
-    (insert strg)))
+      (cond ((looking-back "([ \t]*")
+	     (delete-region (match-beginning 0) (match-end 0))
+	     (insert strg)
+	     (insert " "))
+	    ((looking-at "[ \t]*)")
+	     (delete-region (match-beginning 0) (1- (match-end 0)))
+	     (insert " ")
+	     (insert strg))
+	    (t (unless nbefore (insert " "))
+	       (insert strg)
+	       (unless
+		   (or
+		    (eq 5 (car (syntax-after (point))))
+		    ;; (eq (char-after) ?\))
+		    nafter) (insert " "))))))
+
 
 (defun general-close--insert-assignment-maybe (beg regexp)
   (let (done)
@@ -806,7 +807,7 @@ With \\[universal-argument]: close a list in electric modes. "
 	(unless done
 	  (and general-close-electric-newline-p (not (general-close-empty-line-p))
 	       (newline)))))
-    (when general-close-electric-indent-p
+    (when (and (not done) general-close-electric-indent-p)
       (indent-according-to-mode))
     (< orig (point))))
 
