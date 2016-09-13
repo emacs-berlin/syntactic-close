@@ -463,8 +463,8 @@ If at char `z', follow up with `a'"
 		  (setq done t))
 		 ((and (stringp erg)(eq 1 (length erg)))
 		  (general-close-insert-with-padding-maybe
-		   (general-close--guess-symbol (string-to-number erg))
-		   (setq done t)))))
+		   (general-close--raise-symbol (string-to-char erg)))
+		  (setq done t))))
 	  (t (setq general-close-command-separator-char 59)
 	     (setq done (general-close--handle-separator-modes orig closer))))
     done))
