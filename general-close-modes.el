@@ -104,9 +104,9 @@
 	   (setq done t)))
     done))
 
-(defun general-close--listcompr-guess-symbol (&optional arg)
-  (let ((erg (when arg
-	       (progn (goto-char arg)
+(defun general-close--guess-symbol (&optional pos)
+  (let ((erg (when pos
+	       (progn (goto-char pos)
 		      (char-after)))))
     (unless erg
       (setq erg
@@ -118,31 +118,35 @@
     (unless
 	(or (characterp erg)(< 1 (length erg)))
       (setq erg (string-to-char erg)))
+    erg))
 
-    (setq erg
-	  (cond
-	   ((stringp erg)
-	    erg)
-	   ((eq 122 erg)
-	    ;; if at char `z', follow up with `a'
-	    97)
-	   ((eq erg 90)
-	    65)
-	   ((< 96 erg)
-	    (1+ erg))
-	   ((< 64 erg)
-	    (1+ erg))
-	   ;; raise until number 9
-	   ((< erg 57)
-	    (1+ erg))
-	   (t erg)))))
+(defun general-close--raise-symbol (symbol)
+  "Return the symbol following in asci decimal-values.
+
+If at char `z', follow up with `a'"
+  (if (stringp symbol)
+      symbol
+    (cond
+     ((eq 122 symbol)
+      ;; if at char `z', follow up with `a'
+      97)
+     ((eq symbol 90)
+      65)
+     ((< 96 symbol)
+      (1+ symbol))
+     ((< 64 symbol)
+      (1+ symbol))
+     ;; raise until number 9
+     ((< symbol 57)
+      (1+ symbol))
+     (t symbol))))
 
 (defun general-close-python-electric-close (pps closer force)
   (let (done)
     (cond
      ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
 	   (eq 1 (car (syntax-after (1- (point))))))
-      (insert (general-close--listcompr-guess-symbol))
+      (insert (general-close--guess-symbol))
       (setq done t))
      ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps)))
       (when (eq 2 (car (syntax-after (1- (point)))))
@@ -319,7 +323,7 @@
 	   (eq 1 (car (syntax-after (1- (point))))))
       ;; translate a single char into its successor
       ;; if multi-char symbol, repeat
-      (insert (general-close--listcompr-guess-symbol))
+      (insert (general-close--raise-symbol (general-close--guess-symbol)))
       (setq done t))
      ((and closer general-close-electric-listify-p
 	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[[:alnum:]]")(skip-chars-backward " \t\r\n\f")(eq (char-before) general-close-list-separator-char)))))
@@ -432,6 +436,39 @@
     (unless done (goto-char orig))
     done))
 
+(defvar general-close-haskell-listcomprh-vars nil)
+
+(defvar general-close-haskell-listcomprh-startpos nil)
+(defvar general-close-haskell-listcomprh-counter nil)
+
+(defun general-close-set-listcomprh-update (orig pps)
+  (let (pos varlist)
+    (setq general-close-haskell-listcomprh-counter 0)
+    (cond ((save-excursion (and (nth 0 pps) (goto-char (nth 1 pps))(eq (char-after) ?\[))(setq pos (point)))
+	   ;; (nth 1 pps) (save-excursion (goto-char (nth 2 pps))(eq (char-after) ?\()))
+	   (goto-char pos)
+	   (while (re-search-forward haskell-var-re orig t 1)
+	     ;; (unless (member (match-string-no-properties 0) varlist)
+	     (cl-pushnew (match-string-no-properties 0) varlist))
+	   (goto-char orig)
+	   (nreverse varlist)))))
+
+(defun general-close--semicolon-separator-modes-dispatch (orig closer pps)
+  (let ((closer (or closer (nth-1-pps-complement-char-maybe pps)))
+	done erg)
+    (cond ((and (eq closer ?\))(progn (save-excursion (skip-chars-backward " \t\r\n\f")(looking-back general-close-command-operator-chars (line-beginning-position)))))
+	   (setq erg (car (general-closer-uniq-varlist (nth 1 pps) orig)))
+	   (cond ((and (stringp erg)(< 1 (length erg)))
+		  (general-close-insert-with-padding-maybe erg)
+		  (setq done t))
+		 ((and (stringp erg)(eq 1 (length erg)))
+		  (general-close-insert-with-padding-maybe
+		   (general-close--guess-symbol (string-to-number erg))
+		   (setq done t)))))
+	  (t (setq general-close-command-separator-char 59)
+	     (setq done (general-close--handle-separator-modes orig closer))))
+    done))
+
 (defun general-close--modes (beg pps orig &optional closer force)
   (let (done)
     (cond
@@ -449,23 +486,6 @@
       (setq done (general-close-haskell-close beg closer pps orig)))
      (t (setq done (general-close--intern orig closer pps))))
     done))
-
-(defvar general-close-haskell-listcomprh-vars nil)
-
-(defvar general-close-haskell-listcomprh-startpos nil)
-(defvar general-close-haskell-listcomprh-counter nil)
-
-(defun general-close-set-listcomprh-update (orig pps)
-  (let (pos varlist)
-    (setq general-close-haskell-listcomprh-counter 0)
-    (cond ((save-excursion (and (nth 0 pps) (goto-char (nth 1 pps))(eq (char-after) ?\[))(setq pos (point)))
-	   ;; (nth 1 pps) (save-excursion (goto-char (nth 2 pps))(eq (char-after) ?\()))
-	   (goto-char pos)
-	   (while (re-search-forward haskell-var-re orig t 1)
-	     ;; (unless (member (match-string-no-properties 0) varlist)
-	     (cl-pushnew (match-string-no-properties 0) varlist))
-	   (goto-char orig)
-	   (nreverse varlist)))))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here

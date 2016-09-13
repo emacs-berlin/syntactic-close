@@ -279,6 +279,13 @@ Default is nil"
 ;;   :tag "general-close-pre-right-arrow-re"
 ;;   :group 'general-close)
 
+(defcustom general-close-command-operator-chars
+  "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\|=\\)[ \t]*"
+  "Matches most of syntactical meaningful characters, inclusive whitespaces around. "
+  :type 'regexp
+  :tag "general-close-command-operator-chars"
+  :group 'general-close)
+
 (defcustom general-close-default-argument-1
   "x"
   "Insert a \"x\" maybe when general-close-guess-p is `t'. "
@@ -415,6 +422,12 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	  (goto-char (nth 1 pps))
 	  (general-close--return-complement-char-maybe (char-after)))))))
 
+(defun nth-1-pps-complement-char-maybe (pps)
+  "Return complement character from (nth 1 pps). "
+  (save-excursion
+    (goto-char (nth 1 pps))
+    (general-close--return-complement-char-maybe (char-after))))
+
 (defun general-close--fetch-delimiter-maybe (pps &optional force)
   "Close the innermost list resp. string. "
   (let (erg closer strg)
@@ -437,9 +450,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 		    (eq (char-before) general-close-list-separator-char))))
 	   (char-before (1- (point))))
 	  ((and (nth 1 pps)
-		(save-excursion
-		  (goto-char (nth 1 pps))
-		  (eq ?\] (setq erg (general-close--return-complement-char-maybe (char-after))))))
+		(eq ?\] (setq erg (nth-1-pps-complement-char-maybe pps))))
 	   erg)
 	  ((and (not force)
 		general-close-electric-listify-p
@@ -531,8 +542,7 @@ See `general-close-command-separator-char'"
 		     (setq done (progn (insert 34) t)))
      ;; a command separator may precede closing delimiter
      ((and (nth 1 pps)(member major-mode general-close--semicolon-separator-modes))
-      (setq general-close-command-separator-char ?\;)
-      (setq done (general-close--handle-separator-modes orig closer)))
+      (setq done (general-close--semicolon-separator-modes-dispatch orig closer pps)))
      ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
       (setq general-close-command-separator-char ?\:)
       (setq done (general-close--handle-separator-modes orig closer)))
