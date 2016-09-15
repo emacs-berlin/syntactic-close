@@ -122,6 +122,24 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
+(ert-deftest general-close-python-string-interpolation-test-6 ()
+  ;; "return 'Point({self.x}, {self.y})'.format(self=self)"
+  (general-close-test-with-python-buffer "return 'Point({self.x"
+    (general-close)
+    (should (eq (char-before) ?}))))
+
+(ert-deftest general-close-python-string-interpolation-test-7 ()
+  ;; "return 'Point({self.x}, {self.y})'.format(self=self)"
+  (general-close-test-with-python-buffer "return 'Point({self.x}"
+    (general-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest general-close-python-string-interpolation-test-8 ()
+  ;; "return 'Point({self.x}, {self.y})'.format(self=self)"
+  (general-close-test-with-python-buffer "return 'Point({self.x})"
+    (general-close)
+    (should (eq (char-before) ?'))))
+
 (ert-deftest colon-after-arguments-list-test ()
   (general-close-test-with-python-buffer "def datei(datei, verzeichnis)"
     (let (general-close-electric-listify-p)
