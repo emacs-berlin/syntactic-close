@@ -250,6 +250,14 @@ if __name__ == \"__main__\""
       (skip-chars-backward " \t\r\n\f")
       (should (looking-back "<-")))))
 
+(ert-deftest general-close-list-comprehension-test-18 ()
+  ;; [(x,y)|x<-[1..3],y<-[4,5]]
+  (general-close-test-with-haskell-buffer "potenz(x,y"
+    (let ((general-close-electric-listify-p t))
+      (general-close '(4))
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\))))))
+
 ;; failing from ert?
 ;; (ert-deftest general-close-list-comprehension-test-18 ()
 ;;   ;; [(x,y)|x<-[1..3],y<-[4,5]]

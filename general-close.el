@@ -824,18 +824,23 @@ With \\[universal-argument]: close a list in electric modes. "
 	 done closer pps)
     (when force (general-close--cleanup-inserts))
     (setq pps (parse-partial-sexp beg (point)))
-    (setq done (general-close--travel-comments-maybe pps))
+    ;; with force, do a strict list-closing maybe
+    (when force
+      (insert (general-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))) force))
+      (setq done t))
     (unless done
-      (setq orig (point))
-      (setq done (general-close--modes beg pps orig closer force))
+      (setq done (general-close--travel-comments-maybe pps))
       (unless done
-	(setq done (general-close--common beg pps))
+	(setq orig (point))
+	(setq done (general-close--modes beg pps orig closer force))
 	(unless done
-	  (and general-close-electric-newline-p (not (general-close-empty-line-p))
-	       (newline)))))
-    (when (and (not done) general-close-electric-indent-p)
-      (indent-according-to-mode))
-    (< orig (point))))
+	  (setq done (general-close--common beg pps))
+	  (unless done
+	    (and general-close-electric-newline-p (not (general-close-empty-line-p))
+		 (newline)))))
+      (when (and (not done) general-close-electric-indent-p)
+	(indent-according-to-mode))
+      (< orig (point)))))
 
 (require 'general-close-modes)
 
