@@ -429,47 +429,50 @@ Does not require parenthesis syntax WRT \"{[(\" "
     (goto-char (nth 1 pps))
     (general-close--return-complement-char-maybe (char-after))))
 
+(defun general-close--fetch-electric-delimiter-maybe (pps &optional force)
+  "`general-close-electric-listify-p' is `t'. "
+  (cond ((and (nth 1 pps)(not force)
+	      (save-excursion
+		(progn
+		  (skip-chars-backward " \t\r\n\f")
+		  (eq (char-before) general-close-list-separator-char))))
+	 (char-before (1- (point))))
+	((and (nth 1 pps)(not force)
+	      (save-excursion
+		(progn
+		  (skip-chars-backward " \t\r\n\f")
+		  (member (char-before (1- (point))) (list ?' ?\")))))
+	 (char-before (1- (point))))
+	((and (not force) (nth 1 pps)
+	      (save-excursion
+		(progn (skip-chars-backward " \t\r\n\f")
+		       (not (eq (char-before) general-close-list-separator-char)))))
+	 general-close-list-separator-char)))
+
 (defun general-close--fetch-delimiter-maybe (pps &optional force)
   "Close the innermost list resp. string. "
   (let (erg closer strg)
-    (cond ((nth 3 pps)
-	   (save-excursion
-	     (setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
-	     (if (setq closer (general-close--list-inside-string-maybe strg))
-		 closer
-	       ;; returns a list to construct TQS maybe
-	       (and (setq erg (general-close--in-string-p-intern pps))
-		    (setq closer (make-string (nth 2 erg)(nth 1 erg)))))
-	     closer))
-	  ((and (member major-mode general-close--singlequote-modes) (eq (char-before (1- (point))) ?'))
-	   "'")
-	  ((and (nth 1 pps)(not force)
-		general-close-electric-listify-p
-		(save-excursion
-		  (progn
-		    (skip-chars-backward " \t\r\n\f")
-		    (eq (char-before) general-close-list-separator-char))))
-	   (char-before (1- (point))))
-	  ((and (nth 1 pps)
-		(eq ?\] (setq erg (nth-1-pps-complement-char-maybe pps))))
-	   erg)
-	  ((and (not force)
-		general-close-electric-listify-p
-		(save-excursion
-		  (progn
-		    (skip-chars-backward " \t\r\n\f")
-		    (eq (char-before) general-close-list-separator-char))))
-	   (char-before (point)))
-	  ((and (not force) (nth 1 pps)
-		general-close-electric-listify-p
-		(save-excursion
-		  (progn (skip-chars-backward " \t\r\n\f")
-			 (not (eq (char-before) general-close-list-separator-char)))))
-	   general-close-list-separator-char)
- 	  ((nth 1 pps)
-	   (save-excursion
-	     (goto-char (nth 1 pps))
-	     (general-close--return-complement-char-maybe (char-after)))))))
+    (cond
+     ((and (not force) general-close-electric-listify-p)
+      (general-close--fetch-electric-delimiter-maybe pps force))
+     ((nth 3 pps)
+      (save-excursion
+	(setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
+	(if (setq closer (general-close--list-inside-string-maybe strg))
+	    closer
+	  ;; returns a list to construct TQS maybe
+	  (and (setq erg (general-close--in-string-p-intern pps))
+	       (setq closer (make-string (nth 2 erg)(nth 1 erg)))))
+	closer))
+     ((and (member major-mode general-close--singlequote-modes) (eq (char-before (1- (point))) ?'))
+      "'")
+     ((and (nth 1 pps)
+	   (eq ?\] (setq erg (nth-1-pps-complement-char-maybe pps))))
+      erg)
+     ((nth 1 pps)
+      (save-excursion
+	(goto-char (nth 1 pps))
+	(general-close--return-complement-char-maybe (char-after)))))))
 
 (defun general-close--insert-delimiter-char-maybe (orig closer)
   (when closer
@@ -587,7 +590,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
 		    (eq 5 (car (syntax-after (point))))
 		    ;; (eq (char-after) ?\))
 		    nafter) (insert " "))))))
-
 
 (defun general-close--insert-assignment-maybe (beg regexp)
   (let (done)
@@ -772,6 +774,30 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	    (t (insert general-close-list-separator-char)
 	       (setq done t))))
     done))
+
+(defun general-close--guess-from-string-interpolation-maybe (pps)
+  "Returns the character of innermost sexp in inside. "
+  (when (and (nth 1 pps) (nth 3 pps))
+    (let* ((listchar (save-excursion (goto-char (nth 1 pps))
+				    (char-after)))
+	  (inner-listpos (progn
+			   (skip-chars-backward (concat "^" (char-to-string listchar)))
+			   (1- (point)))))
+    (if
+	 (< (nth 8 pps) inner-listpos)
+	  (general-close--return-complement-char-maybe listchar)
+      (save-excursion (goto-char (nth 8 pps)(char-after))))
+
+	)))
+
+(defun general-close--guess-closer (pps)
+  (save-excursion
+    (cond ((and (nth 1 pps) (nth 3 pps))
+	   (if (general-close--guess-from-string-interpolation-maybe pps)
+	       (progn
+		 (goto-char (nth 1 pps))
+		 (general-close--return-complement-char-maybe (char-after)))
+	     (progn (goto-char (nth 8 pps)) (char-after)))))))
 
 (defun general-close-electric (&optional arg)
   "Call `general-close-electric-listify-p' set to `t'. "

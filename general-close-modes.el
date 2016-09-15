@@ -37,6 +37,11 @@
   :tag "general-close-comint-haskell-pre-right-arrow-re"
   :group 'general-close)
 
+(defun general-close-in-string-interpolation-maybe ()
+  (interactive )
+  (let ((pps (parse-partial-sexp (point-min) (point))))
+    (and (nth 3 pps) (nth 3 (parse-partial-sexp (1+ (nth 8 pps)) (point))))))
+
 ;; Ml
 (defun general-close-ml ()
   (interactive "*")
@@ -70,7 +75,7 @@
 	       (progn
 		 (insert closer)
 		 ;; only closing `"' or `'' was inserted here
-		 (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))))
+		 (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))) force)
 		   (insert closer))
 		 (setq done t))
 	     (if (nth 3 pps)
@@ -96,8 +101,12 @@
 
 ;; Emacs-lisp
 (defun general-close-emacs-lisp-close (closer pps force)
-  (let (done)
-    (cond ((save-excursion
+  (let ((closer (or closer (general-close--fetch-delimiter-maybe pps force)))
+	done)
+    (cond (closer
+	   (insert closer)
+	   (setq done t))
+	  ((save-excursion
 	     (skip-chars-backward " \t\r\n\f")
 	     (looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
 	   (general-close-insert-with-padding-maybe (char-to-string 40))
@@ -365,12 +374,14 @@ If at char `z', follow up with `a'"
 		   (general-close-insert-var-in-listcomprh pps closer orig sorted splitpos))))
     done))
 
-(defun general-close-haskell-close (beg &optional closer pps orig)
-  (let ((closer (or closer
-		    (and pps (general-close--fetch-delimiter-maybe pps))
-		    (general-close--generic-fetch-delimiter-maybe)))
-	(splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
-	done sorted)
+(defun general-close-haskell-electric-close (beg &optional closer pps orig)
+  (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
+	 (closer (or closer
+		     (unless splitter
+		       ;; with `|' look for arrows needed
+		       (or (and pps (general-close--fetch-delimiter-maybe pps))
+		       (general-close--generic-fetch-delimiter-maybe)))))
+	 done sorted)
     (cond
      ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
       (setq done (general-close-haskell-twofold-list-cases pps closer orig)))
@@ -384,10 +395,17 @@ If at char `z', follow up with `a'"
      ((and splitter (not closer)
 	   (not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| general-close-list-separator-char))))))
       (cond ((looking-back "<-[ \t]*")
-	     (general-close-insert-with-padding-maybe "["))
-	    ((eq (char-before) ?\])
-	     (insert general-close-list-separator-char))
-	    (t (general-close-insert-with-padding-maybe "<-")))
+	     (general-close-insert-with-padding-maybe "[")
+	     (setq done t))
+	    ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
+	     (insert general-close-list-separator-char)
+	     (setq done t))
+	    ((nth 1 pps)
+	     (skip-chars-backward " \t\r\n\f")
+	     (insert (nth-1-pps-complement-char-maybe pps))
+	     (setq done t))
+	    (t (general-close-insert-with-padding-maybe "<-")
+	       (setq done t)))
       (setq done t))
      (splitter
       ;; after pipe fetch a var
@@ -403,6 +421,60 @@ If at char `z', follow up with `a'"
      ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
      ((setq done (general-close--insert-string-concat-op-maybe))))
     done))
+
+(defun general-close-haskell-close-intern (beg &optional closer pps orig)
+  (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
+	 (closer (or closer
+		     (unless splitter
+		       ;; with `|' look for arrows needed
+		       (or (and pps (general-close--fetch-delimiter-maybe pps))
+		       (general-close--generic-fetch-delimiter-maybe)))))
+	 done sorted)
+    (cond
+     ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
+      (setq done (general-close-haskell-twofold-list-cases pps closer orig)))
+     ((and splitter (eq ?\] closer))
+      (skip-chars-backward " \t\r\n\f")
+      (insert closer)
+      (setq done t))
+     ;; in list-comprehension
+     ;; [(a,b) |
+     ;; not just after pipe
+     ((and splitter (not closer)
+	   (not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| general-close-list-separator-char))))))
+      (cond ((looking-back "<-[ \t]*")
+	     (general-close-insert-with-padding-maybe "[")
+	     (setq done t))
+	    ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
+	     (insert general-close-list-separator-char)
+	     (setq done t))
+	    ((nth 1 pps)
+	     (skip-chars-backward " \t\r\n\f")
+	     (insert (nth-1-pps-complement-char-maybe pps))
+	     (setq done t))
+	    (t (general-close-insert-with-padding-maybe "<-")
+	       (setq done t)))
+      (setq done t))
+     (splitter
+      ;; after pipe fetch a var
+      (setq done (general-close-haskell-close-in-list-comprehension pps closer orig)))
+     ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
+     ((and (eq 1 (nth 0 pps)) (eq ?\) closer))
+      (insert closer)
+      (setq done t))
+     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re closer)))
+     (closer
+      (insert closer)
+      (setq done t))
+     ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
+     ((setq done (general-close--insert-string-concat-op-maybe))))
+    done))
+
+(defun general-close-haskell-close (beg &optional closer pps orig)
+  (if general-close-electric-listify-p
+      (general-close-haskell-electric-close beg closer pps orig)
+    (general-close-haskell-close-intern beg closer pps orig)))
+
 
 ;; Php
 (defun general-close--php-check (pps &optional closer)
@@ -467,7 +539,7 @@ If at char `z', follow up with `a'"
 		  (setq done t))))
 	  ((progn (save-excursion (beginning-of-line) (looking-at general-close-pre-assignment-re)))
 	   (general-close-insert-with-padding-maybe "=")
-	   (setq done t)) 
+	   (setq done t))
 	  (t (setq general-close-command-separator-char 59)
 	     (setq done (general-close--handle-separator-modes orig closer))))
     done))
