@@ -114,25 +114,29 @@
     done))
 
 (defun general-close--guess-symbol (&optional pos)
-  (let ((erg (when pos
-	       (progn (goto-char pos)
-		      (char-after)))))
-    (unless erg
-      (setq erg
-	    (save-excursion
-	      (progn
-		(forward-char -1)
-		(buffer-substring-no-properties (point) (progn (skip-chars-backward "[[:alnum:]]") (point)))))))
+  (save-excursion
+    (let ((erg (when pos
+		 (progn (goto-char pos)
+			(char-after)))))
+      (unless erg
+	(setq erg
+	      (save-excursion
+		(progn
+		  (forward-char -1)
+		  (buffer-substring-no-properties (point) (progn (skip-chars-backward "[[:alnum:]]") (point)))))))
+      (when (string= "" erg)
+	(setq erg (cond ((member (char-before (1- (point))) (list ?' ?\"))
+			 (char-before (1- (point))))))) 
+      (unless
+	  (or (characterp erg)(< 1 (length erg)))(string= "" erg)
+	(setq erg (string-to-char erg)))
+      erg)))
 
-    (unless
-	(or (characterp erg)(< 1 (length erg)))
-      (setq erg (string-to-char erg)))
-    erg))
-
-(defun general-close--raise-symbol (symbol)
+(defun general-close--raise-symbol-maybe (symbol)
   "Return the symbol following in asci decimal-values.
 
-If at char `z', follow up with `a'"
+If at char `z', follow up with `a'
+If arg SYMBOL is a string, return it unchanged"
   (if (stringp symbol)
       symbol
     (cond
@@ -141,44 +145,46 @@ If at char `z', follow up with `a'"
       97)
      ((eq symbol 90)
       65)
-     ((< 96 symbol)
+     ((and (< symbol 123)(< 96 symbol))
       (1+ symbol))
-     ((< 64 symbol)
+     ((and (< symbol 133)(< 64 symbol))
       (1+ symbol))
      ;; raise until number 9
-     ((< symbol 57)
+     ((and (< 47 symbol)(< symbol 57))
       (1+ symbol))
      (t symbol))))
 
 (defun general-close-python-electric-close (pps closer force)
   (let (done)
     (cond
-     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps))
+     ((and closer (eq 2 (nth 0 pps))
 	   (eq 1 (car (syntax-after (1- (point))))))
       (insert (general-close--guess-symbol))
       (setq done t))
-     ((and closer general-close-electric-listify-p (eq 2 (nth 0 pps)))
+     ((and closer (eq 2 (nth 0 pps)))
       (when (eq 2 (car (syntax-after (1- (point)))))
 	(insert general-close-list-separator-char)
 	(setq done t)))
      ;; simple lists
-     ((and closer general-close-electric-listify-p (eq (char-before) general-close-list-separator-char))
-      (insert closer)
+     ((eq 1 (car (syntax-after (1- (point)))))
+      ;; translate a single char into its successor
+      ;; if multi-char symbol, repeat
+      (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
       (setq done t))
-     ((and closer general-close-electric-listify-p
+     ((and closer
 	   (eq 1 (nth 0 pps)) (not (nth 3 pps))
 	   (not (eq (char-before) general-close-list-separator-char)))
       (insert general-close-list-separator-char)
       (setq done t)
       (when force
 	(general-close-python-close closer pps force)))
-     ((and closer general-close-electric-listify-p
+     ((and closer
 	   (not (eq (char-before) closer)))
       (insert closer)
       (setq done t)
       (when force
 	(general-close-python-close nil nil force nil t)))
-     ((and closer general-close-electric-listify-p)
+     (closer
       (setq done (general-close--electric pps closer force))
       (unless (eq (char-before) general-close-list-separator-char)
 	(general-close-python-close closer pps force))))
@@ -199,6 +205,7 @@ If at char `z', follow up with `a'"
 		(lambda ()(beginning-of-line)(back-to-indentation)))))
 	 (general-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
 	 done)
+    (when force (setq general-close-electric-listify-p nil))
     (cond
      ;; nested lists,
      ;; Inside a list-comprehension
@@ -332,7 +339,7 @@ If at char `z', follow up with `a'"
 	   (eq 1 (car (syntax-after (1- (point))))))
       ;; translate a single char into its successor
       ;; if multi-char symbol, repeat
-      (insert (general-close--raise-symbol (general-close--guess-symbol)))
+      (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
       (setq done t))
      ((and closer general-close-electric-listify-p
 	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[[:alnum:]]")(skip-chars-backward " \t\r\n\f")(eq (char-before) general-close-list-separator-char)))))
@@ -374,42 +381,69 @@ If at char `z', follow up with `a'"
 		   (general-close-insert-var-in-listcomprh pps closer orig sorted splitpos))))
     done))
 
+(defun general-close-haskell-electric-splitter-forms (beg &optional closer pps orig)
+  (let (done)
+    (cond ((and (not closer)
+    		(not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| general-close-list-separator-char))))))
+    	   (cond ((looking-back "<-[ \t]*")
+    		  (general-close-insert-with-padding-maybe "[")
+    		  (setq done t))
+    		 ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
+    		  (insert general-close-list-separator-char)
+    		  (setq done t))
+    		 ((nth 1 pps)
+    		  (skip-chars-backward " \t\r\n\f")
+    		  (insert (nth-1-pps-complement-char-maybe pps))
+    		  (setq done t))
+    		 (t (general-close-insert-with-padding-maybe "<-")
+    		    (setq done t))))
+	   (t (setq done (general-close-haskell-close-in-list-comprehension pps closer orig))))
+    done))
+
+    ;; (cond (splitter
+    ;; 	   ;; after pipe fetch a var
+    ;; 	   )
+    ;; 	  ((and splitter (eq ?\] closer))
+    ;; 	   (skip-chars-backward " \t\r\n\f")
+    ;; 	   (insert closer)
+    ;; 	   (setq done t))
+    ;; 	  ;; in list-comprehension
+    ;; 	  ;; [(a,b) |
+    ;; 	  ;; not just after pipe
+    ;; 	  ((and splitter (not closer)
+    ;; 		(not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| general-close-list-separator-char))))))
+    ;; 	   (cond ((looking-back "<-[ \t]*")
+    ;; 		  (general-close-insert-with-padding-maybe "[")
+    ;; 		  (setq done t))
+    ;; 		 ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
+    ;; 		  (insert general-close-list-separator-char)
+    ;; 		  (setq done t))
+    ;; 		 ((nth 1 pps)
+    ;; 		  (skip-chars-backward " \t\r\n\f")
+    ;; 		  (insert (nth-1-pps-complement-char-maybe pps))
+    ;; 		  (setq done t))
+    ;; 		 (t (general-close-insert-with-padding-maybe "<-")
+    ;; 		    (setq done t)))
+    ;; 	   (setq done t)))
+
+
+
 (defun general-close-haskell-electric-close (beg &optional closer pps orig)
   (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
 	 (closer (or closer
 		     (unless splitter
 		       ;; with `|' look for arrows needed
 		       (or (and pps (general-close--fetch-delimiter-maybe pps))
-		       (general-close--generic-fetch-delimiter-maybe)))))
+			   (general-close--generic-fetch-delimiter-maybe)))))
 	 done sorted)
     (cond
+     (splitter
+      (setq done (general-close-haskell-electric-splitter-forms beg closer pps orig)))
      ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
       (setq done (general-close-haskell-twofold-list-cases pps closer orig)))
-     ((and splitter (eq ?\] closer))
-      (skip-chars-backward " \t\r\n\f")
-      (insert closer)
+     ((eq (char-before) general-close-list-separator-char)
+      (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
       (setq done t))
-     ;; in list-comprehension
-     ;; [(a,b) |
-     ;; not just after pipe
-     ((and splitter (not closer)
-	   (not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| general-close-list-separator-char))))))
-      (cond ((looking-back "<-[ \t]*")
-	     (general-close-insert-with-padding-maybe "[")
-	     (setq done t))
-	    ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
-	     (insert general-close-list-separator-char)
-	     (setq done t))
-	    ((nth 1 pps)
-	     (skip-chars-backward " \t\r\n\f")
-	     (insert (nth-1-pps-complement-char-maybe pps))
-	     (setq done t))
-	    (t (general-close-insert-with-padding-maybe "<-")
-	       (setq done t)))
-      (setq done t))
-     (splitter
-      ;; after pipe fetch a var
-      (setq done (general-close-haskell-close-in-list-comprehension pps closer orig)))
      ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
      ((and (eq 1 (nth 0 pps)) (eq ?\) closer))
       (insert closer)
@@ -535,7 +569,7 @@ If at char `z', follow up with `a'"
 		  (setq done t))
 		 ((and (stringp erg)(eq 1 (length erg)))
 		  (general-close-insert-with-padding-maybe
-		   (general-close--raise-symbol (string-to-char erg)))
+		   (general-close--raise-symbol-maybe (string-to-char erg)))
 		  (setq done t))))
 	  ((progn (save-excursion (beginning-of-line) (looking-at general-close-pre-assignment-re)))
 	   (general-close-insert-with-padding-maybe "=")

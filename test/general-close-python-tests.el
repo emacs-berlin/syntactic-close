@@ -218,6 +218,28 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
       (general-close '(4))
       (should (eq (char-before) ?\])))))
 
+(ert-deftest general-close-python-electric-test-8 ()
+  (general-close-test-with-python-buffer
+      "def potenz(x,"
+    (let ((general-close-electric-listify-p t))
+      (general-close) 
+      (should (eq (char-before) ?y)))))
+
+(ert-deftest general-close-python-electric-test-9 ()
+  (general-close-test-with-python-buffer
+      "def potenz(x,y"
+    (let ((general-close-electric-listify-p t))
+      (general-close) 
+      (should (eq (char-before) ?,)))))
+
+(ert-deftest general-close-python-electric-test-10 ()
+  (general-close-test-with-python-buffer
+      "def potenz(x,y"
+    (let ((general-close-electric-listify-p t))
+      (general-close '(4)) 
+      (should (eq (char-before) ?\))))))
+
+
 (provide 'general-close-python-tests)
 
 ;;; general-close-python-tests.el ends here

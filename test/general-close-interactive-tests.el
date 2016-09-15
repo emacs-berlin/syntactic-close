@@ -68,8 +68,15 @@
   (general-close-test-with-haskell-buffer "add :: (Int,Int)"
     (let (general-close-electric-listify-p)
       (general-close)
-      (skip-chars-backward " \t\r\n\f") 
+      (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?>)))))
+
+(ert-deftest general-close-haskell-right-arrow-test-4 ()
+  (general-close-test-with-haskell-buffer "add :: (Int,"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (looking-back "Int")))))
 
 (ert-deftest general-close-haskell-assign-test-1 ()
   (general-close-test-with-haskell-buffer "asdf "
@@ -77,7 +84,6 @@
       (general-close)
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?=)))))
-
 
 (ert-deftest general-close-haskell-asign-test-2 ()
   (general-close-test-with-haskell-buffer "asdf :: Int -> Int
@@ -97,7 +103,7 @@ asdf n"
 (ert-deftest general-close-haskell-typedef-test ()
   (general-close-test-with-haskell-buffer "signum :: Int ->"
     (general-close)
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?t))))
 
 (ert-deftest general-close-python-colon-test-2 ()
@@ -112,7 +118,6 @@ if __name__ == \"__main__\""
     (should (eq (char-before) ?:))
     (general-close)
     (should (eq 8 (current-indentation)))))
-
 
 (ert-deftest general-close-list-comprehension-test-1 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
@@ -205,7 +210,6 @@ if __name__ == \"__main__\""
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?\))))))
 
-
 (ert-deftest general-close-list-comprehension-test-13 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
   (general-close-test-with-haskell-buffer "[(abd,def)] | abd <- "
@@ -220,7 +224,7 @@ if __name__ == \"__main__\""
     (let ((general-close-electric-listify-p t))
       (general-close)
       (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\]))))) 
+      (should (eq (char-before) ?\])))))
 
 (ert-deftest general-close-list-comprehension-test-15 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
@@ -244,7 +248,15 @@ if __name__ == \"__main__\""
     (let ((general-close-electric-listify-p t))
       (general-close)
       (skip-chars-backward " \t\r\n\f")
-      (should (looking-back "<-"))))) 
+      (should (looking-back "<-")))))
+
+;; failing from ert?
+;; (ert-deftest general-close-list-comprehension-test-18 ()
+;;   ;; [(x,y)|x<-[1..3],y<-[4,5]]
+;;   (general-close-test-with-haskell-buffer "['a']"
+;;     (let ((general-close-electric-listify-p t))
+;;       (general-close)
+;;       (should (empty-line-p)))))
 
 ;; SML
 (ert-deftest general-close-sml-comment-test ()
@@ -259,9 +271,8 @@ if __name__ == \"__main__\""
     'sml-mode
     'general-close-debug-p
     (general-close)
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?=))))
-
 
 (ert-deftest general-close-sml-no-pad-after-test ()
   (general-close-test "val z = (x + y) (a +)"
