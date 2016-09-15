@@ -449,10 +449,18 @@ Does not require parenthesis syntax WRT \"{[(\" "
 		       (not (eq (char-before) general-close-list-separator-char)))))
 	 general-close-list-separator-char)))
 
+(defun general-close-in-string-interpolation-maybe (&optional pps)
+  "Return position of list opener inside a string. "
+  (interactive )
+  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+    (and (nth 3 pps) (nth 1 (setq pps (parse-partial-sexp (1+ (nth 8 pps)) (point)))) pps)))
+
 (defun general-close--fetch-delimiter-maybe (pps &optional force)
   "Close the innermost list resp. string. "
   (let (erg closer strg)
     (cond
+     ((setq erg (general-close-in-string-interpolation-maybe pps))
+      (general-close--return-complement-char-maybe (char-after (nth 1 erg)))) 
      ((and (not force) general-close-electric-listify-p)
       (general-close--fetch-electric-delimiter-maybe pps force))
      ((nth 3 pps)

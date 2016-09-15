@@ -37,11 +37,6 @@
   :tag "general-close-comint-haskell-pre-right-arrow-re"
   :group 'general-close)
 
-(defun general-close-in-string-interpolation-maybe ()
-  (interactive )
-  (let ((pps (parse-partial-sexp (point-min) (point))))
-    (and (nth 3 pps) (nth 3 (parse-partial-sexp (1+ (nth 8 pps)) (point))))))
-
 ;; Ml
 (defun general-close-ml ()
   (interactive "*")
