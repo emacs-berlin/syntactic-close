@@ -270,6 +270,30 @@ Default is nil"
    general-close-pre-right-arrow-re-raw
    "\\_>[ \t]*"))
 
+
+(defvar general-close-emacs-lisp-block-re
+  (concat
+   "[ \t]*\\_<"
+   "(if\\|(cond\\|when\\|unless"
+   "\\_>[ \t]*"))
+
+;; (string-match "[ 	]*\\((defun\\|(defmacro\\)\\_>[ 	]*" "(defun asdf")
+(defvar general-close-emacs-lisp-function-re
+  (concat
+   "[ \t]*"
+   "(defun\\|(defmacro"
+   "\\_>[ \t]*"))
+
+(setq general-close-emacs-lisp-function-re
+  (concat
+   "[ \t]*\\("
+   "(defun\\|(defmacro"
+   "\\)\\_>[ \t]*"))
+
+
+
+
+
 ;; (defvar general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
 ;; (setq general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
 
@@ -455,12 +479,13 @@ Does not require parenthesis syntax WRT \"{[(\" "
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (and (nth 3 pps) (nth 1 (setq pps (parse-partial-sexp (1+ (nth 8 pps)) (point)))) pps)))
 
+;; See also general-close--guess-symbol
 (defun general-close--fetch-delimiter-maybe (pps &optional force)
   "Close the innermost list resp. string. "
   (let (erg closer strg)
     (cond
      ((setq erg (general-close-in-string-interpolation-maybe pps))
-      (general-close--return-complement-char-maybe (char-after (nth 1 erg)))) 
+      (general-close--return-complement-char-maybe (char-after (nth 1 erg))))
      ((and (not force) general-close-electric-listify-p)
       (general-close--fetch-electric-delimiter-maybe pps force))
      ((nth 3 pps)

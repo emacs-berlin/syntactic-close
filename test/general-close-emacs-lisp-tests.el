@@ -51,7 +51,11 @@
     (general-close)
     (should (eq (char-before) ?\"))))
 
-
+(ert-deftest general-close--arglist-test ()
+  (general-close-test-with-elisp-buffer
+      "(defun asdf"
+      (general-close)
+    (should (looking-back "asdf ()"))))
 
 (provide 'general-close-emacs-lisp-tests)
 ;;; general-close-emacs-lisp-tests.el ends here

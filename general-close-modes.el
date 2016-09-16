@@ -92,22 +92,26 @@
 	     (setq done t)))
     done))
 
-(defvar general-close-emacs-lisp-block-re "(if\\|(cond\\|when\\|unless")
-
 ;; Emacs-lisp
 (defun general-close-emacs-lisp-close (closer pps force)
   (let ((closer (or closer (general-close--fetch-delimiter-maybe pps force)))
 	done)
-    (cond (closer
-	   (insert closer)
-	   (setq done t))
-	  ((save-excursion
-	     (skip-chars-backward " \t\r\n\f")
-	     (looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
-	   (general-close-insert-with-padding-maybe (char-to-string 40))
-	   (setq done t)))
+    (cond
+     ((and (eq 1 (nth 1 pps))
+	   (save-excursion
+	     (beginning-of-line)
+	     (looking-at general-close-emacs-lisp-function-re)))
+      (general-close-insert-with-padding-maybe "()" nil t)
+      (setq done t))
+     ((save-excursion
+	(skip-chars-backward " \t\r\n\f")
+	(looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
+      (general-close-insert-with-padding-maybe (char-to-string 40)))
+     (t (insert closer)
+	(setq done t)))
     done))
 
+;; See also general-close--fetch-delimiter-maybe - redundancy?
 (defun general-close--guess-symbol (&optional pos)
   (save-excursion
     (let ((erg (when pos
@@ -121,7 +125,7 @@
 		  (buffer-substring-no-properties (point) (progn (skip-chars-backward "[[:alnum:]]") (point)))))))
       (when (string= "" erg)
 	(setq erg (cond ((member (char-before (1- (point))) (list ?' ?\"))
-			 (char-before (1- (point))))))) 
+			 (char-before (1- (point)))))))
       (unless
 	  (or (characterp erg)(< 1 (length erg)))(string= "" erg)
 	(setq erg (string-to-char erg)))
@@ -242,7 +246,6 @@ If arg SYMBOL is a string, return it unchanged"
     done))
 
 (defun general-close-ruby-close (&optional closer pps)
-  ;; general-close--fetch-delimiter-maybe
   (let ((closer (or closer
 		    (and pps (general-close--fetch-delimiter-maybe pps))
 		    (general-close--generic-fetch-delimiter-maybe)))
@@ -457,7 +460,7 @@ If arg SYMBOL is a string, return it unchanged"
 		     (unless splitter
 		       ;; with `|' look for arrows needed
 		       (or (and pps (general-close--fetch-delimiter-maybe pps))
-		       (general-close--generic-fetch-delimiter-maybe)))))
+			   (general-close--generic-fetch-delimiter-maybe)))))
 	 done sorted)
     (cond
      ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
