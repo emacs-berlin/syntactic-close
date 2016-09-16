@@ -341,9 +341,7 @@ If arg SYMBOL is a string, return it unchanged"
       (setq done t))
      ((and closer general-close-electric-listify-p
 	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[[:alnum:]]")(skip-chars-backward " \t\r\n\f")(eq (char-before) general-close-list-separator-char)))))
-      ;; translate a single char into its successor
-      ;; if multi-char symbol, repeat
-      (insert closer)
+      (insert general-close-list-separator-char)
       (setq done t))
      ((and closer general-close-electric-listify-p
 	   (not (eq 1 (car (syntax-after (1- (point)))))))
@@ -454,7 +452,7 @@ If arg SYMBOL is a string, return it unchanged"
      ((setq done (general-close--insert-string-concat-op-maybe))))
     done))
 
-(defun general-close-haskell-close-intern (beg &optional closer pps orig)
+(defun general-close-haskell-non-electric (beg &optional closer pps orig)
   (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
 	 (closer (or closer
 		     (unless splitter
@@ -505,7 +503,7 @@ If arg SYMBOL is a string, return it unchanged"
 (defun general-close-haskell-close (beg &optional closer pps orig)
   (if general-close-electric-listify-p
       (general-close-haskell-electric-close beg closer pps orig)
-    (general-close-haskell-close-intern beg closer pps orig)))
+    (general-close-haskell-non-electric beg closer pps orig)))
 
 
 ;; Php
@@ -590,8 +588,7 @@ If arg SYMBOL is a string, return it unchanged"
      ((member major-mode general-close--ml-modes)
       (setq done (general-close-ml)))
      ((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
-      (setq done (general-close-haskell-close beg closer pps orig)))
-     (t (setq done (general-close--intern orig closer pps))))
+      (setq done (general-close-haskell-close beg closer pps orig))))
     done))
 
 (provide 'general-close-modes)

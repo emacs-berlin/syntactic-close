@@ -484,19 +484,20 @@ Does not require parenthesis syntax WRT \"{[(\" "
   "Close the innermost list resp. string. "
   (let (erg closer strg)
     (cond
-     ((setq erg (general-close-in-string-interpolation-maybe pps))
-      (general-close--return-complement-char-maybe (char-after (nth 1 erg))))
-     ((and (not force) general-close-electric-listify-p)
-      (general-close--fetch-electric-delimiter-maybe pps force))
      ((nth 3 pps)
-      (save-excursion
-	(setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
-	(if (setq closer (general-close--list-inside-string-maybe strg))
-	    closer
-	  ;; returns a list to construct TQS maybe
-	  (and (setq erg (general-close--in-string-p-intern pps))
-	       (setq closer (make-string (nth 2 erg)(nth 1 erg)))))
-	closer))
+      (cond ((setq erg (general-close-in-string-interpolation-maybe pps))
+	     (general-close--return-complement-char-maybe (char-after (nth 1 erg))))
+	    ((and (not force) general-close-electric-listify-p)
+	     (general-close--fetch-electric-delimiter-maybe pps force))
+
+	    (t (save-excursion
+		 (setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
+		 (if (setq closer (general-close--list-inside-string-maybe strg))
+		     closer
+		   ;; returns a list to construct TQS maybe
+		   (and (setq erg (general-close--in-string-p-intern pps))
+			(setq closer (make-string (nth 2 erg)(nth 1 erg)))))
+		 closer))))
      ((and (member major-mode general-close--singlequote-modes) (eq (char-before (1- (point))) ?'))
       "'")
      ((and (nth 1 pps)
@@ -565,19 +566,27 @@ See `general-close-command-separator-char'"
 	;; ((and (eq closer ?\)) (eq (char-before) ?\)))
 	;;  (insert general-close-command-separator-char)
 	;;  closer)
+	((and closer general-close-electric-listify-p (not (eq (char-before)  general-close-list-separator-char)))
+	 (skip-chars-backward " \t\r\n\f")
+	 (insert general-close-list-separator-char)
+	 (setq done t))
 	(closer
 	 (skip-chars-backward " \t\r\n\f")
 	 (insert closer)
 	 closer)
-
 	(t (general-close--insert-separator-maybe orig))))
 
-(defun general-close--intern (orig closer pps)
-  (let (done)
+(defun general-close--others (orig closer pps)
+  (let (done erg)
     (cond
-     ((and (nth 3 pps)(eq 34 (nth 3 pps)))
-		     ;; is there a case where this string isn't closed now?
-		     (setq done (progn (insert 34) t)))
+     ((nth 3 pps)
+      (cond ((characterp (nth 3 pps))
+	     (insert (nth 3 pps)))
+	    ((setq erg (general-close-in-string-interpolation-maybe pps))
+	     (general-close--return-complement-char-maybe erg))
+	    (t (general-close--return-complement-char-maybe (nth 8 pps))
+	))
+      (setq done t))
      ;; a command separator may precede closing delimiter
      ((and
        ;; (nth 1 pps)
@@ -867,12 +876,14 @@ With \\[universal-argument]: close a list in electric modes. "
 	(setq orig (point))
 	(setq done (general-close--modes beg pps orig closer force))
 	(unless done
-	  (setq done (general-close--common beg pps))
+	  (setq done (general-close--others orig closer pps))
 	  (unless done
-	    (and general-close-electric-newline-p (not (general-close-empty-line-p))
-		 (newline)))))
-      (when (and (not done) general-close-electric-indent-p)
-	(indent-according-to-mode))
+	    (setq done (general-close--common beg pps))
+	    (unless done
+	      (and general-close-electric-newline-p (not (general-close-empty-line-p))
+		   (newline)))))
+	(when (and (not done) general-close-electric-indent-p)
+	  (indent-according-to-mode)))
       (< orig (point)))))
 
 (require 'general-close-modes)

@@ -298,5 +298,15 @@ if __name__ == \"__main__\""
     (general-close)
     (should (eq (char-before) ?\;))))
 
+(ert-deftest general-close-sml-tuple-separator-1 ()
+  (general-close-test "val x = (3"
+    'sml-mode
+    'general-close-debug-p
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (should (eq (char-before) ?,)))))
+
+
+
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here
