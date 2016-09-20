@@ -54,7 +54,7 @@
 (defvar general-close--current-source-buffer nil
   "Set by `general-close--set-current-source-buffer' maybe.
 
-Default is nil. 
+Default is nil.
 Comint-modes might want to load stuff from " )
 
 (defgroup general-close nil
@@ -276,7 +276,6 @@ Default is nil"
    general-close-pre-right-arrow-re-raw
    "\\_>[ \t]*"))
 
-
 (defvar general-close-emacs-lisp-block-re
   (concat
    "[ \t]*\\_<"
@@ -296,25 +295,14 @@ Default is nil"
    "fun"
    "\\_>[ \t]*"))
 
+(defvar general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
+(setq general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
+
 (setq general-close-emacs-lisp-function-re
   (concat
    "[ \t]*\\("
    "(defun\\|(defmacro"
    "\\)\\_>[ \t]*"))
-
-
-
-
-
-;; (defvar general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
-;; (setq general-close-pre-right-arrow-re   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)\\|(\\\\")
-
-;; (defcustom general-close-pre-right-arrow-re
-;;   "[[:alpha:]][A-Za-z0-9_]+ +::\\|(\\\\"
-;;   "Insert \"=\" when looking back. "
-;;   :type 'string
-;;   :tag "general-close-pre-right-arrow-re"
-;;   :group 'general-close)
 
 (defcustom general-close-command-operator-chars
   "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\|=\\)[ \t]*"

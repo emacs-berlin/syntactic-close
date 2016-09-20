@@ -298,6 +298,22 @@ if __name__ == \"__main__\""
     (general-close)
     (should (eq (char-before) ?\;))))
 
+(ert-deftest general-close-sml-assignment-2 ()
+  (general-close-test "val z"
+    'sml-mode
+    'general-close-debug-p
+    (general-close)
+    (skip-chars-backward " \t\r\n\f") 
+    (should (eq (char-before) ?=))))
+
+(ert-deftest general-close-sml-assignment-3 ()
+  (general-close-test "fun foo (z : int)"
+    'sml-mode
+    'general-close-debug-p
+    (general-close)
+    (skip-chars-backward " \t\r\n\f") 
+    (should (eq (char-before) ?=))))
+
 (ert-deftest general-close-sml-tuple-separator-1 ()
   (general-close-test "val x = (3"
     'sml-mode

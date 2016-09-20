@@ -515,16 +515,30 @@ If arg SYMBOL is a string, return it unchanged"
 
 (defun general-close-sml-close (&optional closer pps orig)
   (let (done)
-    (cond ((save-excursion
-	     (and
-	      (progn
-		(skip-chars-backward " \t\r\n\f")
-		(eq (char-before) ?\)))
-	      (progn
-		(back-to-indentation)
-		(looking-at general-close-sml-function-re))))
-	   (general-close-insert-with-padding-maybe "=") 
-	   (setq done t)))
+    (cond
+     (;; type-colon
+      (and (eq 1 (nth 0 pps))
+	   (save-excursion
+	     (progn
+	       (back-to-indentation)
+	       (looking-at (concat general-close-sml-function-re)))))
+      (general-close-insert-with-padding-maybe ":")
+      (setq done t))
+     (;; assignment
+      (looking-back general-close-sml-assignment-re)
+      (general-close-insert-with-padding-maybe "=")
+      (setq done t))
+     (;; function body assignment
+      (save-excursion
+	(and
+	 (progn
+	   (skip-chars-backward " \t\r\n\f")
+	   (eq (char-before) ?\)))
+	 (progn
+	   (back-to-indentation)
+	   (looking-at general-close-sml-function-re))))
+      (general-close-insert-with-padding-maybe "=")
+      (setq done t)))
     done))
 
 
