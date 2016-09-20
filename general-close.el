@@ -290,6 +290,12 @@ Default is nil"
    "(defun\\|(defmacro"
    "\\_>[ \t]*"))
 
+(defvar general-close-sml-function-re
+  (concat
+   "[ \t]*"
+   "fun"
+   "\\_>[ \t]*"))
+
 (setq general-close-emacs-lisp-function-re
   (concat
    "[ \t]*\\("

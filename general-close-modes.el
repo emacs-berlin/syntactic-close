@@ -513,7 +513,19 @@ If arg SYMBOL is a string, return it unchanged"
 	 (forward-char -2))
 	 (setq done t))))
 
-(defun general-close-sml-close (&optional closer pps orig))
+(defun general-close-sml-close (&optional closer pps orig)
+  (let (done)
+    (cond ((save-excursion
+	     (and
+	      (progn
+		(skip-chars-backward " \t\r\n\f")
+		(eq (char-before) ?\)))
+	      (progn
+		(back-to-indentation)
+		(looking-at general-close-sml-function-re))))
+	   (general-close-insert-with-padding-maybe "=") 
+	   (setq done t)))
+    done))
 
 
 ;; (let ((frame (window-frame window))
