@@ -574,22 +574,41 @@ If arg SYMBOL is a string, return it unchanged"
 	     (setq done (general-close--handle-separator-modes orig closer))))
     done))
 
+;; (defun general-close--modes (beg pps orig &optional closer force)
+;; (let (done)
+;; (cond
+;; ((member major-mode (list 'php-mode 'js-mode 'web-mode))
+;; (setq done (general-close--php-check pps closer)))
+;; ((eq major-mode 'python-mode)
+;; (setq done (general-close-python-close closer pps force)))
+;; ((eq major-mode 'emacs-lisp-mode)
+;; (setq done (general-close-emacs-lisp-close closer pps force)))
+;; ((eq major-mode 'ruby-mode)
+;; (setq done (general-close-ruby-close closer pps)))
+;; ((member major-mode general-close--ml-modes)
+;; (setq done (general-close-ml)))
+;; ((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
+;; (setq done (general-close-haskell-close beg closer pps orig))))
+;; done))
+
 (defun general-close--modes (beg pps orig &optional closer force)
   (let (done)
-    (cond
-     ((member major-mode (list 'php-mode 'js-mode 'web-mode))
-      (setq done (general-close--php-check pps closer)))
-     ((eq major-mode 'python-mode)
-      (setq done (general-close-python-close closer pps force)))
-     ((eq major-mode 'emacs-lisp-mode)
-      (setq done (general-close-emacs-lisp-close closer pps force)))
-     ((eq major-mode 'ruby-mode)
-      (setq done (general-close-ruby-close closer pps)))
-     ((member major-mode general-close--ml-modes)
-      (setq done (general-close-ml)))
-     ((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
-      (setq done (general-close-haskell-close beg closer pps orig))))
-    done))
+    (pcase major-mode
+      (`python-mode
+       (setq done (general-close-python-close closer pps force)))
+      (`emacs-lisp-mode
+       (setq done (general-close-emacs-lisp-close closer pps force)))
+      (`ruby-mode
+       (setq done (general-close-ruby-close closer pps)))
+      (_
+       (cond
+	((member major-mode general-close--ml-modes)
+	 (setq done (general-close-ml)))
+	((member major-mode (list 'php-mode 'js-mode 'web-mode))
+	 (setq done (general-close--php-check pps closer)))
+	((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
+	 (setq done (general-close-haskell-close beg closer pps orig))))
+       done))))
 
 (provide 'general-close-modes)
 ;;; general-close-modes.el ends here
