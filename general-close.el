@@ -51,6 +51,12 @@
 (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
   "Defined in haskell-interactive-mode.el, silence warnings. ")
 
+(defvar general-close--current-source-buffer nil
+  "Set by `general-close--set-current-source-buffer' maybe.
+
+Default is nil. 
+Comint-modes might want to load stuff from " )
+
 (defgroup general-close nil
   "Insert closing delimiter whichever needed. "
   :group 'languages
@@ -351,6 +357,11 @@ conditionals closed by a colon for example. ")
   "general-close-empty-line-p-chars"
   :type 'regexp
   :group 'convenience)
+
+(defun general-close--set-current-source-buffer ()
+  (interactive)
+  "Set value of `general-close--current-source-buffer' to current buffer. "
+  (setq general-close--current-source-buffer (current-buffer)))
 
 (defun general-close-toggle-electric-listify ()
   "Switch the value of `general-close-electric-listify-p' in current session. "

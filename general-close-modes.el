@@ -505,7 +505,21 @@ If arg SYMBOL is a string, return it unchanged"
       (general-close-haskell-electric-close beg closer pps orig)
     (general-close-haskell-non-electric beg closer pps orig)))
 
+(defun general-close-inferior-sml-close (&optional closer pps orig)
+  (cond ((looking-back comint-prompt-regexp)
+	 (if general-close--current-source-buffer
+	     	 (insert (concat "use \"" (buffer-name general-close--current-source-buffer) "\";"))
+	 (insert "use \"\";")
+	 (forward-char -2))
+	 (setq done t))))
 
+(defun general-close-sml-close (&optional closer pps orig))
+
+
+;; (let ((frame (window-frame window))
+;; (buffer-list frame)
+
+;; (message "%s" (window--side-check)))))
 ;; Php
 (defun general-close--php-check (pps &optional closer)
   (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
@@ -594,6 +608,10 @@ If arg SYMBOL is a string, return it unchanged"
 (defun general-close--modes (beg pps orig &optional closer force)
   (let (done)
     (pcase major-mode
+      (`inferior-sml-mode
+       (setq done (general-close-inferior-sml-close closer pps force)))
+      (`sml-mode
+      (setq done (general-close-sml-close closer pps force)))
       (`python-mode
        (setq done (general-close-python-close closer pps force)))
       (`emacs-lisp-mode
