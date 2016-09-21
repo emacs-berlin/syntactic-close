@@ -42,6 +42,12 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
+(ert-deftest general-close--elisp-interactive-spec-test ()
+  (general-close-test-with-elisp-buffer
+    "(defun foo ()
+  (interactive "
+    (general-close)
+    (should (eq (char-before) ?\)))))
 
 (ert-deftest general-close--char-class-test ()
   (general-close-test-with-elisp-buffer

@@ -106,8 +106,9 @@
      ((save-excursion
 	(skip-chars-backward " \t\r\n\f")
 	(looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
-      (general-close-insert-with-padding-maybe (char-to-string 40)))
-     (t (insert closer)
+      (general-close-insert-with-padding-maybe (char-to-string 40) t t))
+     (t (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+	(insert closer)
 	(setq done t)))
     done))
 
