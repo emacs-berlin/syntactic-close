@@ -331,6 +331,14 @@ if __name__ == \"__main__\""
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?=)))))
 
+(ert-deftest general-close-sml-function-2 ()
+  (general-close-test "fun foo"
+    'sml-mode
+    'general-close-debug-p
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\()))))
 
 
 (provide 'general-close-interactive-tests)

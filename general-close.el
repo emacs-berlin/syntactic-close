@@ -289,11 +289,22 @@ Default is nil"
    "(defun\\|(defmacro"
    "\\_>[ \t]*"))
 
-(defvar general-close-sml-function-re
+(defvar general-close-sml-fun-after-arglist-re
   (concat
    "[ \t]*"
    "fun"
    "\\_>[ \t]*"))
+
+(defvar general-close-sml-function-before-arglist-re
+  (concat
+   "[ \t]*"
+   "fun"
+   "\\_>[ \t]+[^(]+$"))
+(setq general-close-sml-function-before-arglist-re
+  (concat
+   "[ \t]*"
+   "fun"
+   "\\_>[ \t]+[^(]+$"))
 
 (defvar general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
 (setq general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")

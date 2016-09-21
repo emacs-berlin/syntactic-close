@@ -521,8 +521,16 @@ If arg SYMBOL is a string, return it unchanged"
 	   (save-excursion
 	     (progn
 	       (back-to-indentation)
-	       (looking-at (concat general-close-sml-function-re)))))
+	       (looking-at (concat general-close-sml-fun-after-arglist-re)))))
       (general-close-insert-with-padding-maybe ":")
+      (setq done t))
+     (;; fun foo
+      (and (not (eq 1 (nth 0 pps)))
+	   (save-excursion
+	     (progn
+	       (back-to-indentation)
+	       (looking-at (concat general-close-sml-function-before-arglist-re)))))
+      (general-close-insert-with-padding-maybe "(" nil t)
       (setq done t))
      (;; assignment
       (looking-back general-close-sml-assignment-re)
@@ -536,7 +544,7 @@ If arg SYMBOL is a string, return it unchanged"
 	   (eq (char-before) ?\)))
 	 (progn
 	   (back-to-indentation)
-	   (looking-at general-close-sml-function-re))))
+	   (looking-at general-close-sml-fun-after-arglist-re))))
       (general-close-insert-with-padding-maybe "=")
       (setq done t)))
     done))
