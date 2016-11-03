@@ -197,7 +197,8 @@ If arg SYMBOL is a string, return it unchanged"
   (interactive "*")
   (let* ((closer (or closer
 		     (general-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))))))
-	 (separator-char (or separator-char general-close-list-separator-char)))
+	 (separator-char (or separator-char general-close-list-separator-char))
+	 done)
     (if closer
 	(progn
 	  (insert closer)
@@ -230,7 +231,8 @@ If arg SYMBOL is a string, return it unchanged"
 	 (t (eolp)
 	    (ignore-errors (newline-and-indent))
 	    (setq done t)))
-	done))))
+	done)
+      done)))
 
 ;; Ruby
 (defun general-close--generic-fetch-delimiter-maybe ()
@@ -336,7 +338,7 @@ If arg SYMBOL is a string, return it unchanged"
     ;; (setq done t)
     done))
 
-(defun general-close-haskell-twofold-list-cases (pps &optional closer orig)
+(defun general-close-haskell-twofold-list-cases (pps &optional closer)
   (let* ((sorted (save-excursion (general-closer-uniq-varlist nil nil pps)))
 	 done)
     ;; [(a*b+a) |a<-[1..3],b<-[4..5]]
@@ -419,7 +421,7 @@ If arg SYMBOL is a string, return it unchanged"
      (splitter
       (setq done (general-close-haskell-electric-splitter-forms closer pps orig)))
      ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
-      (setq done (general-close-haskell-twofold-list-cases pps closer orig)))
+      (setq done (general-close-haskell-twofold-list-cases pps closer)))
      ((eq (char-before) general-close-list-separator-char)
       (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
       (setq done t))
@@ -446,7 +448,7 @@ If arg SYMBOL is a string, return it unchanged"
 	 done)
     (cond
      ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
-      (setq done (general-close-haskell-twofold-list-cases pps closer orig)))
+      (setq done (general-close-haskell-twofold-list-cases pps closer)))
      ((and splitter (eq ?\] closer))
       (skip-chars-backward " \t\r\n\f")
       (insert closer)
@@ -484,7 +486,7 @@ If arg SYMBOL is a string, return it unchanged"
      ((setq done (general-close--insert-string-concat-op-maybe))))
     done))
 
-(defun general-close-haskell-close (beg &optional closer pps orig)
+(defun general-close-haskell-close (&optional closer pps orig)
   (if general-close-electric-listify-p
       (general-close-haskell-electric-close closer pps orig)
     (general-close-haskell-non-electric closer pps orig)))
@@ -607,7 +609,7 @@ If arg SYMBOL is a string, return it unchanged"
 	((member major-mode (list 'php-mode 'js-mode 'web-mode))
 	 (setq done (general-close--php-check pps closer)))
 	((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
-	 (setq done (general-close-haskell-close beg closer pps orig))))
+	 (setq done (general-close-haskell-close closer pps orig))))
        done))))
 
 (provide 'general-close-modes)
