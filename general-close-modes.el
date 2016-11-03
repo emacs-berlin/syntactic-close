@@ -94,7 +94,7 @@
     done))
 
 ;; Emacs-lisp
-(defun general-close-emacs-lisp-close (closer pps force)
+(defun general-close-emacs-lisp-close (closer pps)
   (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
 	done)
     (cond
@@ -179,13 +179,11 @@ If arg SYMBOL is a string, return it unchanged"
       (insert general-close-list-separator-char)
       (setq done t)
       (when force
-	(general-close-python-close closer pps force nil nil nil general-close-list-separator-char)))
+	(general-close-python-close closer pps force nil nil general-close-list-separator-char)))
      ((and closer
 	   (not (eq (char-before) closer)))
       (insert closer)
-      (setq done t)
-      (when force
-	(general-close-python-close nil nil force t)))
+      (setq done t))
      (closer
       (setq done (general-close--electric pps closer force))
       (unless (eq (char-before) general-close-list-separator-char)
@@ -194,7 +192,7 @@ If arg SYMBOL is a string, return it unchanged"
     done))
 
 ;; Python
-(defun general-close-python-close (&optional closer pps force done b-of-st b-of-bl separator-char)
+(defun general-close-python-close (&optional closer pps force b-of-st b-of-bl separator-char)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
   (let* ((closer (or closer
@@ -370,7 +368,7 @@ If arg SYMBOL is a string, return it unchanged"
      (t (setq done (general-close-insert-var-in-listcomprh pps sorted))))
     done))
 
-(defun general-close-haskell-close-in-list-comprehension (pps closer orig)
+(defun general-close-haskell-close-in-list-comprehension (pps orig)
   (let ((splitpos
 	 (+ (line-beginning-position)
 	    ;; position in substring
@@ -406,10 +404,10 @@ If arg SYMBOL is a string, return it unchanged"
     		  (setq done t))
     		 (t (general-close-insert-with-padding-maybe "<-")
     		    (setq done t))))
-	   (t (setq done (general-close-haskell-close-in-list-comprehension pps closer orig))))
+	   (t (setq done (general-close-haskell-close-in-list-comprehension pps orig))))
     done))
 
-(defun general-close-haskell-electric-close (beg &optional closer pps orig)
+(defun general-close-haskell-electric-close (&optional closer pps orig)
   (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
 	 (closer (or closer
 		     (unless splitter
@@ -473,7 +471,7 @@ If arg SYMBOL is a string, return it unchanged"
       (setq done t))
      (splitter
       ;; after pipe fetch a var
-      (setq done (general-close-haskell-close-in-list-comprehension pps closer orig)))
+      (setq done (general-close-haskell-close-in-list-comprehension pps  orig)))
      ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
      ((and (eq 1 (nth 0 pps)) (eq ?\) closer))
       (insert closer)
@@ -488,10 +486,10 @@ If arg SYMBOL is a string, return it unchanged"
 
 (defun general-close-haskell-close (beg &optional closer pps orig)
   (if general-close-electric-listify-p
-      (general-close-haskell-electric-close beg closer pps orig)
+      (general-close-haskell-electric-close closer pps orig)
     (general-close-haskell-non-electric closer pps orig)))
 
-(defun general-close-inferior-sml-close (&optional buffer)
+(defun general-close-inferior-sml-close ()
   (let (done)
     (cond ((looking-back comint-prompt-regexp)
 	   (if general-close--current-source-buffer
@@ -582,7 +580,6 @@ If arg SYMBOL is a string, return it unchanged"
   (let (pos varlist)
     (setq general-close-haskell-listcomprh-counter 0)
     (cond ((save-excursion (and (nth 0 pps) (goto-char (nth 1 pps))(eq (char-after) ?\[))(setq pos (point)))
-	   ;; (nth 1 pps) (save-excursion (goto-char (nth 2 pps))(eq (char-after) ?\()))
 	   (goto-char pos)
 	   (while (re-search-forward haskell-var-re orig t 1)
 	     ;; (unless (member (match-string-no-properties 0) varlist)
@@ -600,7 +597,7 @@ If arg SYMBOL is a string, return it unchanged"
       (`python-mode
        (setq done (general-close-python-close closer pps force)))
       (`emacs-lisp-mode
-       (setq done (general-close-emacs-lisp-close closer pps force)))
+       (setq done (general-close-emacs-lisp-close closer pps)))
       (`ruby-mode
        (setq done (general-close-ruby-close closer pps)))
       (_
