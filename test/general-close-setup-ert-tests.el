@@ -50,6 +50,7 @@
 
 (setq general-close-install-directory default-directory)
 (message "default-directory: %s" default-directory)
+
 (sit-for 0.1 t)
 
 (defvar general-close-debug-p nil

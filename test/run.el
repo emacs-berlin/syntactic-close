@@ -53,7 +53,10 @@
                   "general-close-python-tests"
                   "general-close-ruby-tests"
 		  )))
-
+      (load (expand-file-name "beg-end" source-directory))
+      (load (expand-file-name "ar-subr" source-directory))
+      (load (expand-file-name "ar-navigate" source-directory))
+      (load (expand-file-name "thingatpt-utils-base" source-directory))
       (load (expand-file-name "general-close-modes" source-directory))
       (load (expand-file-name "general-close" source-directory))
 
