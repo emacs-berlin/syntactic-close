@@ -517,16 +517,12 @@ Check if list opener inside a string. "
     erg))
 
 ;; See also general-close--guess-symbol
-(defun general-close--fetch-delimiter-maybe (pps &optional force)
+(defun general-close--fetch-delimiter-maybe (pps)
   "Close the innermost list resp. string. "
   (let (erg closer strg)
     (cond
      ((nth 3 pps)
-      (cond ((setq closer (general-close-in-string-interpolation-maybe pps))
-	     ;; (general-close--return-complement-char-maybe (char-after (nth 1 erg)))
-	     )
-	    ;; ((and (not force) general-close-electric-listify-p)
-	    ;;  (general-close--fetch-electric-delimiter-maybe pps force))
+      (cond ((setq closer (general-close-in-string-interpolation-maybe pps)))
 
 	    (t (save-excursion
 		 (setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
@@ -584,35 +580,38 @@ Check if list opener inside a string. "
   "Some languages close expressions with a special char, often `:'
 
 See `general-close-command-separator-char'"
-  (cond ((eq closer ?})
-	 (if
-	     (save-excursion
-	       (skip-chars-backward " \t\r\n\f")
-	       (or (eq (char-before) general-close-command-separator-char)
-		   (eq (char-before) closer)))
-	     (progn
-	       (unless (looking-back "^[ \t]+" nil)
-		 (newline-and-indent))
-	       (insert closer))
-	   (insert general-close-command-separator-char))
-	 closer)
-	((and (eq closer ?\)) (eq (char-before) ?\;))
-	 (newline-and-indent)
-	 (insert closer)
-	 closer)
-	;; Semicolon inserted where it probably shouldn't be? #12
-	;; ((and (eq closer ?\)) (eq (char-before) ?\)))
-	;;  (insert general-close-command-separator-char)
-	;;  closer)
-	((and closer general-close-electric-listify-p (not (eq (char-before)  general-close-list-separator-char)))
-	 (skip-chars-backward " \t\r\n\f")
-	 (insert general-close-list-separator-char)
-	 (setq done t))
-	(closer
-	 (skip-chars-backward " \t\r\n\f")
-	 (insert closer)
-	 closer)
-	(t (general-close--insert-separator-maybe orig))))
+  (let (done)
+    (cond ((eq closer ?})
+	   (if
+	       (save-excursion
+		 (skip-chars-backward " \t\r\n\f")
+		 (or (eq (char-before) general-close-command-separator-char)
+		     (eq (char-before) closer)))
+	       (progn
+		 (unless (looking-back "^[ \t]+" nil)
+		   (newline-and-indent))
+		 (insert closer)
+		 (setq done t))
+	     (insert general-close-command-separator-char)
+	     (setq done t)))
+	  ((and (eq closer ?\)) (eq (char-before) ?\;))
+	   (newline-and-indent)
+	   (insert closer)
+	   closer)
+	  ;; Semicolon inserted where it probably shouldn't be? #12
+	  ;; ((and (eq closer ?\)) (eq (char-before) ?\)))
+	  ;;  (insert general-close-command-separator-char)
+	  ;;  closer)
+	  ((and closer general-close-electric-listify-p (not (eq (char-before) general-close-list-separator-char)))
+	   (skip-chars-backward " \t\r\n\f")
+	   (insert general-close-list-separator-char)
+	   (setq done t))
+	  (closer
+	   (skip-chars-backward " \t\r\n\f")
+	   (insert closer)
+	   closer)
+	  (t (general-close--insert-separator-maybe orig)))
+    done))
 
 (defun general-close--others (orig closer pps)
   (let (done erg)

@@ -70,8 +70,9 @@
 	       (progn
 		 (insert closer)
 		 ;; only closing `"' or `'' was inserted here
-		 (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))) force)
-		   (insert closer))
+		 ;; (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))) force)
+		   (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))))
+		     (insert closer))
 		 (setq done t))
 	     (if (nth 3 pps)
 		 (insert (char-before))
@@ -94,7 +95,7 @@
 
 ;; Emacs-lisp
 (defun general-close-emacs-lisp-close (closer pps force)
-  (let ((closer (or closer (general-close--fetch-delimiter-maybe pps force)))
+  (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
 	done)
     (cond
      ((and (eq 1 (nth 1 pps))
@@ -197,7 +198,7 @@ If arg SYMBOL is a string, return it unchanged"
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
   (let* ((closer (or closer
-		     (general-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))) force))))
+		     (general-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point)))))))
     (if closer
 	(progn
 	  (insert closer)
