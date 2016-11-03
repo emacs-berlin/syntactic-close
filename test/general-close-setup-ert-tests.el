@@ -140,7 +140,6 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (php-mode)
        (insert ,contents)
-       ;; (message "ERT %s" (point))
        (goto-char (point-min))
        (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
@@ -190,7 +189,6 @@ BODY is code to be executed within the temp buffer.  Point is
        (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
-       ;; (message "ERT %s" (point))
        ,@body)))
 
 (defmacro general-close-test-with-js-buffer-point-min (contents &rest body)
@@ -263,7 +261,6 @@ BODY is code to be executed within the temp buffer.  Point is
        (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
-       ;; (message "ERT %s" (point))
        ,@body)))
 
 (defmacro general-close-test-with-html-buffer (contents &rest body)
@@ -279,7 +276,6 @@ BODY is code to be executed within the temp buffer.  Point is
        (when general-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
-       ;; (message "ERT %s" (point))
        ,@body)))
 
 (defmacro general-close-test-with-haskell-buffer (contents &rest body)
@@ -308,6 +304,37 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when general-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
+       ,@body)))
+
+
+(defmacro general-close-test-with-shell-script-buffer (contents &rest body)
+  "Create temp buffer inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 2) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (insert ,contents)
+       (shell-script-mode)
+       (when general-close-debug-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
+
+       ,@body)))
+
+(defmacro general-close-test-with-shell-script-buffer-point-min (contents &rest body)
+  "Create temp buffer inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 2) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (insert ,contents)
+       (shell-script-mode)
+       (goto-char (point-min))
+       (when general-close-debug-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-buffer))
        ,@body)))
 
 (provide 'general-close-setup-ert-tests)
