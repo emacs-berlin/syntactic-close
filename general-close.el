@@ -378,6 +378,9 @@ conditionals closed by a colon for example. ")
   :type 'regexp
   :group 'convenience)
 
+(defvar general-close--current-source-buffer (current-buffer)
+  "Used by modes loading source from comint-shell")
+ 
 (defun general-close--set-current-source-buffer ()
   (interactive)
   "Set value of `general-close--current-source-buffer' to current buffer. "
@@ -611,6 +614,25 @@ See `general-close-command-separator-char'"
 	   (insert closer)
 	   closer)
 	  (t (general-close--insert-separator-maybe orig)))
+    done))
+
+(defun general-close--semicolon-separator-modes-dispatch (orig closer pps)
+  (let ((closer (or closer (and (nth 1 pps) (nth-1-pps-complement-char-maybe pps))))
+	done erg)
+    (cond ((and closer (eq closer ?\))(progn (save-excursion (skip-chars-backward " \t\r\n\f")(looking-back general-close-command-operator-chars (line-beginning-position)))))
+	   (setq erg (car (general-closer-uniq-varlist (nth 1 pps) orig)))
+	   (cond ((and (stringp erg)(< 1 (length erg)))
+		  (general-close-insert-with-padding-maybe erg)
+		  (setq done t))
+		 ((and (stringp erg)(eq 1 (length erg)))
+		  (general-close-insert-with-padding-maybe
+		   (general-close--raise-symbol-maybe (string-to-char erg)))
+		  (setq done t))))
+	  ((progn (save-excursion (beginning-of-line) (looking-at general-close-pre-assignment-re)))
+	   (general-close-insert-with-padding-maybe "=")
+	   (setq done t))
+	  (t (setq general-close-command-separator-char 59)
+	     (setq done (general-close--handle-separator-modes orig closer))))
     done))
 
 (defun general-close--others (orig closer pps)
@@ -900,7 +922,7 @@ With \\[universal-argument]: close everything at point. "
   (interactive "P*")
   (if
       (eq 4 (prefix-numeric-value arg))
-      (while (general-close-intern))
+      (while (general-close-intern arg))
     (general-close-intern)))
 
 (defun general-close-intern (&optional arg)
