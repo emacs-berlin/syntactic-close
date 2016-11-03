@@ -870,16 +870,14 @@ When `general-close-insert-with-padding-p' is `t', the default "
   "Returns the character of innermost sexp in inside. "
   (when (and (nth 1 pps) (nth 3 pps))
     (let* ((listchar (save-excursion (goto-char (nth 1 pps))
-				    (char-after)))
-	  (inner-listpos (progn
-			   (skip-chars-backward (concat "^" (char-to-string listchar)))
-			   (1- (point)))))
-    (if
-	 (< (nth 8 pps) inner-listpos)
+				     (char-after)))
+	   (inner-listpos (progn
+			    (skip-chars-backward (concat "^" (char-to-string listchar)))
+			    (1- (point)))))
+      (if
+	  (< (nth 8 pps) inner-listpos)
 	  (general-close--return-complement-char-maybe listchar)
-      (save-excursion (goto-char (nth 8 pps)(char-after))))
-
-	)))
+	(save-excursion (goto-char (nth 8 pps))(char-after))))))
 
 (defun general-close--guess-closer (pps)
   (save-excursion
