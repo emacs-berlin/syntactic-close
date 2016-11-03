@@ -33,12 +33,14 @@
 (ert-deftest general-close-python-doublequoted-test ()
   (general-close-test-with-python-buffer
       general-close-python-test-string-1
+    (message "%s" "Starte general-close-python-doublequoted-test")
     (general-close)
     (should (eq (char-before) ?\"))))
 
 (ert-deftest general-close-python-singlequoted-test ()
   (general-close-test-with-python-buffer
       "'Some Doku"
+    (message "%s" "general-close-python-singlequoted-test")
     (general-close)
     (should (eq (char-before) ?'))))
 
@@ -46,6 +48,7 @@
   (general-close-test-with-python-buffer
       "\"\"\"Some Doku"
     (font-lock-fontify-buffer)
+    (message "%s" "Starte general-close-python-doublequoted-tqs-test")
     (general-close)
     (should (eq (char-before) ?\"))
     (should (eq -3 (skip-chars-backward "\"")))))
@@ -54,25 +57,32 @@
   (general-close-test-with-python-buffer
       "'''Some Doku"
     (font-lock-fontify-buffer)
+    (message "%s" "Starte general-close-python-singlequoted-tqs-test")
     (general-close)
     (should (eq (char-before) ?'))
     (should (eq -3 (skip-chars-backward "'")))))
 
-(ert-deftest general-close-python-brace-paren-bracket-test ()
+(ert-deftest general-close-python-brace-paren-bracket-test-1 ()
+  (general-close-test-with-python-buffer
+      general-close-python-test-string-2
+    (message "%s" "Starte general-close-python-brace-paren-bracket-test-1")
+    (general-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest general-close-python-brace-paren-bracket-test-2 ()
   (general-close-test-with-python-buffer
       general-close-python-test-string-2
     (general-close)
-    (should (eq (char-before) ?\)))
     (general-close)
-    (should (eq (char-before) ?\]))
+    (should (eq (char-before) ?\]))))
+
+(ert-deftest general-close-python-brace-paren-bracket-test-3 ()
+  (general-close-test-with-python-buffer
+      general-close-python-test-string-2
     (general-close)
-    (should (eq (char-before) ?}))
     (general-close)
-    ;; (message "(current-indentation): %s" (current-indentation))
-    ;; (message "(point): %s" (point))
-    ;; (should (bolp))
-    (should (eq 11 (point)))
-    (should (eq 0 (current-indentation)))))
+    (general-close)
+    (should (eq (char-before) ?}))))
 
 (ert-deftest general-close-delete-whitespace-backward-test ()
   (general-close-test-with-python-buffer
@@ -82,13 +92,21 @@
       (should (eq 8 (point)))
       (should (eq 0 (current-indentation))))))
 
-(ert-deftest general-close-python-nested-paren-test ()
+(ert-deftest general-close-python-nested-paren-test-1 ()
   (general-close-test-with-python-buffer
       "(list ([\n# {123\n# {123\n"
     (general-close)
-    (should (eq (char-before) ?\]))
+    (should (eq (char-before) ?\]))))
+
+(ert-deftest general-close-python-nested-paren-test-2 ()
+  (general-close-test-with-python-buffer
+      "(list ([\n# {123\n# {123\n]"
     (general-close)
-    (should (eq (char-before) ?\)))
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest general-close-python-nested-paren-test-3 ()
+  (general-close-test-with-python-buffer
+      "(list ([\n# {123\n# {123\n])"
     (general-close)
     (should (eq (char-before) ?\)))))
 
@@ -146,16 +164,21 @@
       (general-close)
       (should (eq (char-before) ?:)))))
 
-(ert-deftest general-close-python-colon-test ()
+(ert-deftest general-close-python-colon-test-1 ()
   (general-close-test-with-python-buffer
       "#! /usr/bin/env python3
 with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
     (general-close)
-    (should (eq (char-before) ?:))
-    (general-close)
-    (should (eq (char-before) 32))))
+    (should (eq (char-before) ?:))))
 
-(ert-deftest general-close-python-colon-test-3 ()
+(ert-deftest general-close-python-colon-test-5 ()
+  (general-close-test-with-python-buffer
+      "#! /usr/bin/env python3
+with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe:"
+    (general-close)
+    (should (empty-line-p))))
+
+(ert-deftest general-close-python-colon-test-4 ()
   (general-close-test-with-python-buffer
       "class TestInit(unittest.TestCase):
     def setUp(self):
@@ -222,21 +245,21 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
   (general-close-test-with-python-buffer
       "def potenz(x,"
     (let ((general-close-electric-listify-p t))
-      (general-close) 
+      (general-close)
       (should (eq (char-before) ?y)))))
 
 (ert-deftest general-close-python-electric-test-9 ()
   (general-close-test-with-python-buffer
       "def potenz(x,y"
     (let ((general-close-electric-listify-p t))
-      (general-close) 
+      (general-close)
       (should (eq (char-before) ?,)))))
 
 (ert-deftest general-close-python-electric-test-10 ()
   (general-close-test-with-python-buffer
       "def potenz(x,y"
     (let ((general-close-electric-listify-p t))
-      (general-close '(4)) 
+      (general-close '(4))
       (should (eq (char-before) ?\))))))
 
 

@@ -49,11 +49,15 @@
     (general-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest general-close--char-class-test ()
+(ert-deftest general-close--char-class-test-1 ()
   (general-close-test-with-elisp-buffer
     "(string-match \"[[:alpha:]"
     (general-close)
-    (should (eq (char-before) ?\]))
+    (should (eq (char-before) ?\]))))
+ 
+(ert-deftest general-close--char-class-test-2 ()
+  (general-close-test-with-elisp-buffer
+    "(string-match \"[[:alpha:]]"
     (general-close)
     (should (eq (char-before) ?\"))))
 

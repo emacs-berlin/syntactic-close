@@ -123,6 +123,33 @@ Returns position reached if point was moved. "
 	 (setq done t)
 	 (and (< (point) orig) (point)))))
 
+;;; string-strip stuff ends here
+(defcustom empty-line-p-chars "^[ \t\r]*$"
+  "Empty-line-p-chars."
+  :type 'regexp
+  :group 'convenience)
+
+(unless (functionp 'empty-line-p)
+  (defalias 'empty-line-p 'ar-empty-line-p))
+(defun ar-empty-line-p (&optional iact)
+  "Returns t if cursor is at an empty line, nil otherwise."
+  (interactive "p")
+  (save-excursion
+    (beginning-of-line)
+    (when iact
+      (message "%s" (looking-at empty-line-p-chars)))
+    (looking-at empty-line-p-chars)))
+
+(defun ar-previous-line-empty-or-BOB-p ()
+  (save-excursion
+    (unless (bolp)
+      (beginning-of-line))
+    (unless
+	(bobp)
+      (when (forward-line -1)
+	(beginning-of-line)))
+    (or (bobp) (ar-empty-line-p))))
+
 (defun ar-forward-comment (&optional pos char)
   "Go to end of (next) commented section following point.
 
@@ -332,14 +359,14 @@ With universal arg \C-u insert a `%'. "
     erg)))
 
 (defun ar-trim-string-left (string &optional arg)
-  "Remove ARG characters from beginning and end of STRING. 
+  "Remove ARG characters from beginning and end of STRING.
 
 Return the shortened string"
   (setq arg (or arg 1))
   (substring string arg))
 
 (defun ar-trim-string-right (string &optional arg)
-  "Remove ARG characters from beginning and end of STRING. 
+  "Remove ARG characters from beginning and end of STRING.
 
 Return the shortened string"
   (setq arg (or arg 1))

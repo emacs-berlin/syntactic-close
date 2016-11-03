@@ -107,9 +107,10 @@
 	(skip-chars-backward " \t\r\n\f")
 	(looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
       (general-close-insert-with-padding-maybe (char-to-string 40) t t))
-     (t (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-	(insert closer)
-	(setq done t)))
+     (closer
+      (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+      (insert closer)
+      (setq done t)))
     done))
 
 ;; See also general-close--fetch-delimiter-maybe - redundancy?
@@ -173,7 +174,7 @@ If arg SYMBOL is a string, return it unchanged"
       (setq done t))
      ((and closer
 	   (eq 1 (nth 0 pps)) (not (nth 3 pps))
-	   (not (eq (char-before) general-close-list-separator-char)))
+	   (not (member (char-before) (list ?\] general-close-list-separator-char))))
       (insert general-close-list-separator-char)
       (setq done t)
       (when force
@@ -187,7 +188,8 @@ If arg SYMBOL is a string, return it unchanged"
      (closer
       (setq done (general-close--electric pps closer force))
       (unless (eq (char-before) general-close-list-separator-char)
-	(general-close-python-close closer pps force))))
+	(general-close-python-close closer pps force)))
+     (t (error "general-close-python-electric-close: nothing found")))
     done))
 
 ;; Python
@@ -195,34 +197,41 @@ If arg SYMBOL is a string, return it unchanged"
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
   (let* ((closer (or closer
-		     (general-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))) force)))
-	 (pps (parse-partial-sexp (point-min) (point)))
-	 ;; (delimiter (or delimiter (general-close-fetch-delimiter pps)))
-	 (general-close-beginning-of-statement
-	  (or b-of-st
-	      (if (ignore-errors (functionp 'py-backward-statement))
-		  'py-backward-statement
-		(lambda ()(beginning-of-line)(back-to-indentation)))))
-	 (general-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
-	 done)
-    (when force (setq general-close-electric-listify-p nil))
-    (cond
-     ;; nested lists,
-     ;; Inside a list-comprehension
-     (general-close-electric-listify-p
-      (setq done (general-close-python-electric-close pps closer force)))
-     (closer
-      (setq done (general-close-python-listclose closer force pps)))
-     ((and (not (char-equal ?: (char-before)))
-	   (save-excursion
-	     (funcall general-close-beginning-of-statement)
-	     (looking-at general-close-beginning-of-block-re)))
-      (insert ":")
-      (setq done t))
-     (t (eolp)
-	(ignore-errors (newline-and-indent))
-	(setq done t)))
-    done))
+		     (general-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))) force))))
+    (if closer
+	(progn
+	  (insert closer)
+	  (setq done t))
+      (let* (
+	     (Pps (parse-partial-sexp (point-min) (point)))
+	     ;; (delimiter (or delimiter (general-close-fetch-delimiter pps)))
+	     (general-close-beginning-of-statement
+	      (or b-of-st
+		  (if (ignore-errors (functionp 'py-backward-statement))
+		      'py-backward-statement
+		    (lambda ()(beginning-of-line)(back-to-indentation)))))
+	     (general-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
+	     done)
+	;; (when force (setq general-close-electric-listify-p nil))
+	(cond
+	 ;; nested lists,
+	 ;; Inside a list-comprehension
+	 ((and (nth 1 pps) (not (member closer (list ?\) ?\" ?'))) general-close-electric-listify-p)
+	  (setq done (general-close-python-electric-close pps closer force)))
+	 (closer
+	  (setq done (general-close-python-listclose closer force pps)))
+	 ((and (not (char-equal ?: (char-before)))
+	       (save-excursion
+		 (funcall general-close-beginning-of-statement)
+		 (looking-at general-close-beginning-of-block-re)))
+	  (insert ":")
+	  (setq done t))
+	 ((and (nth 3 pps)(setq closer (general-close-in-string-maybe))(setq done t))
+	  (insert closer))
+	 (t (eolp)
+	    (ignore-errors (newline-and-indent))
+	    (setq done t)))
+	done))))
 
 ;; Ruby
 (defun general-close--generic-fetch-delimiter-maybe ()
@@ -370,9 +379,9 @@ If arg SYMBOL is a string, return it unchanged"
 	   (skip-chars-backward " \t\r\n\f")
 	   (insert general-close-list-separator-char)
 	   (setq done t))
-	  (t (skip-chars-backward "^)" (line-beginning-position))
+	  (t (skip-chars-backward "^)\[" (line-beginning-position))
 	     (and (eq (char-before) ?\))(forward-char -1))
-	     (setq sorted (general-closer-uniq-varlist nil (point) (parse-partial-sexp (line-beginning-position) (point))))
+	     (setq sorted (general-closer-uniq-varlist nil splitpos (parse-partial-sexp (line-beginning-position) (point))))
 	     (goto-char orig)
 	     (setq done
 		   (general-close-insert-var-in-listcomprh pps closer orig sorted splitpos))))
@@ -383,11 +392,13 @@ If arg SYMBOL is a string, return it unchanged"
     (cond ((and (not closer)
     		(not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| general-close-list-separator-char))))))
     	   (cond ((looking-back "<-[ \t]*")
-    		  (general-close-insert-with-padding-maybe "[")
+    		  (general-close-insert-with-padding-maybe "[" nil t)
     		  (setq done t))
     		 ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
     		  (insert general-close-list-separator-char)
     		  (setq done t))
+		 ((looking-back "| +[[:alnum:]]+")
+    		  (general-close-insert-with-padding-maybe "<-"))
     		 ((nth 1 pps)
     		  (skip-chars-backward " \t\r\n\f")
     		  (insert (nth-1-pps-complement-char-maybe pps))
@@ -396,34 +407,6 @@ If arg SYMBOL is a string, return it unchanged"
     		    (setq done t))))
 	   (t (setq done (general-close-haskell-close-in-list-comprehension pps closer orig))))
     done))
-
-    ;; (cond (splitter
-    ;; 	   ;; after pipe fetch a var
-    ;; 	   )
-    ;; 	  ((and splitter (eq ?\] closer))
-    ;; 	   (skip-chars-backward " \t\r\n\f")
-    ;; 	   (insert closer)
-    ;; 	   (setq done t))
-    ;; 	  ;; in list-comprehension
-    ;; 	  ;; [(a,b) |
-    ;; 	  ;; not just after pipe
-    ;; 	  ((and splitter (not closer)
-    ;; 		(not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| general-close-list-separator-char))))))
-    ;; 	   (cond ((looking-back "<-[ \t]*")
-    ;; 		  (general-close-insert-with-padding-maybe "[")
-    ;; 		  (setq done t))
-    ;; 		 ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
-    ;; 		  (insert general-close-list-separator-char)
-    ;; 		  (setq done t))
-    ;; 		 ((nth 1 pps)
-    ;; 		  (skip-chars-backward " \t\r\n\f")
-    ;; 		  (insert (nth-1-pps-complement-char-maybe pps))
-    ;; 		  (setq done t))
-    ;; 		 (t (general-close-insert-with-padding-maybe "<-")
-    ;; 		    (setq done t)))
-    ;; 	   (setq done t)))
-
-
 
 (defun general-close-haskell-electric-close (beg &optional closer pps orig)
   (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
@@ -445,7 +428,8 @@ If arg SYMBOL is a string, return it unchanged"
      ((and (eq 1 (nth 0 pps)) (eq ?\) closer))
       (insert closer)
       (setq done t))
-     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re closer)))
+     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
+     ((setq done (general-close--typedef-maybe (line-beginning-position) general-close-typedef-re)))
      (closer
       (insert closer)
       (setq done t))

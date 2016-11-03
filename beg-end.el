@@ -32,6 +32,8 @@
 
 ;;; Code:
 
+;; (require 'ar-subr)
+
 (defcustom thing-inside-comments nil
   "If text inside comments matches determining the border of a THING. "
   :type 'boolean
@@ -390,10 +392,13 @@ Optional second arg --a number, nil or `t'-- if interactively called. "
       (ar--char-delimiters-beginning-whitespaced-form char)
     (unless first (goto-char (point-min)))
     (let ((stack nil)
+	  (push-p t)
 	  pps)
       (when (char-equal char (char-after))
 	(push (point) stack)
-	(forward-char 1))
+	(setq push-p nil)
+	;; pusp-p stays nil first time
+	(unless (eobp) (forward-char 1)))
       (cond ((and escaped comment)
 	     (while
 		 (ar--char-delimiters-beginning-push char)))
@@ -411,23 +416,22 @@ Optional second arg --a number, nil or `t'-- if interactively called. "
 		  (pop stack))))
 	    (t
 	     (while
-		 (< 0 (skip-chars-forward (concat "^" (regexp-quote (char-to-string char))) orig))
-	       (while (and (< (point) orig)(nth 8 (parse-partial-sexp (point-min) (point))))
-		 (forward-char 1)
-		 ;; im behind string number-of-windows
-		 (unless (nth 8 (parse-partial-sexp (point-min) (point)))
-		   (push (point) stack))
-		 (skip-chars-forward (concat "^" (regexp-quote (char-to-string char))) orig))
-	       (while
-		   (and (< (point) orig)(char-equal char (char-after)))
-		 (push (point) stack)
-		 (and (setq pps (parse-partial-sexp (point-min) (point)))
-		      (nth 4 pps)
-		      (pop stack))
-		 (forward-char 1)))))
-      (if (eq 0 (ignore-errors (% (length stack) 2)))
-	  (when (and (char-equal char (char-after)) (not (eobp)))
-	    (point))
+		 (and (not (eobp))(progn (skip-chars-forward (concat "^" (regexp-quote (char-to-string char))) orig)(<= (point) orig)))
+	       (cond ((nth 4 (setq pps (parse-partial-sexp (point-min) (point)))))
+		     ((and (nth 3 pps) (eq 7 (car (syntax-after (point)))))
+		      (unless (or (eq (point) orig) (ar--escaped))
+			(pop stack) (setq push-p t)))
+		     ((eq (char-after) char)
+		      (unless (ar--escaped)
+			(if
+			    push-p
+			    (progn
+			      (push (point) stack)
+			      (setq push-p nil))
+			  (unless (eq (point) orig) (pop stack))
+			  (setq push-p t)))))
+	       (unless (eobp) (forward-char 1)))))
+      (when stack
 	(pop stack)))))
 
 (defun ar-char-delimiters-beginning (char &optional escaped comment first)
@@ -446,19 +450,25 @@ With FIRST don't check from BOB "
 (defun ar-char-delimiters-end-raw (&optional escaped comment)
   (let (erg)
     (cond ((and escaped comment)
-	   (when (< 0 (skip-chars-forward (concat "^" (regexp-quote (char-to-string char)))))
+	   (skip-chars-forward (concat "^" (regexp-quote (char-to-string char))))
+	   (when (eq (char-after) char)
 	     (setq erg (point))))
 	  (comment
 	   (while (and (< 0 (skip-chars-forward (concat "^" (regexp-quote (char-to-string char)))))
 		       (setq erg (point))
 		       (ar--escaped)
 		       (setq erg nil))))
-	  (t (while (and (< 0 (skip-chars-forward (concat "^" (regexp-quote (char-to-string char)))))
-			 (setq erg (point))
-			 (or (ar--escaped)
-			     (and (setq pps (parse-partial-sexp (point-min) (point)))
-				  (nth 4 pps)))
-			 (setq erg nil)))))
+	  ;; ((eq orig (point))
+	  ;;  (and (setq pps (parse-partial-sexp (point-min) (point)))
+	  ;; 	(nth 3 pps)
+	  ;; 	(unless (ar--escaped) (setq erg (point)))))
+	  (t (while (and (not (eobp))
+			 (< 0 (skip-chars-forward (concat "^" (regexp-quote (char-to-string char)))))
+			 (setq pps (parse-partial-sexp (point-min) (point)))
+			 (when (or (ar--escaped) (nth 4 pps))
+			   (forward-char 1)
+			   t)))
+	     (when (eq (char-after) (setq erg (point))))))
     erg))
 
 (defun ar-char-delimiters-end (char &optional escaped comment)
@@ -470,7 +480,7 @@ If ESCAPED, also match chars which are backslashed. "
     (ar-char-delimiters-end-raw escaped comment)
     (unless (eobp)
       (when (and (char-equal char (char-after))(< orig (point)))
-	(forward-char 1)
+	(unless (eobp) (forward-char 1))
 	(point)))))
 
 (provide 'beg-end)

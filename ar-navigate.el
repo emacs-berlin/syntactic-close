@@ -25,8 +25,19 @@
 
 ;;; Code:
 
+
 (defvar ar-string-delim-re "\\(\"\"\"\\|'''\\|\"\\|'\\)"
   "When looking at beginning of string. ")
+
+(defvar ar-smart-indentation nil)
+(defvar ar-block-re "")
+(make-variable-buffer-local 'ar-block-re)
+
+(defvar ar-clause-re "")
+(make-variable-buffer-local 'ar-clause-re)
+
+(defvar ar-extended-block-or-clause-re "")
+(make-variable-buffer-local 'ar-extended-block-or-clause-re)
 
 (defvar ar-labelled-re "[ \\t]*:[[:graph:]]+"
   "When looking at label. ")
@@ -34,77 +45,91 @@
 
 (defvar ar-expression-skip-regexp "[^ (=:#\t\r\n\f]"
   "ar-expression assumes chars indicated possible composing a ar-expression, skip it. ")
+(make-variable-buffer-local 'ar-expression-skip-regexp) 
 
 (defvar ar-expression-skip-chars "^ (:=#\t\r\n\f"
   "ar-expression assumes chars indicated possible composing a ar-expression, skip it. ")
+(make-variable-buffer-local 'ar-expression-skip-chars) 
 
 (defvar ar-expression-re "[^ =#\t\r\n\f]+"
   "ar-expression assumes chars indicated possible composing a ar-expression, when looking-at or -back. ")
+(make-variable-buffer-local 'ar-expression-re)
 
 (defvar ar-not-expression-regexp "[ .=#\t\r\n\f)]+"
   "ar-expression assumes chars indicated probably will not compose a ar-expression. ")
+(make-variable-buffer-local 'ar-not-expression-regexp)
 
 (defvar ar-not-expression-chars " #\t\r\n\f"
   "ar-expression assumes chars indicated probably will not compose a ar-expression. ")
+(make-variable-buffer-local 'ar-not-expression-chars)
 
 (defvar ar-partial-expression-backward-chars "^ =,\"'()[]{}:#\t\r\n\f"
   "ar-partial-expression assumes chars indicated possible composing a ar-partial-expression, skip it. ")
+(make-variable-buffer-local 'ar-partial-expression-backward-chars)
 
 (defvar ar-partial-expression-forward-chars "^ \"')}]:#\t\r\n\f")
+(make-variable-buffer-local 'ar-partial-expression-forward-chars) 
 
 (defvar ar-operator-regexp "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\)[ \t]*"
   "Matches most of operators inclusive whitespaces around.
 
 See also `ar-assignment-regexp' ")
 
+
 (defvar ar-assignment-regexp "[ \t]*=[^=]"
   "Matches assignment operator inclusive whitespaces around.
 
 See also `ar-operator-regexp' ")
+(make-variable-buffer-local 'ar-operator-regexp) 
 
 (defvar ar-delimiter-regexp "\\(\\.[[:alnum:]]\\|,\\|;\\|:\\)[ \t\n]"
   "Delimiting elements of lists or other programming constructs. ")
+(make-variable-buffer-local 'ar-delimiter-regexp)
 
 (defvar ar-line-number-offset 0
   "When an exception occurs as a result of ar-execute-region, a
 subsequent ar-up-exception needs the line number where the region
 started, in order to jump to the correct file line.  This variable is
 set in ar-execute-region and used in ar--jump-to-exception.")
+(make-variable-buffer-local 'ar-line-number-offset) 
 
 (defvar ar-match-paren-no-use-syntax-pps nil)
+(make-variable-buffer-local 'ar-match-paren-no-use-syntax-pps) 
 
 (defvar ar-traceback-line-re
   "[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
   "Regular expression that describes tracebacks.")
 
-(defvar ar-bol-forms-last-indent nil
-  "For internal use. Stores indent from last ar-forward-of-FORM-bol command.
-When this-command is ar-backward-FORM-bol, last-command's indent will be considered in order to jump onto right beginning position.")
-
 (defvar ar-XXX-tag-face 'ar-XXX-tag-face)
 
 (defvar ar-pseudo-keyword-face 'ar-pseudo-keyword-face)
+(make-variable-buffer-local 'ar-XXX-tag-face) 
 
 (defvar ar-variable-name-face 'ar-variable-name-face)
 
 (defvar ar-number-face 'ar-number-face)
+(make-variable-buffer-local 'ar-variable-name-face)
+ 
 
 (defvar ar-decorators-face 'ar-decorators-face)
 
 (defvar ar-object-reference-face 'ar-object-reference-face)
+(make-variable-buffer-local 'ar-decorators-face) 
 
 (defvar ar-builtins-face 'ar-builtins-face)
 
 (defvar ar-class-name-face 'ar-class-name-face)
+(make-variable-buffer-local 'ar-builtins-face) 
 
 (defvar ar-exception-name-face 'ar-exception-name-face)
 
 (defvar ar-import-from-face 'ar-import-from-face)
+(make-variable-buffer-local 'ar-exception-name-face) 
 
 (defvar ar-def-class-face 'ar-def-class-face)
 
 (defvar ar-try-if-face 'ar-try-if-face)
-
+(make-variable-buffer-local 'ar-def-class-face) 
 
 (require 'ar-subr)
 
@@ -129,6 +154,486 @@ When this-command is ar-backward-FORM-bol, last-command's indent will be conside
               "\\|")
    "\\)")
   "Regular expression matching beginning of defun. ")
+
+
+
+(defun ar-toggle-indent-tabs-mode ()
+  "Toggle `indent-tabs-mode'.
+
+Returns value of `indent-tabs-mode' switched to. "
+  (interactive)
+  (when
+      (setq indent-tabs-mode (not indent-tabs-mode))
+    (setq tab-width ar-indent-offset))
+  (when (and ar-verbose-p (called-interactively-p 'any)) (message "indent-tabs-mode %s  ar-indent-offset %s" indent-tabs-mode ar-indent-offset))
+  indent-tabs-mode)
+
+(defun ar-indent-tabs-mode (arg &optional iact)
+  "With positive ARG switch `indent-tabs-mode' on.
+
+With negative ARG switch `indent-tabs-mode' off.
+Returns value of `indent-tabs-mode' switched to. "
+  (interactive "p")
+  (if (< 0 arg)
+      (progn
+        (setq indent-tabs-mode t)
+        (setq tab-width ar-indent-offset))
+    (setq indent-tabs-mode nil))
+  (when (and ar-verbose-p (or iact (called-interactively-p 'any))) (message "indent-tabs-mode %s   ar-indent-offset %s" indent-tabs-mode ar-indent-offset))
+  indent-tabs-mode)
+
+(defun ar-indent-tabs-mode-on (arg)
+  "Switch `indent-tabs-mode' on. "
+  (interactive "p")
+  (ar-indent-tabs-mode (abs arg)(called-interactively-p 'any)))
+
+(defun ar-indent-tabs-mode-off (arg)
+  "Switch `indent-tabs-mode' off. "
+  (interactive "p")
+  (ar-indent-tabs-mode (- (abs arg))(called-interactively-p 'any)))
+
+;;  Guess indent offset
+(defun ar-guessed-sanity-check (guessed)
+  (and (>= guessed 2)(<= guessed 8)(eq 0 (% guessed 2))))
+
+(defun ar--guess-indent-final (indents orig)
+  "Calculate and do sanity-check. "
+  (let* ((first (car indents))
+         (second (cadr indents))
+         (erg (if (and first second)
+                  (if (< second first)
+                      ;; (< (point) orig)
+                      (- first second)
+                    (- second first))
+                (default-value 'ar-indent-offset))))
+    (setq erg (and (ar-guessed-sanity-check erg) erg))
+    erg))
+
+(defun ar--guess-indent-forward ()
+  "Called when moving to end of a form and `ar-smart-indentation' is on. "
+  (let* ((first (if
+                    (ar--beginning-of-statement-p)
+                    (current-indentation)
+                  (progn
+                    (ar-forward-statement)
+                    (ar-backward-statement)
+                    (current-indentation))))
+         (second (if (or (looking-at ar-extended-block-or-clause-re)(eq 0 first))
+                     (progn
+                       (ar-forward-statement)
+                       (ar-forward-statement)
+                       (ar-backward-statement)
+                       (current-indentation))
+                   ;; when not starting from block, look above
+                   (while (and (re-search-backward ar-extended-block-or-clause-re nil 'movet 1)
+                               (or (>= (current-indentation) first)
+                                   (nth 8 (parse-partial-sexp (point-min) (point))))))
+                   (current-indentation))))
+    (list first second)))
+
+(defun ar--guess-indent-backward ()
+  "Called when moving to beginning of a form and `ar-smart-indentation' is on. "
+  (let* ((cui (current-indentation))
+         (indent (if (< 0 cui) cui 999))
+         (pos (progn (while (and (re-search-backward ar-extended-block-or-clause-re nil 'move 1)
+                                 (or (>= (current-indentation) indent)
+                                     (nth 8 (parse-partial-sexp (point-min) (point))))))
+                     (unless (bobp) (point))))
+         (first (and pos (current-indentation)))
+         (second (and pos (ar-forward-statement) (ar-forward-statement) (ar-backward-statement)(current-indentation))))
+    (list first second)))
+
+(defun ar-guess-indent-offset (&optional direction)
+  "Guess `ar-indent-offset'.
+
+Set local value of `ar-indent-offset', return it
+
+Might change local value of `ar-indent-offset' only when called
+downwards from beginning of block followed by a statement. Otherwise default-value is returned."
+  (interactive)
+  (save-excursion
+    (let* ((orig (point))
+           (indents
+            (cond (direction
+                   (if (eq 'forward direction)
+                       (ar--guess-indent-forward)
+                     (ar--guess-indent-backward)))
+                  ;; guess some usable indent is above current position
+                  ((eq 0 (current-indentation))
+                   (ar--guess-indent-forward))
+                  (t (ar--guess-indent-backward))))
+           (erg (ar--guess-indent-final indents orig)))
+      (if erg (setq ar-indent-offset erg)
+        (setq ar-indent-offset
+              (default-value 'ar-indent-offset)))
+      (when (called-interactively-p 'any) (message "%s" ar-indent-offset))
+      ar-indent-offset)))
+
+(defun ar-up-statement ()
+  "Go to the beginning of next statement upwards in buffer.
+
+Return position if statement found, nil otherwise. "
+  (interactive)
+  (let ((orig (point))
+        erg)
+    (if (ar--beginning-of-statement-p)
+	(setq erg (ar-backward-statement))
+      (setq erg (and (ar-backward-statement) (ar-backward-statement))))
+    (when (and ar-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+    erg))
+(make-variable-buffer-local 'ar-beginning-of-defun-re) 
+
+(defun ar-down-statement ()
+  "Go to the beginning of next statement downwards in buffer.
+
+Return position if statement found, nil otherwise. "
+  (interactive)
+  (let* ((orig (point))
+	  (erg
+	   (cond ((ar--end-of-statement-p)
+		  (setq erg (and (ar-forward-statement) (ar-backward-statement))))
+		 ((< orig (progn (ar-forward-statement) (ar-backward-statement)))
+		  (point))
+		 (t (and (ar-forward-statement) (ar-forward-statement)(ar-backward-statement))))))
+	   (when (and ar-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+	   erg))
+
+(defun ar-up-base (regexp)
+  "Go to the beginning of next form upwards in buffer.
+
+Return position if form found, nil otherwise. "
+  (let* ((orig (point))
+         erg)
+    (if (bobp)
+        (setq erg nil)
+      (while (and (re-search-backward regexp nil t 1)
+                  (nth 8 (parse-partial-sexp (point-min) (point)))))
+      (back-to-indentation)
+      (when (looking-at regexp) (setq erg (point)))
+      (when ar-verbose-p (message "%s" erg))
+      erg)))
+
+(defun ar-down-base (regexp)
+  "Go to the beginning of next form below in buffer.
+
+Return position if form found, nil otherwise. "
+  (unless (eobp)
+    (forward-line 1)
+    (beginning-of-line)
+    (let* ((orig (point))
+           erg)
+      (if (eobp)
+          (setq erg nil)
+        (while (and (re-search-forward regexp nil t 1)
+                    (nth 8 (parse-partial-sexp (point-min) (point)))))
+        (back-to-indentation)
+        (when (looking-at regexp) (setq erg (point)))
+        (when ar-verbose-p (message "%s" erg))
+        erg))))
+
+(defun ar-up-base-bol (regexp)
+  "Go to the beginning of next form upwards in buffer.
+
+Return position if form found, nil otherwise. "
+  (let* ((orig (point))
+         erg)
+    (if (bobp)
+        (setq erg nil)
+      (while (and (re-search-backward regexp nil t 1)
+                  (nth 8 (parse-partial-sexp (point-min) (point)))))
+      (beginning-of-line)
+      (when (looking-at regexp) (setq erg (point)))
+      (when ar-verbose-p (message "%s" erg))
+      erg)))
+
+(defun ar-down-base-bol (regexp)
+  "Go to the beginning of next form below in buffer.
+
+Return position if form found, nil otherwise. "
+  (unless (eobp)
+    (forward-line 1)
+    (beginning-of-line)
+    (let* ((orig (point))
+           erg)
+      (if (eobp)
+          (setq erg nil)
+        (while (and (re-search-forward regexp nil t 1)
+                    (nth 8 (parse-partial-sexp (point-min) (point)))))
+        (beginning-of-line)
+        (when (looking-at regexp) (setq erg (point)))
+        (when ar-verbose-p (message "%s" erg))
+        erg))))
+
+(defun ar-up-block ()
+  "Go to the beginning of next block upwards in buffer.
+
+Return position if block found, nil otherwise. "
+  (interactive)
+  (ar-up-base ar-block-re))
+
+(defun ar-up-block-or-clause ()
+  "Go to the beginning of next block-or-clause upwards in buffer.
+
+Return position if block-or-clause found, nil otherwise. "
+  (interactive)
+  (ar-up-base ar-block-or-clause-re))
+
+(defun ar-up-class ()
+  "Go to the beginning of next class upwards in buffer.
+
+Return position if class found, nil otherwise. "
+  (interactive)
+  (ar-up-base ar-class-re))
+
+(defun ar-up-clause ()
+  "Go to the beginning of next clause upwards in buffer.
+
+Return position if clause found, nil otherwise. "
+  (interactive)
+  (ar-up-base ar-clause-re))
+
+(defun ar-up-def ()
+  "Go to the beginning of next def upwards in buffer.
+
+Return position if def found, nil otherwise. "
+  (interactive)
+  (ar-up-base ar-def-re))
+
+(defun ar-up-def-or-class ()
+  "Go to the beginning of next def-or-class upwards in buffer.
+
+Return position if def-or-class found, nil otherwise. "
+  (interactive)
+  (ar-up-base ar-def-or-class-re))
+
+(defun ar-up-minor-block ()
+  "Go to the beginning of next minor-block upwards in buffer.
+
+Return position if minor-block found, nil otherwise. "
+  (interactive)
+  (ar-up-base ar-minor-block-re))
+
+(defun ar-up-section ()
+  "Go to the beginning of next section upwards in buffer.
+
+Return position if section found, nil otherwise. "
+  (interactive)
+  (ar-up-base ar-section-re))
+
+(defun ar-down-block ()
+  "Go to the beginning of next block below in buffer.
+
+Return position if block found, nil otherwise. "
+  (interactive)
+  (ar-down-base ar-block-re))
+
+(defun ar-down-block-or-clause ()
+  "Go to the beginning of next block-or-clause below in buffer.
+
+Return position if block-or-clause found, nil otherwise. "
+  (interactive)
+  (ar-down-base ar-block-or-clause-re))
+
+(defun ar-down-class ()
+  "Go to the beginning of next class below in buffer.
+
+Return position if class found, nil otherwise. "
+  (interactive)
+  (ar-down-base ar-class-re))
+
+(defun ar-down-clause ()
+  "Go to the beginning of next clause below in buffer.
+
+Return position if clause found, nil otherwise. "
+  (interactive)
+  (ar-down-base ar-clause-re))
+
+(defun ar-down-def ()
+  "Go to the beginning of next def below in buffer.
+
+Return position if def found, nil otherwise. "
+  (interactive)
+  (ar-down-base ar-def-re))
+
+(defun ar-down-def-or-class ()
+  "Go to the beginning of next def-or-class below in buffer.
+
+Return position if def-or-class found, nil otherwise. "
+  (interactive)
+  (ar-down-base ar-def-or-class-re))
+
+(defun ar-down-minor-block ()
+  "Go to the beginning of next minor-block below in buffer.
+
+Return position if minor-block found, nil otherwise. "
+  (interactive)
+  (ar-down-base ar-minor-block-re))
+
+(defun ar-down-section ()
+  "Go to the beginning of next section below in buffer.
+
+Return position if section found, nil otherwise. "
+  (interactive)
+  (ar-down-base ar-section-re))
+
+(defun ar-up-block-bol ()
+  "Go to the beginning of next block upwards in buffer.
+
+Go to beginning of line.
+Return position if block found, nil otherwise. "
+  (interactive)
+  (ar-up-base-bol ar-block-re))
+
+(defun ar-up-block-or-clause-bol ()
+  "Go to the beginning of next block-or-clause upwards in buffer.
+
+Go to beginning of line.
+Return position if block-or-clause found, nil otherwise. "
+  (interactive)
+  (ar-up-base-bol ar-block-or-clause-re))
+
+(defun ar-up-class-bol ()
+  "Go to the beginning of next class upwards in buffer.
+
+Go to beginning of line.
+Return position if class found, nil otherwise. "
+  (interactive)
+  (ar-up-base-bol ar-class-re))
+
+(defun ar-up-clause-bol ()
+  "Go to the beginning of next clause upwards in buffer.
+
+Go to beginning of line.
+Return position if clause found, nil otherwise. "
+  (interactive)
+  (ar-up-base-bol ar-clause-re))
+
+(defun ar-up-def-bol ()
+  "Go to the beginning of next def upwards in buffer.
+
+Go to beginning of line.
+Return position if def found, nil otherwise. "
+  (interactive)
+  (ar-up-base-bol ar-def-re))
+
+(defun ar-up-def-or-class-bol ()
+  "Go to the beginning of next def-or-class upwards in buffer.
+
+Go to beginning of line.
+Return position if def-or-class found, nil otherwise. "
+  (interactive)
+  (ar-up-base-bol ar-def-or-class-re))
+
+(defun ar-up-minor-block-bol ()
+  "Go to the beginning of next minor-block upwards in buffer.
+
+Go to beginning of line.
+Return position if minor-block found, nil otherwise. "
+  (interactive)
+  (ar-up-base-bol ar-minor-block-re))
+
+(defun ar-up-section-bol ()
+  "Go to the beginning of next section upwards in buffer.
+
+Go to beginning of line.
+Return position if section found, nil otherwise. "
+  (interactive)
+  (ar-up-base-bol ar-section-re))
+
+(defun ar-down-block-bol ()
+  "Go to the beginning of next block below in buffer.
+
+Go to beginning of line
+Return position if block found, nil otherwise "
+  (interactive)
+  (ar-down-base-bol ar-block-re))
+
+(defun ar-down-block-or-clause-bol ()
+  "Go to the beginning of next block-or-clause below in buffer.
+
+Go to beginning of line
+Return position if block-or-clause found, nil otherwise "
+  (interactive)
+  (ar-down-base-bol ar-block-or-clause-re))
+
+(defun ar-down-class-bol ()
+  "Go to the beginning of next class below in buffer.
+
+Go to beginning of line
+Return position if class found, nil otherwise "
+  (interactive)
+  (ar-down-base-bol ar-class-re))
+
+(defun ar-down-clause-bol ()
+  "Go to the beginning of next clause below in buffer.
+
+Go to beginning of line
+Return position if clause found, nil otherwise "
+  (interactive)
+  (ar-down-base-bol ar-clause-re))
+
+(defun ar-down-def-bol ()
+  "Go to the beginning of next def below in buffer.
+
+Go to beginning of line
+Return position if def found, nil otherwise "
+  (interactive)
+  (ar-down-base-bol ar-def-re))
+
+(defun ar-down-def-or-class-bol ()
+  "Go to the beginning of next def-or-class below in buffer.
+
+Go to beginning of line
+Return position if def-or-class found, nil otherwise "
+  (interactive)
+  (ar-down-base-bol ar-def-or-class-re))
+
+(defun ar-down-minor-block-bol ()
+  "Go to the beginning of next minor-block below in buffer.
+
+Go to beginning of line
+Return position if minor-block found, nil otherwise "
+  (interactive)
+  (ar-down-base-bol ar-minor-block-re))
+
+(defun ar-down-section-bol ()
+  "Go to the beginning of next section below in buffer.
+
+Go to beginning of line
+Return position if section found, nil otherwise "
+  (interactive)
+  (ar-down-base-bol ar-section-re))
+
+;; (defun ar--end-base-look-upward (thisregexp regexp)
+;;   (progn (back-to-indentation)
+;; 	 (let ((bofst (ar--beginning-of-statement-p)))
+;; 	   (cond ((and bofst (eq regexp 'ar-clause-re)(looking-at ar-extended-block-or-clause-re))
+;; 		  (point))
+;; 		 ((and bofst (looking-at thisregexp))
+;; 		  (point))
+;; 		 (t
+;; 		  (when
+;; 		      (cdr-safe
+;; 		       (ar--go-to-keyword
+;; 			thisregexp))
+;; 		    (when (ar--statement-opens-block-p ar-extended-block-or-clause-re)
+;; 		      (point))))))))
+
+;; (defun ar--go-down-when-found-upward (regexp)
+;;   (let ((thisindent (current-indentation))
+;; 	last)
+;;     (while
+;; 	(and (ar-down-statement)
+;; 	     (or (< thisindent (current-indentation))
+;; 		 (and (eq thisindent (current-indentation))
+;; 		      (or (eq regexp 'ar-minor-block-re)
+;; 			  (eq regexp 'ar-block-re)
+;; 			  (eq regexp 'ar-if-block-re))
+;; 		      (looking-at ar-clause-re)))
+;; 	     (ar-forward-statement)(setq last (point))))
+;;     (and last (goto-char last))))
+
+
 
 (defun ar-beginning-of-defun (&optional arg done)
   "Move to the beginning of a function definition.
@@ -246,8 +751,8 @@ If already at the beginning or before a expression, go to next expression in buf
              (goto-char (nth 8 pps)))
         (cond (;; consider expression a string starting at BOL
                (bolp))
-              ((looking-back ar-assignment-regexp))
-              ((looking-back ar-operator-regexp)
+              ((looking-back ar-assignment-regexp) (line-beginning-position))
+              ((looking-back ar-operator-regexp (line-beginning-position))
                (when (nth 2 pps)
                  (goto-char (nth 2 pps))))
               (t (ar--beginning-of-expression-intern orig))))
@@ -257,13 +762,13 @@ If already at the beginning or before a expression, go to next expression in buf
         (unless (bobp)
           (ar--beginning-of-expression-intern orig)))
        ;; concatenated strings
-       ((looking-back (concat ar-string-delim-re ar-expression-re ar-string-delim-re ar-operator-regexp ar-string-delim-re ar-expression-re ar-string-delim-re))
+       ((looking-back (concat ar-string-delim-re ar-expression-re ar-string-delim-re ar-operator-regexp ar-string-delim-re ar-expression-re ar-string-delim-re) (line-beginning-position))
         (goto-char (match-beginning 0))
         (while (looking-back (concat ar-string-delim-re ar-expression-re ar-string-delim-re ar-operator-regexp) (line-beginning-position) t)
           (goto-char (match-beginning 0)))
         (skip-chars-backward ar-expression-skip-chars))
        ;; before comment
-       ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
+       ((and (looking-at "[ \t]*#") (looking-back "^[ \t]*") (line-beginning-position))
         (forward-line -1)
         (end-of-line)
         (skip-chars-backward " \t\r\n\f")
@@ -271,56 +776,56 @@ If already at the beginning or before a expression, go to next expression in buf
           (forward-char -1)
           (ar--beginning-of-expression-intern orig)))
        ((and (< (point) orig)(looking-at (concat ar-expression-re ar-delimiter-regexp))))
-       ((looking-back (concat "[^ \t\n\r\f]+" ar-delimiter-regexp))
+       ((looking-back (concat "[^ \t\n\r\f]+" ar-delimiter-regexp) (line-beginning-position))
         (goto-char (match-beginning 0))
 	(skip-chars-backward ar-expression-skip-chars)
-        (unless (or (looking-back ar-assignment-regexp) (looking-back "^[ \t]*"))
+        (unless (or (looking-back ar-assignment-regexp) (looking-back "^[ \t]*") (line-beginning-position))
           (ar--beginning-of-expression-intern orig)))
        ;; before assignment
-       ((looking-back ar-assignment-regexp)
+       ((looking-back ar-assignment-regexp (line-beginning-position))
         (goto-char (1- (match-beginning 0)))
         (forward-char -1)
         (ar--beginning-of-expression-intern orig))
-       ((looking-back ar-operator-regexp)
+       ((looking-back ar-operator-regexp (line-beginning-position))
         (goto-char (1- (match-beginning 0)))
         (forward-char -1)
         (unless (< 0 (abs (skip-chars-backward ar-expression-skip-chars)))
           (ar--beginning-of-expression-intern orig)))
-       ((looking-back "\"\\|'")
+       ((looking-back "\"\\|'" (line-beginning-position))
         (forward-char -1)
         (skip-chars-backward "\"'")
-        (unless (looking-back ar-assignment-regexp)
+        (unless (looking-back ar-assignment-regexp (line-beginning-position))
           (ar--beginning-of-expression-intern orig)))
-       ((looking-back "(\\|\\[")
+       ((looking-back "(\\|\\[" (line-beginning-position))
         (forward-char -1)
-        (unless (looking-back ar-assignment-regexp)
+        (unless (looking-back ar-assignment-regexp (line-beginning-position))
           (ar--beginning-of-expression-intern orig)))
-       ((looking-back "[\])}]")
+       ((looking-back "[\])}]" (line-beginning-position))
         (forward-char -1)
-        (unless (looking-back ar-assignment-regexp)
+        (unless (looking-back ar-assignment-regexp (line-beginning-position))
           (ar--beginning-of-expression-intern orig)))
        ;; inside expression
-       ((looking-back ar-expression-re)
+       ((looking-back ar-expression-re (line-beginning-position))
         (skip-chars-backward ar-expression-skip-chars)
-        (unless (or (looking-back "^[ \t]*") (looking-back ar-assignment-regexp))
+        (unless (or (looking-back "^[ \t]*") (looking-back ar-assignment-regexp) (line-beginning-position))
           (ar--beginning-of-expression-intern orig)))
        ((looking-back (concat "[ \t]*" "[[:alnum:]_]*" ar-operator-regexp "[[:alnum:]_]*") (line-beginning-position) t)
         (goto-char (match-beginning 0))
-        (unless (looking-back "^[ \t]*")
+        (unless (looking-back "^[ \t]*" (line-beginning-position))
           (ar--beginning-of-expression-intern orig)))
-       ((and (eq (point) orig) (looking-back "[ \t\r\n\f]"))
+       ((and (eq (point) orig) (looking-back "[ \t\r\n\f]") (line-beginning-position))
         (skip-chars-backward " \t\r\n\f")
         (unless (bobp)
           (forward-char -1)
           (ar--beginning-of-expression-intern orig)))
-       ((and (eq (point) orig) (not (bobp)) (looking-back ar-expression-re))
+       ((and (eq (point) orig) (not (bobp)) (looking-back ar-expression-re) (line-beginning-position))
         (forward-char -1)
         (when (< 0 (abs (skip-chars-backward ar-expression-skip-chars)))
           (ar--beginning-of-expression-intern orig)))
-       ((and (looking-at ar-expression-re) (not (looking-back "[ \t\r\n\f]")))
+       ((and (looking-at ar-expression-re) (not (looking-back "[ \t\r\n\f]")) (line-beginning-position))
         (unless (< 0 (abs (skip-chars-backward ar-expression-skip-chars)))
           (ar--beginning-of-expression-intern orig)))
-       ((and (eq (point) orig)(looking-back "[ \t]*="))
+       ((and (eq (point) orig)(looking-back "[ \t]*=") (line-beginning-position))
         (goto-char (match-beginning 0))
         (skip-chars-backward " \t\r\n\f")
         (ar--beginning-of-expression-intern orig)))
@@ -392,7 +897,7 @@ Operators however are left aside resp. limit ar-expression designed for edit-pur
         (forward-list)
         (unless (looking-at "[ \t]*$")
           (ar--end-of-expression-intern orig)))
-       ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
+       ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*") (line-beginning-position))
         (while (and (looking-at "[ \t]*#") (not (eobp)))
           (forward-line 1))
         (ar--end-of-expression-intern orig))
@@ -521,10 +1026,10 @@ For beginning of clause ar-backward-clause. "
           (setq done t)
           (ar-backward-statement orig done limit))
          ;; BOL or at space before comment
-         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
+         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*") (line-beginning-position))
           (forward-comment -1)
           (while (and (not (bobp))
-                      (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
+                      (looking-at "[ \t]*#")(looking-back "^[ \t]*") (line-beginning-position))
             (forward-comment -1))
           (unless (bobp)
             (ar-backward-statement orig done limit)))
@@ -572,7 +1077,7 @@ For beginning of clause ar-backward-clause. "
 	  (back-to-indentation)
 	  (setq done t)
 	  (ar-backward-statement orig done limit))
-        (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
+        (unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*") (line-beginning-position))
           (when (< (point) orig)(setq erg (point))))
         (when (and ar-verbose-p (interactive-p)) (message "%s" erg))
         erg))))
@@ -671,7 +1176,7 @@ Operators are ignored. "
 	  (or (< (point) (progn (forward-comment 1)(point)))(forward-line 1))
 	  (ar-forward-expression orig done repeat))
 	 ;; empty before comment
-	 ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
+	 ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*") (line-beginning-position))
 	  (while (and (looking-at "[ \t]*#") (not (eobp)))
 	    (forward-line 1))
 	  (ar-forward-expression orig done repeat))
@@ -845,17 +1350,24 @@ Returns position if successful, nil otherwise"
     (when erg (setq erg (cons (current-indentation) erg)))
     erg))
 
+;; (defun ar--beginning-of-statement-p ()
+;;   "Returns position, if cursor is at the beginning of a `statement', nil otherwise. "
+;;   (save-excursion
+;;     (let ((orig (point))
+;; 	  erg)
+;;       (unless (and (eolp) (not (empty-line-p)))
+;; 	(ar-forward-statement))
+;;       (ar-backward-statement)
+;;       (when (eq orig (point))
+;; 	(setq erg orig))
+;;       erg)))
+
 (defun ar--beginning-of-statement-p ()
   "Returns position, if cursor is at the beginning of a `statement', nil otherwise. "
-  (save-excursion
-    (let ((orig (point))
-	  erg)
-      (unless (and (eolp) (not (empty-line-p)))
-	(ar-forward-statement))
-      (ar-backward-statement)
-      (when (eq orig (point))
-	(setq erg orig))
-      erg)))
+  (when (eq (current-column) (current-indentation))
+    (let ((pps (parse-partial-sexp (point-min) (point))))
+      (unless (or (nth 3 pps) (nth 4 pps))
+	(point)))))
 
 (defun ar--beginning-of-form-intern (regexp &optional iact indent orig lc)
   "Go to beginning of FORM.

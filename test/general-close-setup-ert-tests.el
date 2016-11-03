@@ -97,7 +97,8 @@ BODY is code to be executed within the temp buffer.  Point is
        (python-mode)
        (when general-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
-       ,@body)))
+       ,@body))
+  (sit-for 0.1))
 
 (defmacro general-close-test-with-python-buffer-point-min (contents &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
@@ -113,7 +114,8 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when general-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
-       ,@body)))
+       ,@body)
+     (sit-for 0.1)))
 
 (defmacro general-close-test-with-php-buffer (contents &rest body)
   "Create temp buffer in `php-mode' inserting CONTENTS.

@@ -47,6 +47,11 @@
 ;; (require 'haskell-mode)
 (require 'sh-script)
 ;; (require 'python-mode)
+(require 'beg-end)
+(require 'ar-subr)
+(require 'thingatpt-utils-base)
+(require 'ar-navigate)
+
 
 (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
   "Defined in haskell-interactive-mode.el, silence warnings. ")
@@ -81,7 +86,7 @@ Default is t"
   :tag "general-close-insert-with-padding-p"
   :group 'general-close)
 
-(defvar general-close-electric-listify-p nil)
+(defvar general-close-electric-listify-p t)
 (defcustom general-close-electric-listify-p nil
   "When inside a list, assume list-separator.
 
@@ -276,6 +281,8 @@ Default is nil"
    general-close-pre-right-arrow-re-raw
    "\\_>[ \t]*"))
 
+(defvar general-close-typedef-re "[a-z][A-Za-z_]* *$")
+
 (defvar general-close-emacs-lisp-block-re
   (concat
    "[ \t]*\\_<"
@@ -288,6 +295,14 @@ Default is nil"
    "[ \t]*"
    "(defun\\|(defmacro"
    "\\_>[ \t]*"))
+
+(defvar sml-block-re (list "abstraction" "abstype" "and" "andalso" "as" "before" "case"
+                 "datatype" "else" "end" "eqtype" "exception" "do" "fn"
+                 "fun" "functor" "handle" "if" "in" "include" "infix"
+                 "infixr" "let" "local" "nonfix" "o" "of" "op" "open" "orelse"
+                 "overload" "raise" "rec" "sharing" "sig" "signature"
+                 "struct" "structure" "then" "type" "val" "where" "while"
+                 "with" "withtype"))
 
 (defvar general-close-sml-fun-after-arglist-re
   (concat
@@ -405,20 +420,17 @@ Otherwise switch it off. "
 	 ?\))))
 
 (defun general-close--in-string-p-intern (pps)
-  "Returns start-position, delimiter-char, delimiter-lenth a list. "
+  "Return the delimiting string. "
   (goto-char (nth 8 pps))
-  (list (point) (char-after)(skip-chars-forward (char-to-string (char-after)))))
+  (buffer-substring-no-properties (point) (progn  (skip-chars-forward (char-to-string (char-after))) (point))))
 
-(defun general-close-in-string-p ()
+(defun general-close-in-string-maybe (&optional pps)
   "if inside a double- triple- or singlequoted string,
 
-If non-nil, return a list composed of
-- beginning position
-- the character used as string-delimiter (in decimal)
-- and length of delimiter, commonly 1 or 3 "
+Return delimiting chars "
   (interactive)
   (save-excursion
-    (let* ((pps (parse-partial-sexp (point-min) (point)))
+    (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
 	   (erg (when (nth 3 pps)
 		  (general-close--in-string-p-intern pps))))
       (unless erg
@@ -490,10 +502,19 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	 general-close-list-separator-char)))
 
 (defun general-close-in-string-interpolation-maybe (&optional pps)
-  "Return position of list opener inside a string. "
-  (interactive )
-  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and (nth 3 pps) (nth 1 (setq pps (parse-partial-sexp (1+ (nth 8 pps)) (point)))) pps)))
+  "Return nearest openener.
+
+Check if list opener inside a string. "
+  (interactive)
+  (let ((pps (or pps (parse-partial-sexp (point-min) (point))))
+	erg last)
+    (cond ((and (nth 3 pps)
+		;; paren inside string maybe
+		(setq erg (nth 1 (setq last (parse-partial-sexp (1+ (nth 8 pps)) (point)))))(< (nth 8 pps) erg))
+	   (setq erg (nth-1-pps-complement-char-maybe last)))
+	  ((nth 3 pps)
+	   (setq erg (general-close-in-string-maybe pps))))
+    erg))
 
 ;; See also general-close--guess-symbol
 (defun general-close--fetch-delimiter-maybe (pps &optional force)
@@ -501,10 +522,11 @@ Does not require parenthesis syntax WRT \"{[(\" "
   (let (erg closer strg)
     (cond
      ((nth 3 pps)
-      (cond ((setq erg (general-close-in-string-interpolation-maybe pps))
-	     (general-close--return-complement-char-maybe (char-after (nth 1 erg))))
-	    ((and (not force) general-close-electric-listify-p)
-	     (general-close--fetch-electric-delimiter-maybe pps force))
+      (cond ((setq closer (general-close-in-string-interpolation-maybe pps))
+	     ;; (general-close--return-complement-char-maybe (char-after (nth 1 erg)))
+	     )
+	    ;; ((and (not force) general-close-electric-listify-p)
+	    ;;  (general-close--fetch-electric-delimiter-maybe pps force))
 
 	    (t (save-excursion
 		 (setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
@@ -674,13 +696,25 @@ When `general-close-insert-with-padding-p' is `t', the default "
       (setq done t))
     done))
 
-(defun general-close--right-arrow-maybe (beg regexp &optional closer)
+(defun general-close--right-arrow-maybe (beg regexp)
   (let (done)
     (when (save-excursion
 	    (goto-char beg)
 	    (skip-chars-forward " \t\r\n\f")
 	    (looking-at regexp))
       (general-close-insert-with-padding-maybe "->")
+      (setq done t))
+    done))
+
+(defun general-close--typedef-maybe (beg regexp)
+  (let (done)
+    (when (save-excursion
+	    (and
+	     (goto-char beg)
+	     (ar-previous-line-empty-or-BOB-p)
+	     (skip-chars-forward " \t\r\n\f")
+	     (looking-at regexp)))
+      (general-close-insert-with-padding-maybe "::")
       (setq done t))
     done))
 
@@ -865,42 +899,30 @@ When `general-close-insert-with-padding-p' is `t', the default "
 
 (defun general-close (&optional arg)
   "Command will insert closing delimiter whichever needed.
-
-With optional ARG 2, close everything at point
-With \\[universal-argument]: close a list in electric modes. "
+With \\[universal-argument]: close everything at point. "
   (interactive "P*")
   (if
-      (eq 2 (prefix-numeric-value arg))
+      (eq 4 (prefix-numeric-value arg))
       (while (general-close-intern))
-    (general-close-intern arg)))
+    (general-close-intern)))
 
 (defun general-close-intern (&optional arg)
   (let* ((beg (general-close--point-min))
 	 (force (eq 4 (prefix-numeric-value arg)))
 	 (orig (point))
-	 ;; (counter 1)
-	 done closer pps)
-    (when force (general-close--cleanup-inserts))
-    (setq pps (parse-partial-sexp beg (point)))
-    ;; with force, do a strict list-closing maybe
-    (when force
-      (insert (general-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))) force))
-      (setq done t))
-    (unless done
-      (setq done (general-close--travel-comments-maybe pps))
-      (unless done
-	(setq orig (point))
-	(setq done (general-close--modes beg pps orig closer force))
-	(unless done
-	  (setq done (general-close--others orig closer pps))
-	  (unless done
-	    (setq done (general-close--common beg pps))
-	    (unless done
-	      (and general-close-electric-newline-p (not (general-close-empty-line-p))
-		   (newline)))))
-	(when (and (not done) general-close-electric-indent-p)
-	  (indent-according-to-mode)))
-      (< orig (point)))))
+	 (pps (parse-partial-sexp beg (point)))
+	 done closer)
+	  ;; ((setq done (general-close--travel-comments-maybe pps)))
+    (cond
+	  ((setq done (general-close--modes beg pps orig closer force)))
+	  ((setq done (general-close--others orig closer pps)))
+	  ((setq done (general-close--common beg pps))))
+
+    ;; (and general-close-electric-newline-p (not (general-close-empty-line-p))
+    ;; 	 (newline))
+    (when (and (not done) general-close-electric-indent-p)
+      (indent-according-to-mode))
+    (< orig (point))))
 
 (require 'general-close-modes)
 

@@ -50,28 +50,28 @@
     (general-close)
     (should (eq (char-before) ?\}))))
 
-(ert-deftest general-close-haskell-right-arrow-test-1 ()
+(ert-deftest general-close-haskell-close-paren-test-1 ()
   (general-close-test-with-haskell-buffer
       "add :: (Int,Int"
     (let (general-close-electric-listify-p)
       (general-close)
       (should (eq (char-before) ?\))))))
 
-(ert-deftest general-close-haskell-right-arrow-test-2 ()
+(ert-deftest general-close-haskell-right-arrow-test-1 ()
   (general-close-test-with-haskell-buffer "asdf :: Int"
     (let (general-close-electric-listify-p)
       (general-close)
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?>)))))
 
-(ert-deftest general-close-haskell-right-arrow-test-3 ()
+(ert-deftest general-close-haskell-right-arrow-test-2 ()
   (general-close-test-with-haskell-buffer "add :: (Int,Int)"
     (let (general-close-electric-listify-p)
       (general-close)
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?>)))))
 
-(ert-deftest general-close-haskell-right-arrow-test-4 ()
+(ert-deftest general-close-haskell-close-paren-test-2 ()
   (general-close-test-with-haskell-buffer "add :: (Int,"
     (let ((general-close-electric-listify-p t))
       (general-close)
@@ -115,9 +115,18 @@ asdf n"
                       font_size=150)
 if __name__ == \"__main__\""
     (general-close)
-    (should (eq (char-before) ?:))
+    (should (eq (char-before) ?:))))
+
+(ert-deftest general-close-python-colon-test-3 ()
+  (general-close-test-with-python-buffer
+      "class TutorialApp(App):
+    def build(self):
+        return Button(text=\"Hello!\",
+                      background_color=(0, 0, 1, 1)
+                      font_size=150)
+if __name__ == \"__main__\":"
     (general-close)
-    (should (eq 8 (current-indentation)))))
+    (should (eq 4 (current-indentation)))))
 
 (ert-deftest general-close-list-comprehension-test-1 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
@@ -258,15 +267,27 @@ if __name__ == \"__main__\""
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?\))))))
 
-;; failing from ert?
-;; (ert-deftest general-close-list-comprehension-test-18 ()
-;;   ;; [(x,y)|x<-[1..3],y<-[4,5]]
-;;   (general-close-test-with-haskell-buffer "['a']"
-;;     (let ((general-close-electric-listify-p t))
-;;       (general-close)
-;;       (should (empty-line-p)))))
+(ert-deftest general-close-list-single-var-test-1 ()
+  (general-close-test-with-haskell-buffer "potenz(x,y"
+    (let ((general-close-electric-listify-p t))
+      (general-close '(4))
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\))))))
 
-;; SML
+(ert-deftest general-close-type-test-1 ()
+  (general-close-test-with-haskell-buffer "type Radius = Float
+type Width  = Float
+type Height = Float
+
+Date Shape = Circle Radius
+           | Rect Width Height
+
+area "
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?:)))))
+
 (ert-deftest general-close-sml-comment-test ()
   (general-close-test "(* definition of nat"
     'sml-mode
@@ -331,15 +352,25 @@ if __name__ == \"__main__\""
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?=)))))
 
-(ert-deftest general-close-sml-function-2 ()
-  (general-close-test "fun foo"
+;; (ert-deftest general-close-sml-function-2 ()
+;;   (general-close-test "fun foo"
+;;     'sml-mode
+;;     'general-close-debug-p
+;;     (let ((general-close-electric-listify-p t))
+;;       (general-close)
+;;       (skip-chars-backward " \t\r\n\f")
+;;       (should (eq (char-before) ?\()))))
+
+(ert-deftest general-close-backward-of-block-1 ()
+  (general-close-test "fun silly1 (z : int) =
+  let
+      val"
     'sml-mode
     'general-close-debug-p
-    (let ((general-close-electric-listify-p t))
-      (general-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\()))))
-
+    (let ((general-close-electric-listify-p t)
+	  (ar-smart-indentation t))
+      (ar-backward-block)
+      (should (eq (char-after) ?f)))))
 
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here
