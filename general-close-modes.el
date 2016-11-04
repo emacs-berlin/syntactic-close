@@ -70,7 +70,6 @@
 	       (progn
 		 (insert closer)
 		 ;; only closing `"' or `'' was inserted here
-		 ;; (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))) force)
 		   (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))))
 		     (insert closer))
 		 (setq done t))
@@ -380,7 +379,8 @@ If arg SYMBOL is a string, return it unchanged"
 	   (skip-chars-backward " \t\r\n\f")
 	   (insert general-close-list-separator-char)
 	   (setq done t))
-	  (t (skip-chars-backward "^)\[" (line-beginning-position))
+	  (t (goto-char splitpos)
+	     (skip-chars-backward "^)\[" (line-beginning-position))
 	     (and (eq (char-before) ?\))(forward-char -1))
 	     (setq sorted (general-closer-uniq-varlist nil splitpos (parse-partial-sexp (line-beginning-position) (point))))
 	     (goto-char orig)
@@ -418,6 +418,9 @@ If arg SYMBOL is a string, return it unchanged"
 			   (general-close--generic-fetch-delimiter-maybe)))))
 	 done)
     (cond
+     ((ignore-errors (eq closer ?\]))
+      (insert closer)
+      (setq done t)) 
      (splitter
       (setq done (general-close-haskell-electric-splitter-forms closer pps orig)))
      ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
@@ -478,7 +481,7 @@ If arg SYMBOL is a string, return it unchanged"
      ((and (eq 1 (nth 0 pps)) (eq ?\) closer))
       (insert closer)
       (setq done t))
-     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re closer)))
+     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
      (closer
       (insert closer)
       (setq done t))
@@ -487,9 +490,20 @@ If arg SYMBOL is a string, return it unchanged"
     done))
 
 (defun general-close-haskell-close (&optional closer pps orig)
-  (if general-close-electric-listify-p
-      (general-close-haskell-electric-close closer pps orig)
-    (general-close-haskell-non-electric closer pps orig)))
+  (let (erg done)
+    (cond ((and (nth 4 pps)
+		(save-excursion
+		  (goto-char (nth 8 pps))
+		  (looking-at "{-")
+		  ;; plain comment closed by newline
+		  (setq erg (general-close--return-complement-string-maybe "{-"))))
+	   (insert erg)
+	   (setq done t)))
+    (unless done
+      (if general-close-electric-listify-p
+	  (setq done (general-close-haskell-electric-close closer pps orig))
+	(setq done (general-close-haskell-non-electric closer pps orig))))
+    done))
 
 (defun general-close-inferior-sml-close ()
   (let (done)
@@ -589,8 +603,9 @@ If arg SYMBOL is a string, return it unchanged"
 	   (goto-char orig)
 	   (nreverse varlist)))))
 
-(defun general-close--modes (beg pps orig &optional closer force)
-  (let (done)
+(defun general-close--modes (pps orig &optional closer force)
+  (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
+	done)
     (pcase major-mode
       (`inferior-sml-mode
        (setq done (general-close-inferior-sml-close)))

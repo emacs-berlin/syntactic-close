@@ -422,6 +422,12 @@ Otherwise switch it off. "
 	((eq erg ?\()
 	 ?\))))
 
+(defun general-close--return-complement-string-maybe (erg)
+  (cond
+   ((string= erg "{-")
+    "-}")
+   ))
+
 (defun general-close--in-string-p-intern (pps)
   "Return the delimiting string. "
   (goto-char (nth 8 pps))
@@ -616,6 +622,28 @@ See `general-close-command-separator-char'"
 	  (t (general-close--insert-separator-maybe orig)))
     done))
 
+(defun general-close-insert-with-padding-maybe (strg &optional nbefore nafter)
+  "Takes a string. Insert a space before and after maybe.
+
+When `general-close-insert-with-padding-p' is `t', the default "
+  (skip-chars-backward " \t\r\n\f")
+  (if general-close-insert-with-padding-p
+      (cond ((looking-back "([ \t]*")
+	     (delete-region (match-beginning 0) (match-end 0))
+	     (insert strg)
+	     (insert " "))
+	    ((looking-at "[ \t]*)")
+	     (delete-region (match-beginning 0) (1- (match-end 0)))
+	     (insert " ")
+	     (insert strg))
+	    (t (unless nbefore (insert " "))
+	       (insert strg)
+	       (unless
+		   (or
+		    (eq 5 (car (syntax-after (point))))
+		    ;; (eq (char-after) ?\))
+		    nafter) (insert " "))))))
+
 (defun general-close--semicolon-separator-modes-dispatch (orig closer pps)
   (let ((closer (or closer (and (nth 1 pps) (nth-1-pps-complement-char-maybe pps))))
 	done erg)
@@ -669,28 +697,6 @@ See `general-close-command-separator-char'"
   (if (eq (char-before) ?\ )
       (insert (concat strg " "))
       (insert (concat " " strg " "))))
-
-(defun general-close-insert-with-padding-maybe (strg &optional nbefore nafter)
-  "Takes a string. Insert a space before and after maybe.
-
-When `general-close-insert-with-padding-p' is `t', the default "
-  (skip-chars-backward " \t\r\n\f")
-  (if general-close-insert-with-padding-p
-      (cond ((looking-back "([ \t]*")
-	     (delete-region (match-beginning 0) (match-end 0))
-	     (insert strg)
-	     (insert " "))
-	    ((looking-at "[ \t]*)")
-	     (delete-region (match-beginning 0) (1- (match-end 0)))
-	     (insert " ")
-	     (insert strg))
-	    (t (unless nbefore (insert " "))
-	       (insert strg)
-	       (unless
-		   (or
-		    (eq 5 (car (syntax-after (point))))
-		    ;; (eq (char-after) ?\))
-		    nafter) (insert " "))))))
 
 (defun general-close--insert-assignment-maybe (beg regexp)
   (let (done)
@@ -933,7 +939,7 @@ With \\[universal-argument]: close everything at point. "
 	 done closer)
 	  ;; ((setq done (general-close--travel-comments-maybe pps)))
     (cond
-	  ((setq done (general-close--modes beg pps orig closer force)))
+	  ((setq done (general-close--modes pps orig closer force)))
 	  ((setq done (general-close--others orig closer pps)))
 	  ((setq done (general-close--common beg pps))))
 

@@ -43,12 +43,19 @@
     (general-close)
     (should (eq (char-before) ?/))))
 
-(ert-deftest general-close-haskell-comment-test ()
+(ert-deftest general-close-haskell-comment-test-1 ()
   (general-close-test-with-haskell-buffer
       "{- To explore this file: "
     'general-close-debug-p
     (general-close)
-    (should (eq (char-before) ?\}))))
+    (should (looking-back "-}"))))
+
+(ert-deftest general-close-haskell-comment-test-2 ()
+  (general-close-test-with-haskell-buffer
+      "{- To explore this file: -}"
+    'general-close-debug-p
+    (general-close)
+    (should (empty-line-p)))) 
 
 (ert-deftest general-close-haskell-close-paren-test-1 ()
   (general-close-test-with-haskell-buffer
@@ -361,7 +368,7 @@ area "
 ;;       (skip-chars-backward " \t\r\n\f")
 ;;       (should (eq (char-before) ?\()))))
 
-(ert-deftest general-close-backward-of-block-1 ()
+(ert-deftest general-close-backward-block-1 ()
   (general-close-test "fun silly1 (z : int) =
   let
       val"

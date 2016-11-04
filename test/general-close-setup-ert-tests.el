@@ -69,7 +69,8 @@ BODY is code to be executed within the temp buffer "
        (when ,verbose
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
-       ,@body)))
+       ,@body))
+  (sit-for 0.1))
 
 (defmacro general-close-test-point-min (contents mode verbose &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
@@ -290,7 +291,8 @@ BODY is code to be executed within the temp buffer.  Point is
        (haskell-mode)
        (when general-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
-       ,@body)))
+       ,@body)
+     (sit-for 0.1)))
 
 (defmacro general-close-test-with-haskell-buffer-point-min (contents &rest body)
   "Create temp buffer in `haskell-mode' inserting CONTENTS.
@@ -305,7 +307,8 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when general-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
-       ,@body)))
+       ,@body)
+     (sit-for 0.1)))
 
 
 (defmacro general-close-test-with-shell-script-buffer (contents &rest body)
