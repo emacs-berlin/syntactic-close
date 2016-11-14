@@ -55,7 +55,7 @@
       "{- To explore this file: -}"
     'general-close-debug-p
     (general-close)
-    (should (empty-line-p)))) 
+    (should (empty-line-p))))
 
 (ert-deftest general-close-haskell-close-paren-test-1 ()
   (general-close-test-with-haskell-buffer
@@ -73,7 +73,7 @@
 
 (ert-deftest general-close-haskell-right-arrow-test-2 ()
   (general-close-test-with-haskell-buffer "add :: (Int,Int)"
-    (let (general-close-electric-listify-p)
+    (let ((general-close-electric-listify-p t))
       (general-close)
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?>)))))
@@ -100,6 +100,22 @@ asdf n"
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?=)))))
 
+(ert-deftest general-close-haskell-asign-test-3 ()
+  (general-close-test-with-haskell-buffer "asdf :: Int -> [Int]
+asdf n = ["
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (looking-back general-close-default-argument-1)))))
+
+(ert-deftest general-close-haskell-asign-test-4 ()
+  (general-close-test-with-haskell-buffer "asdf :: Int -> [Int]
+asdf "
+    (let (general-close-electric-listify-p)
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?=)))))
+
 (ert-deftest general-close-haskell-concat-test ()
   ;; indent s = "    " ++ s
   (general-close-test-with-haskell-buffer "indent s = \"asdf\""
@@ -112,6 +128,12 @@ asdf n"
     (general-close)
     (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?t))))
+
+(ert-deftest general-close-haskell-default-type-test ()
+  (general-close-test-with-haskell-buffer "signum :: "
+    (general-close)
+    (skip-chars-backward " \t\r\n\f")
+    (should (looking-back general-close-default-type))))
 
 (ert-deftest general-close-python-colon-test-2 ()
   (general-close-test-with-python-buffer
@@ -331,7 +353,7 @@ area "
     'sml-mode
     'general-close-debug-p
     (general-close)
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?=))))
 
 (ert-deftest general-close-sml-assignment-3 ()
@@ -339,7 +361,7 @@ area "
     'sml-mode
     'general-close-debug-p
     (general-close)
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?=))))
 
 (ert-deftest general-close-sml-tuple-separator-1 ()

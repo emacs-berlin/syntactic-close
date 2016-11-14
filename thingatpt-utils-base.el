@@ -1,4 +1,4 @@
-;;; thingatpt-utils-base.el --- th-at-point edit functions
+;;; thingatpt-utils-base.el --- th-at-point edit functions -*- lexical-binding: t; -*- 
 
 ;; Copyright (C) 2010-2016 Andreas Röhler, unless
 ;; indicated otherwise
@@ -432,7 +432,7 @@ XEmacs-users: `unibyte' and `multibyte' class is unused i.e. set to \".\""
     :type 'regexp
     :group 'werkstatt))
 
-;; (require 'thingatpt-highlight)
+
 ;; Backslashed
 (put 'backslashed 'beginning-op-at
      (lambda ()
@@ -1316,8 +1316,7 @@ XEmacs-users: `unibyte' and `multibyte' class is unused i.e. set to \".\""
 (put 'delimited 'beginning-op-at
      (lambda ()
        (let ((begdel (concat th-beg-delimiter ar-delimiters-atpt))
-             (pps (syntax-ppss))
-             pos)
+             (pps (syntax-ppss)))
          (cond ((nth 8 pps)
 		(or
 		 ;; in string
@@ -1325,6 +1324,9 @@ XEmacs-users: `unibyte' and `multibyte' class is unused i.e. set to \".\""
 		 ;; in comment
 		 (goto-char (nth 8 pps))))
 	       ((looking-at "[({\\[]"))
+	       ((eq 5 (car (syntax-after (point))))
+		(forward-char 1) 
+		(forward-list -1))
                ((looking-at "]")
                 (beginning-of-form-base "[" "]" nil 'move nil nil t))
                ((looking-at "}")
@@ -1333,11 +1335,10 @@ XEmacs-users: `unibyte' and `multibyte' class is unused i.e. set to \".\""
                 (beginning-of-form-base "(" ")" nil 'move nil nil t))
                ((looking-at (concat "[" begdel "]"))
                 (ar-set-delimiter-zeichen)
-                (let ((pos (nth 8 pps)))
-                  (when pos
-                    (goto-char pos))))
-               ((setq pos (nth 8 pps))
-                (goto-char pos)
+                (when (nth 8 pps)
+		  (goto-char pos)))
+               ((nth 8 pps)
+                (goto-char (nth 8 pps))
                 (ar-set-delimiter-zeichen))
                ((nth 1 pps)
 		;; brace etc. not covered by (nth 1 pps)
@@ -1355,9 +1356,9 @@ XEmacs-users: `unibyte' and `multibyte' class is unused i.e. set to \".\""
 (put 'delimited 'end-op-at
      (lambda ()
        (let ((enddel (concat th-end-delimiter ar-delimiters-atpt)))
-         (cond ((looking-at "\\[")
-                (forward-list 1)
-                (looking-back "]"))
+         (cond ((eq 4 (car (syntax-after (point))))
+		;; (looking-at "\\[")
+                (forward-list 1))
                ;; (goto-char (match-end 0))
                ;; (end-of-form-base "\\[" "]" nil 'move nil nil t))
                ((looking-at "{")
@@ -1371,8 +1372,10 @@ XEmacs-users: `unibyte' and `multibyte' class is unused i.e. set to \".\""
                 (looking-back ")"))
                (t (forward-char 1)
                   (search-forward (char-to-string ar-delimiter-zeichen-atpt) nil nil 1)))
-         ;;(when (looking-back (concat "[" enddel "]"))
-	 (cons (match-beginning 0) (match-end 0)))))
+         (if (eq 5 (car (syntax-after (1- (point)))))
+	     (cons (1- (point)) (point))
+	   (when (looking-back (concat "[" enddel "]"))
+	     (cons (match-beginning 0) (match-end 0)))))))
 
 (defun ar-set-delimiter-zeichen ()
   (setq ar-delimiter-zeichen-atpt
@@ -1418,7 +1421,7 @@ XEmacs-users: `unibyte' and `multibyte' class is unused i.e. set to \".\""
   (lambda ()
     (when (looking-at "[ <]\\{0,1\\}\\([\041-\132\136-\176]+@[\041-\132\136-\176]+\\)[;,> \t\n]*")
     (goto-char (match-end 1))
-    (skip-chars-backward "[[:punct:]]"))(point)))
+    (skip-chars-backward "[:punct:]"))(point)))
 
 ;; Filename
 (if (featurep 'xemacs)
@@ -1983,7 +1986,7 @@ XEmacs-users: `unibyte' and `multibyte' class is unused i.e. set to \".\""
 (put 'whitespace 'beginning-op-at
      (lambda () (when (looking-at "[ \t]") (skip-chars-backward "[ \t\r\n[:blank:]]")(point))))
 
-(put 'whitespace 'end-op-at (lambda () (skip-chars-forward "[ \t\r\n[:blank:]]")(point)))
+(put 'whitespace 'end-op-at (lambda () (skip-chars-forward " \t\r\n[:blank:]")(point)))
 
 ;; Word
 (put 'word 'beginning-op-at
@@ -2658,14 +2661,14 @@ With optional arg IACT, the resulting list is sent to the message-buffer too. "
 	(setq last (point))))
     last))
 
-(defun ar-th-forward-function-call (arg)
+(defun ar-th-forward-function-call (thing arg)
   (let (erg)
     (while (< 0 arg)
       (setq erg (funcall (get thing 'forward-op-at)))
       (setq arg (1- arg)))
     erg))
 
-(defun ar-th-backward-function-call (arg)
+(defun ar-th-backward-function-call (arg thing)
   (let (erg)
     (while
 	(> 0 arg)
@@ -2683,12 +2686,12 @@ searches backward with negative argument "
     (if (< 0 arg)
 	(progn
 	  (if (functionp (get thing 'forward-op-at))
-	      (setq erg (ar-th-forward-function-call arg))
+	      (setq erg (ar-th-forward-function-call thing arg))
 	    (setq erg (ar-th-forward-fallback arg after thing)))
 	  ;; (and erg (consp erg) (setq erg (cdr erg)))
 	  (when (ignore-errors (< orig erg)) erg))
       (if (functionp (get thing 'backward-op-at))
-	  (setq erg (ar-th-backward-function-call arg))
+	  (setq erg (ar-th-backward-function-call arg thing))
 	(setq erg (ar-th-backward-fallback arg thing)))
       ;; (and erg (consp erg) (setq erg (cdr erg)))
       (when (> orig erg) erg))))
@@ -2927,6 +2930,27 @@ it defaults to `<', otherwise it defaults to `string<'."
       (if messages (message "Reordering buffer... Done"))))
   nil)
 
+(defun delim-slash-function (arg)
+  "Insert ARG backslashes. "
+  (when arg
+    (dotimes (i arg) (insert 47))))
+
+(defun ar-th-delim-intern (thing &optional beg end beg-char end-char arg)
+  (ignore-errors
+    (let* ((begstr (or beg-char th-beg-delimiter))
+           (endstr (or end-char th-end-delimiter)))
+      (when beg
+        (goto-char beg)
+        (delim-slash-function arg)
+        (insert begstr)
+        (goto-char end)
+        (delim-slash-function arg)
+        (insert endstr)
+        (setq done t))
+      (when (< (point) end)
+        (ar-th-forward thing)
+        (ar-th-delim-intern thing beg end beg-char end-char)))))
+
 (defun ar-th-delim (thing &optional arg beg-char end-char iact beg end)
   "Process begin and end of region according to value of
   `delim-action'
@@ -2943,29 +2967,6 @@ it defaults to `<', otherwise it defaults to `string<'."
       (when (and beg end)
 	(narrow-to-region beg end)
 	(ar-th-delim-intern thing beg end beg-char end-char)))))
-
-(defun ar-th-delim-intern (thing &optional beg end beg-char end-char)
-  (ignore-errors
-    (let* ((begstr (or beg-char th-beg-delimiter))
-           (endstr (or end-char th-end-delimiter)))
-      (when beg
-        (goto-char beg)
-        (delim-slash-function arg)
-        (insert begstr)
-        (goto-char end)
-        (delim-slash-function arg)
-        (insert endstr)
-        (setq done t))
-      (when (< (point) end)
-        (ar-th-forward thing)
-        (ar-th-delim-intern thing beg end beg-char end-char)))))
-
-(defun delim-slash-function (arg)
-  " "
-  (when (eq arg 2)
-    (insert "\\"))
-  (when (eq arg 4)
-    (insert "\\\\")))
 
 (defun ar-th-base-copy-or (kind arg &optional iact)
   " "

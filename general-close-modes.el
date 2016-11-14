@@ -58,7 +58,7 @@
 	     (setq done t)))
     done))
 
-(defun general-close-python-listclose (closer force pps separator-char)
+(defun general-close-python-listclose (closer force pps separator-char electric)
   "If inside list, assume another item first. "
   (let (done)
     (cond ((and force (eq (char-before) separator-char))
@@ -76,10 +76,10 @@
 	     (if (nth 3 pps)
 		 (insert (char-before))
 	       (insert ","))
-	     (unless general-close-electric-listify-p
+	     (unless electric
 	       (setq done t))))
 	  ((eq (char-before) general-close-list-separator-char)
-	   (if general-close-electric-listify-p
+	   (if electric
 	       (progn
 		 (save-excursion
 		   (forward-char -1)
@@ -97,6 +97,14 @@
   (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
 	done)
     (cond
+     ((and (nth 1 pps) (nth 3 pps)
+	   ;; (if (< (nth 1 pps) (nth 8 pps))
+	   (looking-back "\\[\\[:[a-z]+" (line-beginning-position)))
+      (insert ":")
+      (setq done t))
+     ((and (eq 2 (nth 1 pps)) (looking-back "\\[\\[:[a-z]+" (1- (nth 1 pps))))
+      (insert ":")
+      (setq done t))
      ((and (eq 1 (nth 1 pps))
 	   (save-excursion
 	     (beginning-of-line)
@@ -118,13 +126,18 @@
   (save-excursion
     (let ((erg (when pos
 		 (progn (goto-char pos)
-			(char-after)))))
+			(char-after))))
+	  beg end)
       (unless erg
-	(setq erg
-	      (save-excursion
-		(progn
-		  (forward-char -1)
-		  (buffer-substring-no-properties (point) (progn (skip-chars-backward "[[:alnum:]]") (point)))))))
+	(save-excursion
+	  (progn
+	    (forward-char -1)
+	    (skip-chars-backward "[:punct:] \t")
+	    (when (looking-back "[[:alpha:]]+" (line-beginning-position) )
+	      (setq end (point))
+	      (skip-chars-backward "[:alnum:]" (line-beginning-position))
+		 (setq erg (buffer-substring-no-properties (point) end))
+	    ))))
       (when (string= "" erg)
 	(setq erg (cond ((member (char-before (1- (point))) (list ?' ?\"))
 			 (char-before (1- (point)))))))
@@ -191,7 +204,7 @@ If arg SYMBOL is a string, return it unchanged"
     done))
 
 ;; Python
-(defun general-close-python-close (&optional closer pps force b-of-st b-of-bl separator-char)
+(defun general-close-python-close (&optional closer pps force b-of-st b-of-bl separator-char electric)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
   (let* ((closer (or closer
@@ -211,14 +224,13 @@ If arg SYMBOL is a string, return it unchanged"
 		    (lambda ()(beginning-of-line)(back-to-indentation)))))
 	     (general-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
 	     done)
-	;; (when force (setq general-close-electric-listify-p nil))
 	(cond
 	 ;; nested lists,
 	 ;; Inside a list-comprehension
-	 ((and (nth 1 pps) (not (member closer (list ?\) ?\" ?'))) general-close-electric-listify-p)
+	 ((and (nth 1 pps) (not (member closer (list ?\) ?\" ?'))) electric)
 	  (setq done (general-close-python-electric-close pps closer force)))
 	 (closer
-	  (setq done (general-close-python-listclose closer force pps separator-char)))
+	  (setq done (general-close-python-listclose closer force pps separator-char electric)))
 	 ((and (not (char-equal ?: (char-before)))
 	       (save-excursion
 		 (funcall general-close-beginning-of-statement)
@@ -310,7 +322,9 @@ If arg SYMBOL is a string, return it unchanged"
 (defun general-close-insert-var-in-listcomprh (pps &optional sorted splitpos)
   ;; which var of sorted to insert?
   (let* ((sorted sorted)
-	 (splitpos (or splitpos (save-excursion (and (skip-chars-backward "^|" (line-beginning-position))(eq (char-before) ?|)(1- (point))))))
+	 (splitpos (or splitpos
+		       (save-excursion (and (skip-chars-backward "^|" (line-beginning-position))(eq (char-before) ?|)(1- (point))))
+		       (and (eq (char-before) general-close-list-separator-char) (1- (point)))))
 	 done vars-at-point candidate)
     (if splitpos
 	(progn
@@ -326,34 +340,38 @@ If arg SYMBOL is a string, return it unchanged"
 		  ;; sorted))
 		  (cond ((looking-back "<-[ \t]*" (line-beginning-position))
 			 "[")
-			((looking-back "|[ \t]*" (line-beginning-position))
+			((looking-back "|[ \t]*")
 			 (car sorted))
+			((looking-back (char-to-string general-close-list-separator-char) (line-beginning-position))
+			 (if (< 1 (length (car sorted)))
+			     (car sorted)
+			   (general-close--raise-symbol-maybe (string-to-char (car sorted)))))
 			(t "<-"))))))
-
-    (when candidate
-      (general-close-insert-with-padding-maybe candidate)
-      (setq done t))
+    (unless done
+      (when candidate
+	(general-close-insert-with-padding-maybe candidate t t)
+	(setq done t)))
     ;; (insert closer)
     ;; (setq done t)
     done))
 
-(defun general-close-haskell-twofold-list-cases (pps &optional closer)
+(defun general-close-haskell-twofold-list-cases (pps &optional closer electric)
   (let* ((sorted (save-excursion (general-closer-uniq-varlist nil nil pps)))
 	 done)
     ;; [(a*b+a) |a<-[1..3],b<-[4..5]]
     (cond
      (;; after a punct-character
-      (and closer general-close-electric-listify-p
+      (and closer electric
 	   (eq 1 (car (syntax-after (1- (point))))))
       ;; translate a single char into its successor
       ;; if multi-char symbol, repeat
       (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
       (setq done t))
-     ((and closer general-close-electric-listify-p
-	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[[:alnum:]]")(skip-chars-backward " \t\r\n\f")(eq (char-before) general-close-list-separator-char)))))
+     ((and closer electric
+	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[:alnum:]")(skip-chars-backward " \t\r\n\f")(eq (char-before) general-close-list-separator-char)))))
       (insert general-close-list-separator-char)
       (setq done t))
-     ((and closer general-close-electric-listify-p
+     ((and closer electric
 	   (not (eq 1 (car (syntax-after (1- (point)))))))
       ;; works but not needed (?)
       (save-excursion
@@ -361,7 +379,7 @@ If arg SYMBOL is a string, return it unchanged"
 	(setq closer (general-close--return-complement-char-maybe (char-after))))
       (insert closer)
       (setq done t))
-     ((and closer general-close-electric-listify-p)
+     ((and closer electric)
       ;; Inside a list-comprehension
       (when (eq 2 (car (syntax-after (1- (point)))))
 	(insert general-close-list-separator-char)
@@ -416,24 +434,55 @@ If arg SYMBOL is a string, return it unchanged"
 		       ;; with `|' look for arrows needed
 		       (or (and pps (general-close--fetch-delimiter-maybe pps))
 			   (general-close--generic-fetch-delimiter-maybe)))))
-	 done)
+	 (electric t)
+	 done erg)
     (cond
+     ((and (eq 2 (nth 0 pps))(member (char-before) (list ?\( ?\[))(eq (char-before (1- (point))) general-close-list-separator-char))
+      (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
+      (setq done t))
+     ;; Default list var
+     ((and
+	(nth 1 pps)
+       ;; (eq 2 (nth 0 pps))
+    	   (setq erg
+		 (car-safe (member (char-before) (list ?\( ?\[))))
+	   (looking-back
+	    (concat "[a-z][A-Za-z_]* +\\(::\\|=\\) +.?"
+		    (regexp-quote (char-to-string erg)))))
+      ;; (line-beginning-position))))
+      (insert general-close-default-argument-1)
+      (setq done t))
+     ;; ((and (nth 1 pps)
+     ;; 	   (setq erg
+     ;; 		 (car-safe (member (char-before) (list ?\( ?\[))))
+     ;; 	   (looking-back
+     ;; 	    (concat "[a-z][A-Za-z_]* += +.?"
+     ;; 		    (regexp-quote (char-to-string erg)))))
+      ;; (insert general-close-default-argument-1)
+      ;; (setq done t))
      ((ignore-errors (eq closer ?\]))
       (insert closer)
-      (setq done t)) 
+      (setq done t))
      (splitter
       (setq done (general-close-haskell-electric-splitter-forms closer pps orig)))
      ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
-      (setq done (general-close-haskell-twofold-list-cases pps closer)))
-     ((eq (char-before) general-close-list-separator-char)
+      (setq done (general-close-haskell-twofold-list-cases pps closer electric)))
+     ((and (eq (char-before) general-close-list-separator-char)(not (car-safe (member (char-before (1- (point))) (list ?\) ?\])))))
       (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
+      (setq done t))
+     ((eq (char-before) general-close-list-separator-char)(car-safe (member (char-before (1- (point))) (list ?\) ?\])))
+      (insert (general-close--return-complement-char-maybe (char-before (1- (point)))))
       (setq done t))
      ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
      ((and (eq 1 (nth 0 pps)) (eq ?\) closer))
       (insert closer)
       (setq done t))
      ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
+     ((looking-back ":: [[:alnum:],()]+?")
+      (general-close-insert-with-padding-maybe "->")
+      (setq done t))
      ((setq done (general-close--typedef-maybe (line-beginning-position) general-close-typedef-re)))
+     ((setq done (general-close--default-type-maybe (line-beginning-position) general-close-default-type-re)))
      (closer
       (insert closer)
       (setq done t))
@@ -489,7 +538,7 @@ If arg SYMBOL is a string, return it unchanged"
      ((setq done (general-close--insert-string-concat-op-maybe))))
     done))
 
-(defun general-close-haskell-close (&optional closer pps orig)
+(defun general-close-haskell-close (&optional closer pps orig electric)
   (let (erg done)
     (cond ((and (nth 4 pps)
 		(save-excursion
@@ -500,7 +549,7 @@ If arg SYMBOL is a string, return it unchanged"
 	   (insert erg)
 	   (setq done t)))
     (unless done
-      (if general-close-electric-listify-p
+      (if electric
 	  (setq done (general-close-haskell-electric-close closer pps orig))
 	(setq done (general-close-haskell-non-electric closer pps orig))))
     done))
@@ -603,7 +652,7 @@ If arg SYMBOL is a string, return it unchanged"
 	   (goto-char orig)
 	   (nreverse varlist)))))
 
-(defun general-close--modes (pps orig &optional closer force)
+(defun general-close--modes (pps orig &optional closer force electric)
   (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
 	done)
     (pcase major-mode
@@ -612,7 +661,7 @@ If arg SYMBOL is a string, return it unchanged"
       (`sml-mode
       (setq done (general-close-sml-close pps)))
       (`python-mode
-       (setq done (general-close-python-close closer pps force)))
+       (setq done (general-close-python-close closer pps force nil nil nil electric)))
       (`emacs-lisp-mode
        (setq done (general-close-emacs-lisp-close closer pps)))
       (`ruby-mode
@@ -624,7 +673,7 @@ If arg SYMBOL is a string, return it unchanged"
 	((member major-mode (list 'php-mode 'js-mode 'web-mode))
 	 (setq done (general-close--php-check pps closer)))
 	((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
-	 (setq done (general-close-haskell-close closer pps orig))))
+	 (setq done (general-close-haskell-close closer pps orig electric))))
        done))))
 
 (provide 'general-close-modes)

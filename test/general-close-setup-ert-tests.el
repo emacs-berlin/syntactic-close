@@ -112,7 +112,6 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (insert ,contents)
        (python-mode)
-       ;; (message "fill-paragraph-function: %s" fill-paragraph-function)
        (goto-char (point-min))
        (when general-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))

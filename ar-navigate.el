@@ -1,4 +1,4 @@
-;;; ar-navigate.el --- Some basic navigation         -*- lexical-binding: t; -*-
+;;; ar-navigate.el --- Some basic navigation -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015  Andreas Röhler
 

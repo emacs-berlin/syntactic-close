@@ -102,7 +102,7 @@ Default is nil"
 (defcustom general-close-list-separator-char 44
   "Char separating elements of a list.
 
-Only takes effect if `general-close-electric-listify-p' is `t'
+Takes effect with electric mode
 Default is `,'"
 
   :type 'character
@@ -113,7 +113,7 @@ Default is `,'"
 (defcustom general-close-list-element-delimiter-1 39
   "Char delimiting elements of a list.
 
-Only takes effect if `general-close-electric-listify-p' is `t'
+Takes effect with electric mode
 Default is `''"
 
   :type 'character
@@ -124,7 +124,7 @@ Default is `''"
 (defcustom general-close-list-element-delimiter-2 34
   "Char delimiting elements of a list.
 
-Only takes effect if `general-close-electric-listify-p' is `t'
+Takes effect with `electric' mode
 Default is `\"'"
 
   :type 'character
@@ -267,7 +267,7 @@ Default is nil"
 (setq general-close-pre-right-arrow-re-raw
       (concat
        ;; asdf :: Int
-       "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)"
+       "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([[:alnum:]]+\\)"
        "\\|"
        ;; add :: (Int,Int)
        "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: +\\([[:alpha:]]+[A-Za-z0-9_]*\\),\\([[:alpha:]]+[A-Za-z0-9_]*\\) +|")
@@ -280,8 +280,13 @@ Default is nil"
    "[ \t]*\\_<"
    general-close-pre-right-arrow-re-raw
    "\\_>[ \t]*"))
+;; (setq general-close-pre-right-arrow-re "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([[:alnum:]]+\\)$")
 
 (defvar general-close-typedef-re "[a-z][A-Za-z_]* *$")
+
+(defvar general-close-default-type "Int")
+
+(defvar general-close-default-type-re "[[:alpha:]][A-Za-z0-9_]+[ \t]+::[ \t]*$")
 
 (defvar general-close-emacs-lisp-block-re
   (concat
@@ -380,7 +385,7 @@ conditionals closed by a colon for example. ")
 
 (defvar general-close--current-source-buffer (current-buffer)
   "Used by modes loading source from comint-shell")
- 
+
 (defun general-close--set-current-source-buffer ()
   (interactive)
   "Set value of `general-close--current-source-buffer' to current buffer. "
@@ -417,10 +422,17 @@ Otherwise switch it off. "
 	 erg)
 	((eq erg ?\[)
 	 ?\])
+	((eq erg ?\])
+	 ?\[)
 	((eq erg ?{)
 	 ?\})
+	((eq erg ?})
+	 ?\{)
+	((eq erg ?\))
+	 ?\()
 	((eq erg ?\()
-	 ?\))))
+	 ?\))
+	))
 
 (defun general-close--return-complement-string-maybe (erg)
   (cond
@@ -491,7 +503,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
     (general-close--return-complement-char-maybe (char-after))))
 
 (defun general-close--fetch-electric-delimiter-maybe (pps &optional force)
-  "`general-close-electric-listify-p' is `t'. "
+  ""
   (cond ((and (nth 1 pps)(not force)
 	      (save-excursion
 		(progn
@@ -663,7 +675,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	     (setq done (general-close--handle-separator-modes orig closer))))
     done))
 
-(defun general-close--others (orig closer pps)
+(defun general-close--others (orig closer pps electric)
   (let (done erg)
     (cond
      ((nth 3 pps)
@@ -733,6 +745,18 @@ When `general-close-insert-with-padding-p' is `t', the default "
       (setq done t))
     done))
 
+(defun general-close--default-type-maybe (beg regexp)
+  (let (done)
+    (when (save-excursion
+	    (and
+	     (goto-char beg)
+	     (ar-previous-line-empty-or-BOB-p)
+	     (skip-chars-forward " \t\r\n\f")
+	     (looking-at regexp)))
+      (general-close-insert-with-padding-maybe general-close-default-type)
+      (setq done t))
+    done))
+
 (defun general-close--typedef-maybe (beg regexp)
   (let (done)
     (when (save-excursion
@@ -750,7 +774,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	 general-close-comint-pre-right-arrow-re)
 	(t general-close-pre-right-arrow-re)))
 
-(defun general-close-comint (beg &optional closer)
+(defun general-close-comint (beg &optional closer electric)
   (let ((right-arrow-re (general-close--which-right-arrow-regex))
 	done)
     (cond (closer
@@ -816,7 +840,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	 (match-end 0))
 	(t (point-min))))
 
-(defun general-close--in-known-comint (beg &optional closer)
+(defun general-close--in-known-comint (beg &optional closer electric)
   (let (done)
     (setq done (general-close-comint beg closer))
     (unless done
@@ -826,11 +850,11 @@ When `general-close-insert-with-padding-p' is `t', the default "
       (setq done t))
     done))
 
-(defun general-close--common (beg pps)
+(defun general-close--common (beg pps electric)
   (let ((closer (general-close--fetch-delimiter-maybe pps))
 	done)
     (when (member major-mode general-close-known-comint-modes)
-      (setq done (general-close--in-known-comint beg closer)))
+      (setq done (general-close--in-known-comint beg closer electric)))
     (unless done
       (when closer
 	(unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
@@ -920,34 +944,36 @@ When `general-close-insert-with-padding-p' is `t', the default "
   "Call `general-close-electric-listify-p' set to `t'. "
     (interactive "P*")
   (let ((general-close-electric-listify-p t))
-    (general-close arg)))
+    (general-close arg t)))
 
-(defun general-close (&optional arg)
+(defun general-close (&optional arg electric)
   "Command will insert closing delimiter whichever needed.
 With \\[universal-argument]: close everything at point. "
   (interactive "P*")
   (if
       (eq 4 (prefix-numeric-value arg))
-      (while (general-close-intern arg))
-    (general-close-intern)))
+      (while (general-close-intern arg (or electric general-close-electric-listify-p)))
+    (general-close-intern arg (or electric general-close-electric-listify-p) (called-interactively-p 'any))))
 
-(defun general-close-intern (&optional arg)
+(defun general-close-intern (&optional arg electric iact )
   (let* ((beg (general-close--point-min))
 	 (force (eq 4 (prefix-numeric-value arg)))
 	 (orig (point))
 	 (pps (parse-partial-sexp beg (point)))
+	 (electric (or electric general-close-electric-listify-p))
+	 (verbose general-close-verbose-p)
 	 done closer)
-	  ;; ((setq done (general-close--travel-comments-maybe pps)))
+    ;; ((setq done (general-close--travel-comments-maybe pps)))
     (cond
-	  ((setq done (general-close--modes pps orig closer force)))
-	  ((setq done (general-close--others orig closer pps)))
-	  ((setq done (general-close--common beg pps))))
+     ((setq done (general-close--modes pps orig closer force electric)))
+     ((setq done (general-close--others orig closer pps electric)))
+     ((setq done (general-close--common beg pps electric))))
 
     ;; (and general-close-electric-newline-p (not (general-close-empty-line-p))
     ;; 	 (newline))
-    (when (and (not done) general-close-electric-indent-p)
+    (when (and (not done) electric)
       (indent-according-to-mode))
-    (< orig (point))))
+    (or (< orig (point)) (and iact verbose (message "%s" "nil")))))
 
 (require 'general-close-modes)
 

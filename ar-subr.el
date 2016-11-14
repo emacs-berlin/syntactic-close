@@ -142,13 +142,11 @@ Returns position reached if point was moved. "
 
 (defun ar-previous-line-empty-or-BOB-p ()
   (save-excursion
-    (unless (bolp)
-      (beginning-of-line))
-    (unless
-	(bobp)
-      (when (forward-line -1)
-	(beginning-of-line)))
-    (or (bobp) (ar-empty-line-p))))
+    (beginning-of-line)
+    (or
+     (bobp)
+     (when (forward-line -1)
+       (ar-empty-line-p)))))
 
 (defun ar-forward-comment (&optional pos char)
   "Go to end of (next) commented section following point.
