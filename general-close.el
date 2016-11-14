@@ -675,7 +675,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	     (setq done (general-close--handle-separator-modes orig closer))))
     done))
 
-(defun general-close--others (orig closer pps electric)
+(defun general-close--others (orig closer pps)
   (let (done erg)
     (cond
      ((nth 3 pps)
@@ -774,7 +774,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	 general-close-comint-pre-right-arrow-re)
 	(t general-close-pre-right-arrow-re)))
 
-(defun general-close-comint (beg &optional closer electric)
+(defun general-close-comint (beg &optional closer)
   (let ((right-arrow-re (general-close--which-right-arrow-regex))
 	done)
     (cond (closer
@@ -840,7 +840,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	 (match-end 0))
 	(t (point-min))))
 
-(defun general-close--in-known-comint (beg &optional closer electric)
+(defun general-close--in-known-comint (beg &optional closer)
   (let (done)
     (setq done (general-close-comint beg closer))
     (unless done
@@ -854,7 +854,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
   (let ((closer (general-close--fetch-delimiter-maybe pps))
 	done)
     (when (member major-mode general-close-known-comint-modes)
-      (setq done (general-close--in-known-comint beg closer electric)))
+      (setq done (general-close--in-known-comint beg closer)))
     (unless done
       (when closer
 	(unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
@@ -950,12 +950,13 @@ When `general-close-insert-with-padding-p' is `t', the default "
   "Command will insert closing delimiter whichever needed.
 With \\[universal-argument]: close everything at point. "
   (interactive "P*")
-  (if
-      (eq 4 (prefix-numeric-value arg))
-      (while (general-close-intern arg (or electric general-close-electric-listify-p)))
-    (general-close-intern arg (or electric general-close-electric-listify-p) (called-interactively-p 'any))))
+  (let ((list-separator-char general-close-list-separator-char))
+    (if
+	(eq 4 (prefix-numeric-value arg))
+	(while (general-close-intern list-separator-char arg (or electric general-close-electric-listify-p)))
+      (general-close-intern list-separator-char arg (or electric general-close-electric-listify-p) (called-interactively-p 'any)))))
 
-(defun general-close-intern (&optional arg electric iact )
+(defun general-close-intern (list-separator-char &optional arg electric iact )
   (let* ((beg (general-close--point-min))
 	 (force (eq 4 (prefix-numeric-value arg)))
 	 (orig (point))
@@ -965,8 +966,8 @@ With \\[universal-argument]: close everything at point. "
 	 done closer)
     ;; ((setq done (general-close--travel-comments-maybe pps)))
     (cond
-     ((setq done (general-close--modes pps orig closer force electric)))
-     ((setq done (general-close--others orig closer pps electric)))
+     ((setq done (general-close--modes pps orig list-separator-char closer force electric)))
+     ((setq done (general-close--others orig closer pps)))
      ((setq done (general-close--common beg pps electric))))
 
     ;; (and general-close-electric-newline-p (not (general-close-empty-line-p))

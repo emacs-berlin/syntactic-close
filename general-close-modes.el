@@ -490,7 +490,7 @@ If arg SYMBOL is a string, return it unchanged"
      ((setq done (general-close--insert-string-concat-op-maybe))))
     done))
 
-(defun general-close-haskell-non-electric (&optional closer pps orig)
+(defun general-close-haskell-non-electric (list-separator-char &optional closer pps orig)
   (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
 	 (closer (or closer
 		     (unless splitter
@@ -509,12 +509,12 @@ If arg SYMBOL is a string, return it unchanged"
      ;; [(a,b) |
      ;; not just after pipe
      ((and splitter (not closer)
-	   (not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| general-close-list-separator-char))))))
+	   (not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| list-separator-char))))))
       (cond ((looking-back "<-[ \t]*")
 	     (general-close-insert-with-padding-maybe "[")
 	     (setq done t))
 	    ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
-	     (insert general-close-list-separator-char)
+	     (insert list-separator-char)
 	     (setq done t))
 	    ((nth 1 pps)
 	     (skip-chars-backward " \t\r\n\f")
@@ -538,7 +538,7 @@ If arg SYMBOL is a string, return it unchanged"
      ((setq done (general-close--insert-string-concat-op-maybe))))
     done))
 
-(defun general-close-haskell-close (&optional closer pps orig electric)
+(defun general-close-haskell-close (list-separator-char &optional closer pps orig electric)
   (let (erg done)
     (cond ((and (nth 4 pps)
 		(save-excursion
@@ -551,7 +551,7 @@ If arg SYMBOL is a string, return it unchanged"
     (unless done
       (if electric
 	  (setq done (general-close-haskell-electric-close closer pps orig))
-	(setq done (general-close-haskell-non-electric closer pps orig))))
+	(setq done (general-close-haskell-non-electric list-separator-char closer pps orig))))
     done))
 
 (defun general-close-inferior-sml-close ()
@@ -652,7 +652,7 @@ If arg SYMBOL is a string, return it unchanged"
 	   (goto-char orig)
 	   (nreverse varlist)))))
 
-(defun general-close--modes (pps orig &optional closer force electric)
+(defun general-close--modes (pps orig list-separator-char &optional closer force electric)
   (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
 	done)
     (pcase major-mode
@@ -673,7 +673,7 @@ If arg SYMBOL is a string, return it unchanged"
 	((member major-mode (list 'php-mode 'js-mode 'web-mode))
 	 (setq done (general-close--php-check pps closer)))
 	((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
-	 (setq done (general-close-haskell-close closer pps orig electric))))
+	 (setq done (general-close-haskell-close list-separator-char closer pps orig electric))))
        done))))
 
 (provide 'general-close-modes)
