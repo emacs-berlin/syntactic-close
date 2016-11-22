@@ -942,7 +942,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	     (sgml-mode)
 	     (sgml-close-tag)
 	     (funcall oldmode)
-	     (font-lock-ensure)
+	     (font-lock-fontify-buffer)
 	     (setq done t)))
     done))
 
