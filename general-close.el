@@ -55,6 +55,11 @@
 (require 'general-close-modes)
 
 ;; Stuff prefixed "ar-" to be removed when modules are ready
+(defcustom ar-empty-line-p-chars "^[ \t\r]*$"
+  "ar-empty-line-p-chars"
+  :type 'regexp
+  :group 'convenience)
+
 (unless (functionp 'empty-line-p)
   (defalias 'empty-line-p 'ar-empty-line-p))
 (defun ar-empty-line-p (&optional iact)
@@ -63,8 +68,8 @@
   (save-excursion
     (beginning-of-line)
     (when iact
-      (message "%s" (looking-at empty-line-p-chars)))
-    (looking-at empty-line-p-chars)))
+      (message "%s" (looking-at ar-empty-line-p-chars)))
+    (looking-at ar-empty-line-p-chars)))
 
 (defun ar-previous-line-empty-or-BOB-p ()
   (save-excursion
