@@ -10,7 +10,6 @@ test/#*
 *.rb
 *.txt
 *~
-/.cask
 RCS
 run-travis-ci.sh
 test/*.hs

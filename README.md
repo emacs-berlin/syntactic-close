@@ -19,12 +19,3 @@ http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
 Being designed to work for every language, please open a ticket should
 anything fail.
 
-Files 
-
-ar-subr.el
-beg-end.el
-thingatpt-utils-base.el
-ar-navigate.el
-
-are copied from https://github.com/andreas-roehler/werkstatt/tree/master/thingatpt-utils-core, please report bugs there.
-

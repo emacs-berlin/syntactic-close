@@ -1,4 +1,4 @@
-;;; run.el ---                                       -*- lexical-binding: t; -*-
+;;; run.el --- -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2016 Emacs User Group Berlin
 
