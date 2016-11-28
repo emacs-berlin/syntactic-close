@@ -197,7 +197,7 @@ if __name__ == \"__main__\":"
   (general-close-test-with-haskell-buffer "[(a,"
     (let ((general-close-electric-listify-p t))
       (general-close)
-      (should (looking-back "a,b,"))))) 
+      (should (looking-back "a,b,")))))
 
 (ert-deftest general-close-list-comprehension-test-6 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
@@ -448,6 +448,13 @@ area "
 	  (ar-smart-indentation t))
       (ar-backward-block)
       (should (eq (char-after) ?f)))))
+
+
+(ert-deftest general-close-close-ruby-string-interpolation-test-1 ()
+  (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
+  \"Sending from #{from} to #{to} via #{via"
+    (general-close)
+    (should (eq (char-before) ?}))))
 
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here

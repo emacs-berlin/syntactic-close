@@ -50,12 +50,6 @@
     (general-close)
     (should (eq (char-before) ?|))))
 
-(ert-deftest general-close-close-ruby-string-interpolation-test-1 ()
-  (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
-  \"Sending from #{from} to #{to} via #{via"
-    (general-close)
-    (should (eq (char-before) ?}))))
-
 (ert-deftest general-close-close-ruby-string-interpolation-test-2 ()
   (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
   \"Sending from #{from} to #{to} via #{via}"

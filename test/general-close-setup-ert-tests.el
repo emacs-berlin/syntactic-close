@@ -21,32 +21,6 @@
 ;;; Commentary:
 
 ;;; Code:
-;; (defvar emacs-verzeichnis "~/emacs-25.1")
-;; (if (file-readable-p emacs-verzeichnis)
-;;   (add-to-list 'load-path (concat emacs-verzeichnis "/lisp/emacs-lisp/"))
-;;   (message "%s" "Maybe edit emacs-verzeichnis"))
-;; (require 'cl-preloaded)
-;; (if (file-readable-p "~/.emacs.d/elpa/")
-;;        (add-to-list 'load-path "~/.emacs.d/elpa/sml-mode-6.7")
-;;   (message "%s" "elpa archiv not found"))
-;; (require 'haskell)
-
-;; (load "~/werkstatt/misc/sml-mode.el" nil t)
-;; (require 'sml-mode)
-
-(add-to-list 'load-path "../.cask/24.4/elpa/haskell-mode-20160818.437")
-
-(if (file-readable-p
-     "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
-    (progn
-      (message "Lade %s" "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
-      (load "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el" nil t))
-  (message "Nicht gefunden: %s" "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
-  ;; (dired ".cask/24.4/elpa/haskell-mode-20160818.437")
-  )
-
-;; (require 'haskell)
-;; (require 'haskell-mode)
 
 (setq general-close-install-directory default-directory)
 (message "default-directory: %s" default-directory)
@@ -56,6 +30,24 @@
 (defvar general-close-debug-p nil
   "Avoid error")
 ;; (setq general-close-debug-p t)
+
+
+(add-to-list 'load-path "../.cask/24.4/elpa/haskell-mode-20160818.437")
+(if (file-readable-p
+     "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
+    (progn
+      (message "Lade %s" "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
+      (load "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el" nil t))
+  (message "Nicht gefunden: %s" "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
+
+;; .cask/24.4/elpa/php-mode-20160910.1801/
+(add-to-list 'load-path "../.cask/24.4/elpa/php-mode-20160910.1801")
+(if (file-readable-p
+     "../.cask/24.4/elpa/php-mode-20160910.1801/haskell.el")
+    (progn
+      (message "Lade %s" "../.cask/24.4/elpa/php-mode-20160910.1801/haskell.el")
+      (load "../.cask/24.4/elpa/php-mode-20160910.1801/haskell.el" nil t))
+  (message "Nicht gefunden: %s" "../.cask/24.4/elpa/php-mode-20160910.1801/haskell.el"))
 
 (defmacro general-close-test (contents mode verbose &rest body)
   "Create temp buffer inserting CONTENTS.
