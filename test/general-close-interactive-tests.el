@@ -83,7 +83,14 @@
     (let ((general-close-electric-listify-p t))
       (general-close)
       (skip-chars-backward " \t\r\n\f")
-      (should (looking-back "Int")))))
+      (should (looking-back "Int,Int,")))))
+
+(ert-deftest general-close-haskell-close-paren-test-2a ()
+  (general-close-test-with-haskell-buffer "add :: (Int"
+    (let ((general-close-electric-listify-p t))
+      (general-close)
+      (skip-chars-backward " \t\r\n\f")
+      (should (eq (char-before) ?\))))))
 
 (ert-deftest general-close-haskell-assign-test-1 ()
   (general-close-test-with-haskell-buffer "asdf "
@@ -162,7 +169,7 @@ if __name__ == \"__main__\":"
   (general-close-test-with-haskell-buffer "[(asdb,"
     (let ((general-close-electric-listify-p t))
       (general-close)
-      (should (eq (char-before) ?b)))))
+      (should (looking-back "asdb,asdb," (line-beginning-position))))))
 
 (ert-deftest general-close-list-comprehension-test-2 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
@@ -180,17 +187,17 @@ if __name__ == \"__main__\":"
 
 (ert-deftest general-close-list-comprehension-test-4 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (general-close-test-with-haskell-buffer "[(x,"
+  (general-close-test-with-haskell-buffer "[(a)"
     (let ((general-close-electric-listify-p t))
       (general-close)
-      (should (eq (char-before) ?y)))))
+      (should (eq (char-before) ?\])))))
 
 (ert-deftest general-close-list-comprehension-test-5 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
   (general-close-test-with-haskell-buffer "[(a,"
     (let ((general-close-electric-listify-p t))
       (general-close)
-      (should (eq (char-before) ?b)))))
+      (should (looking-back "a,b,"))))) 
 
 (ert-deftest general-close-list-comprehension-test-6 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
@@ -295,6 +302,7 @@ if __name__ == \"__main__\":"
       (general-close '(4))
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?\))))))
+
 
 (ert-deftest general-close-list-single-var-test-1 ()
   (general-close-test-with-haskell-buffer "potenz(x,y"

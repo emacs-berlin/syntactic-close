@@ -358,9 +358,10 @@ conditionals closed by a colon for example. ")
 (defvar general-close-list-separator-char ?,
   "This char might be modified internally. ")
 
-(defvar general-close-known-comint-modes (list 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode)
+(defvar general-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode)
   "`parse-partial-sexp' must scan only from last prompt. ")
-;; (setq general-close-known-comint-modes (list 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode))
+(setq general-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode))
+
 
 (defvar general-close-empty-line-p-chars "^[ \t\r]*$")
 (defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
@@ -1021,7 +1022,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	  (progn
 	    (forward-char -1)
 	    (skip-chars-backward "[:punct:] \t")
-	    (when (looking-back "[[:alpha:]]+" (line-beginning-position))
+	    (when (looking-back "[[:alnum:]]+" (line-beginning-position))
 	      (setq end (point))
 	      (skip-chars-backward "[:alnum:]" (line-beginning-position))
 	      (setq erg (buffer-substring-no-properties (point) end))))))
@@ -1038,9 +1039,12 @@ When `general-close-insert-with-padding-p' is `t', the default "
 
 If at char `z', follow up with `a'
 If arg SYMBOL is a string, return it unchanged"
-  (if (stringp symbol)
-      symbol
+  (let ((oldval symbol))
     (cond
+     ((stringp symbol)
+      (cond ((string-match "^[0-9]+$" symbol)
+	     (prin1-to-string (1+ (car (read-from-string symbol)))))
+	    (t symbol)))
      ((eq 122 symbol)
       ;; if at char `z', follow up with `a'
       97)
@@ -1053,7 +1057,10 @@ If arg SYMBOL is a string, return it unchanged"
      ;; raise until number 9
      ((and (< 47 symbol)(< symbol 57))
       (1+ symbol))
-     (t symbol))))
+     (t (prin1-to-string (1+ (car (read-from-string (char-to-string symbol))))))
+
+     ;; (t symbol)
+     )))
 
 (defun general-close-python-electric-close (list-separator-char pps closer force)
   (let (done)
@@ -1312,6 +1319,18 @@ If arg SYMBOL is a string, return it unchanged"
 	   (t (setq done (general-close-haskell-close-in-list-comprehension list-separator-char pps orig))))
     done))
 
+(defun general-close-insert-raised-number-maybe (&optional pps)
+  (interactive "*")
+  (let* ((pps (or pps (parse-partial-sexp (line-beginning-position) (point))))
+	 (erg (when (nth 2 pps)
+		(save-excursion
+		  (and (goto-char (nth 2 pps))
+		       (number-at-point)))))
+	 done)
+    (when erg (insert (format "%s" (1+ erg)))
+	  (setq done t))
+    done))
+
 (defun general-close-haskell-electric-close (list-separator-char &optional closer pps orig)
   (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
 	 (closer (or closer
@@ -1325,6 +1344,15 @@ If arg SYMBOL is a string, return it unchanged"
      ((and (eq 2 (nth 0 pps))(member (char-before) (list ?\( ?\[))(eq (char-before (1- (point))) list-separator-char))
       (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
       (setq done t))
+     ((and (nth 1 pps) (eq (char-before) general-close-list-separator-char) (not (car-safe (member (char-before (1- (point))) (list ?\) ?\])))))
+      ;; (insert (prin1-to-string (general-close--raise-symbol-maybe (general-close--guess-symbol))))
+      (setq erg  (insert (general-close--raise-symbol-maybe (general-close--guess-symbol))))
+      ;; (if (stringp erg)
+      ;; (insert erg)
+      ;; (insert (prin1-to-string erg)))
+      (setq done t)
+      ;; (setq done (general-close-insert-raised-number-maybe pps))
+      (insert general-close-list-separator-char))
      ;; Default list var
      ((and
 	(nth 1 pps)
@@ -1461,7 +1489,7 @@ If arg SYMBOL is a string, return it unchanged"
       (general-close-insert-with-padding-maybe "(" nil t)
       (setq done t))
      (;; assignment
-      (looking-back general-close-sml-assignment-re (line-beginning-position)) 
+      (looking-back general-close-sml-assignment-re (line-beginning-position))
       (general-close-insert-with-padding-maybe "=")
       (setq done t))
      (;; function body assignment
