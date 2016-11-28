@@ -1039,28 +1039,24 @@ When `general-close-insert-with-padding-p' is `t', the default "
 
 If at char `z', follow up with `a'
 If arg SYMBOL is a string, return it unchanged"
-  (let ((oldval symbol))
-    (cond
-     ((stringp symbol)
-      (cond ((string-match "^[0-9]+$" symbol)
-	     (prin1-to-string (1+ (car (read-from-string symbol)))))
-	    (t symbol)))
-     ((eq 122 symbol)
-      ;; if at char `z', follow up with `a'
-      97)
-     ((eq symbol 90)
-      65)
-     ((and (< symbol 123)(< 96 symbol))
-      (1+ symbol))
-     ((and (< symbol 133)(< 64 symbol))
-      (1+ symbol))
-     ;; raise until number 9
-     ((and (< 47 symbol)(< symbol 57))
-      (1+ symbol))
-     (t (prin1-to-string (1+ (car (read-from-string (char-to-string symbol))))))
-
-     ;; (t symbol)
-     )))
+  (cond
+   ((stringp symbol)
+    (cond ((string-match "^[0-9]+$" symbol)
+	   (prin1-to-string (1+ (car (read-from-string symbol)))))
+	  (t symbol)))
+   ((eq 122 symbol)
+    ;; if at char `z', follow up with `a'
+    97)
+   ((eq symbol 90)
+    65)
+   ((and (< symbol 123)(< 96 symbol))
+    (1+ symbol))
+   ((and (< symbol 133)(< 64 symbol))
+    (1+ symbol))
+   ;; raise until number 9
+   ((and (< 47 symbol)(< symbol 57))
+    (1+ symbol))
+   (t (prin1-to-string (1+ (car (read-from-string (char-to-string symbol))))))))
 
 (defun general-close-python-electric-close (list-separator-char pps closer force)
   (let (done)
@@ -1345,24 +1341,16 @@ If arg SYMBOL is a string, return it unchanged"
       (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
       (setq done t))
      ((and (nth 1 pps) (eq (char-before) general-close-list-separator-char) (not (car-safe (member (char-before (1- (point))) (list ?\) ?\])))))
-      ;; (insert (prin1-to-string (general-close--raise-symbol-maybe (general-close--guess-symbol))))
       (setq erg  (insert (general-close--raise-symbol-maybe (general-close--guess-symbol))))
-      ;; (if (stringp erg)
-      ;; (insert erg)
-      ;; (insert (prin1-to-string erg)))
       (setq done t)
-      ;; (setq done (general-close-insert-raised-number-maybe pps))
       (insert general-close-list-separator-char))
      ;; Default list var
-     ((and
-	(nth 1 pps)
-       ;; (eq 2 (nth 0 pps))
+     ((and (nth 1 pps)
     	   (setq erg
 		 (car-safe (member (char-before) (list ?\( ?\[))))
 	   (looking-back
 	    (concat "[a-z][A-Za-z_]* +\\(::\\|=\\) +.?"
 		    (regexp-quote (char-to-string erg))) (line-beginning-position)))
-      ;; (line-beginning-position))))
       (insert general-close-default-argument-1)
       (setq done t))
      ((ignore-errors (eq closer ?\]))
@@ -1551,7 +1539,7 @@ If arg SYMBOL is a string, return it unchanged"
     (setq general-close-haskell-listcomprh-counter 0)
     (cond ((save-excursion (and (nth 0 pps) (goto-char (nth 1 pps))(eq (char-after) ?\[))(setq pos (point)))
 	   (goto-char pos)
-	   (while (re-search-forward haskell-var-re orig t 1)
+	   (while (re-search-forward [^ \t] orig t 1)
 	     ;; (unless (member (match-string-no-properties 0) varlist)
 	     (cl-pushnew (match-string-no-properties 0) varlist))
 	   (goto-char orig)
