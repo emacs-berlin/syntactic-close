@@ -31,23 +31,24 @@
   "Avoid error")
 ;; (setq general-close-debug-p t)
 
-
-(add-to-list 'load-path "../.cask/24.4/elpa/haskell-mode-20160818.437")
-(if (file-readable-p
-     "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
-    (progn
-      (message "Lade %s" "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el")
-      (load "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el" nil t))
-  (message "Nicht gefunden: %s" "../.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
+(unless (featurep 'haskell) 
+  (add-to-list 'load-path (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437"))
+  (if (file-readable-p
+       (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
+      (progn
+	(message "Lade %s" (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
+	(load (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el") nil t))
+    (message "Nicht gefunden: %s" (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))))
 
 ;; .cask/24.4/elpa/php-mode-20160910.1801/
-(add-to-list 'load-path "../.cask/24.4/elpa/php-mode-20160910.1801")
-(if (file-readable-p
-     "../.cask/24.4/elpa/php-mode-20160910.1801/haskell.el")
-    (progn
-      (message "Lade %s" "../.cask/24.4/elpa/php-mode-20160910.1801/haskell.el")
-      (load "../.cask/24.4/elpa/php-mode-20160910.1801/haskell.el" nil t))
-  (message "Nicht gefunden: %s" "../.cask/24.4/elpa/php-mode-20160910.1801/haskell.el"))
+(unless (featurep 'php-mode)
+  (add-to-list 'load-path (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801"))
+  (if (file-readable-p
+       (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
+      (progn
+	(message "Lade %s" (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
+	(load (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el") nil t))
+    (message "Nicht gefunden: %s" (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))))
 
 (defmacro general-close-test (contents mode verbose &rest body)
   "Create temp buffer inserting CONTENTS.
