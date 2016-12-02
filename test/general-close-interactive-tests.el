@@ -55,7 +55,8 @@
       "{- To explore this file: -}"
     'general-close-debug-p
     (general-close)
-    (should (empty-line-p))))
+    (sit-for 0.1)
+    (should (ar-empty-line-p))))
 
 (ert-deftest general-close-haskell-close-paren-test-1 ()
   (general-close-test-with-haskell-buffer
@@ -303,7 +304,6 @@ if __name__ == \"__main__\":"
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?\))))))
 
-
 (ert-deftest general-close-list-single-var-test-1 ()
   (general-close-test-with-haskell-buffer "potenz(x,y"
     (let ((general-close-electric-listify-p t))
@@ -449,12 +449,12 @@ area "
       (ar-backward-block)
       (should (eq (char-after) ?f)))))
 
-
-(ert-deftest general-close-close-ruby-string-interpolation-test-1 ()
-  (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
-  \"Sending from #{from} to #{to} via #{via"
-    (general-close)
-    (should (eq (char-before) ?}))))
+;; braucht beg-end
+;; (ert-deftest general-close-close-ruby-string-interpolation-test-1 ()
+;;   (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
+;;   \"Sending from #{from} to #{to} via #{via"
+;;     (general-close)
+;;     (should (eq (char-before) ?}))))
 
 (provide 'general-close-interactive-tests)
 ;;; general-close-interactive-tests.el ends here

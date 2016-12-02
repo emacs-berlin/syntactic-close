@@ -176,7 +176,7 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
       "#! /usr/bin/env python3
 with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe:"
     (general-close)
-    (should (empty-line-p))))
+    (should (ar-empty-line-p))))
 
 (ert-deftest general-close-python-colon-test-4 ()
   (general-close-test-with-python-buffer

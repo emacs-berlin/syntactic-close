@@ -96,7 +96,7 @@ With \\[universal-argument]: close everything at point. "
 	(while (general-close-intern list-separator-char arg (or electric general-close-electric-listify-p)))
       (general-close-intern list-separator-char arg (or electric general-close-electric-listify-p) (called-interactively-p 'any)))))
 
-(defun general-close-intern (list-separator-char &optional arg electric iact )
+(defun general-close-intern (list-separator-char &optional arg electric iact)
   (let* ((beg (general-close--point-min))
 	 (force (eq 4 (prefix-numeric-value arg)))
 	 (orig (point))
@@ -109,11 +109,10 @@ With \\[universal-argument]: close everything at point. "
      ((setq done (general-close--modes pps orig list-separator-char closer force electric)))
      ((setq done (general-close--others orig closer pps)))
      ((setq done (general-close--common beg pps))))
-
-    ;; (and general-close-electric-newline-p (not (general-close-empty-line-p))
-    ;; 	 (newline))
-    (when (and (not done) electric)
-      (indent-according-to-mode))
+    (unless done
+      (and general-close-electric-newline-p (not (general-close-empty-line-p))
+	   (newline)
+	   (indent-according-to-mode)))
     (or (< orig (point)) (and iact verbose (message "%s" "nil")))))
 
 (require 'general-close-modes)
