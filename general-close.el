@@ -84,24 +84,11 @@
   "Call `general-close-electric-listify-p' set to `t'. "
     (interactive "P*")
   (let ((general-close-electric-listify-p t))
-    (general-close arg t)))
+    (general-close arg nil t)))
 
-(defun general-close (&optional arg electric)
-  "Command will insert closing delimiter whichever needed.
-With \\[universal-argument]: close everything at point. "
-  (interactive "P*")
-  (let ((list-separator-char general-close-list-separator-char))
-    (if
-	(eq 4 (prefix-numeric-value arg))
-	(while (general-close-intern list-separator-char arg (or electric general-close-electric-listify-p)))
-      (general-close-intern list-separator-char arg (or electric general-close-electric-listify-p) (called-interactively-p 'any)))))
-
-(defun general-close-intern (list-separator-char &optional arg electric iact)
-  (let* ((beg (general-close--point-min))
-	 (force (eq 4 (prefix-numeric-value arg)))
-	 (orig (point))
+(defun general-close-intern (beg list-separator-char electric iact &optional force)
+  (let* ((orig (point))
 	 (pps (parse-partial-sexp beg (point)))
-	 (electric (or electric general-close-electric-listify-p))
 	 (verbose general-close-verbose-p)
 	 done closer)
     ;; ((setq done (general-close--travel-comments-maybe pps)))
@@ -114,6 +101,21 @@ With \\[universal-argument]: close everything at point. "
 	   (newline)
 	   (indent-according-to-mode)))
     (or (< orig (point)) (and iact verbose (message "%s" "nil")))))
+
+(defun general-close (&optional arg beg electric force)
+  "Command will insert closing delimiter whichever needed.
+
+Smart insert default values when `general-close-electric-listify-p' is non-nil.
+
+With \\[universal-argument]: close everything at point. "
+  (interactive "P*")
+  (let ((beg (or beg (general-close--point-min)))
+	(list-separator-char general-close-list-separator-char)
+	(electric (or electric general-close-electric-listify-p))
+	(iact (called-interactively-p 'any)))
+    (pcase (prefix-numeric-value arg)
+      (4 (general-close-intern beg list-separator-char electric iact t))
+      (_ (general-close-intern beg list-separator-char electric iact force)))))
 
 (require 'general-close-modes)
 
