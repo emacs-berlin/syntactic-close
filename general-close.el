@@ -85,7 +85,6 @@ Default is t"
 (defcustom general-close-list-separator-char 44
   "Char separating elements of a list.
 
-
 Default is `,'"
 
   :type 'character
@@ -179,12 +178,6 @@ Default is nil"
    "(if\\|(cond\\|when\\|unless"
    "\\_>[ \t]*"))
 
-(defvar general-close-emacs-lisp-function-re
-  (concat
-   "[ \t]*"
-   "(defun\\|(defmacro"
-   "\\_>[ \t]*"))
-
 (defvar general-close-sml-fun-after-arglist-re
   (concat
    "[ \t]*"
@@ -205,31 +198,11 @@ Default is nil"
 (defvar general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
 (setq general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
 
-(setq general-close-emacs-lisp-function-re
-  (concat
-   "[ \t]*\\("
-   "(defun\\|(defmacro"
-   "\\)\\_>[ \t]*"))
-
 (defcustom general-close-command-operator-chars
   "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\|=\\)[ \t]*"
   "Matches most of syntactical meaningful characters, inclusive whitespaces around. "
   :type 'regexp
   :tag "general-close-command-operator-chars"
-  :group 'general-close)
-
-(defcustom general-close-default-argument-1
-  "x"
-  "Insert a \"x\" maybe when general-close-guess-p is `t'. "
-  :type 'string
-  :tag "general-close-default-argument-1"
-  :group 'general-close)
-
-(defcustom general-close-default-argument-2
-  "y"
-  "Insert an \"y\" maybe when general-close-guess-p is `t'. "
-  :type 'string
-  :tag "general-close-default-argument-2"
   :group 'general-close)
 
 (defvar general-close-verbose-p nil)
@@ -418,22 +391,22 @@ Check if list opener inside a string. "
       (insert closer)
       closer))))
 
-;; (defun general-close--insert-separator-maybe (orig)
-;;   "Returns `t', if separator was inserted. "
-;;   (let (erg)
-;;     (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-;;       (delete-region (point) orig))
-;;     (when
-;; 	(not (eq (char-before) general-close-command-separator-char))
-;;       (when (save-excursion
-;; 	      (forward-char -1)
-;; 	      (when (ignore-errors (setq erg (nth 1 (parse-partial-sexp (point-min) (point)))))
-;; 		(goto-char erg))
-;; 	      (back-to-indentation)
-;; 	      ;; ert does no font-lock
-;; 	      (or (and general-close-keywords (looking-at general-close-keywords))
-;; 		  (face-at-point)))
-;; 	(insert general-close-command-separator-char) t))))
+(defun general-close--insert-separator-maybe (orig)
+  "Returns `t', if separator was inserted. "
+  (let (erg)
+    (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+      (delete-region (point) orig))
+    (when
+	(not (eq (char-before) general-close-command-separator-char))
+      (when (save-excursion
+	      (forward-char -1)
+	      (when (ignore-errors (setq erg (nth 1 (parse-partial-sexp (point-min) (point)))))
+		(goto-char erg))
+	      (back-to-indentation)
+	      ;; ert does no font-lock
+	      (or (and general-close-keywords (looking-at general-close-keywords))
+		  (face-at-point)))
+	(insert general-close-command-separator-char) t))))
 
 (defun general-close--handle-separator-modes (orig closer)
   "Some languages close expressions with a special char, often `:'
@@ -731,12 +704,12 @@ When `general-close-insert-with-padding-p' is `t', the default "
      ((and (eq 2 (nth 1 pps)) (looking-back "\\[\\[:[a-z]+" (1- (nth 1 pps))))
       (insert ":")
       (setq done t))
-     ((and (eq 1 (nth 1 pps))
-	   (save-excursion
-	     (beginning-of-line)
-	     (looking-at general-close-emacs-lisp-function-re)))
-      (general-close-insert-with-padding-maybe "()" nil t)
-      (setq done t))
+     ;; ((and (eq 1 (nth 1 pps))
+     ;; 	   (save-excursion
+     ;; 	     (beginning-of-line)
+     ;; 	     (looking-at general-close-emacs-lisp-function-re)))
+     ;;  (general-close-insert-with-padding-maybe "()" nil t)
+     ;;  (setq done t))
      ((save-excursion
 	(skip-chars-backward " \t\r\n\f")
 	(looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
@@ -795,7 +768,7 @@ If arg SYMBOL is a string, return it unchanged"
     (1+ symbol))
    (t (prin1-to-string (1+ (car (read-from-string (char-to-string symbol))))))))
 
-(defun general-close-python-close (list-separator-char &optional closer pps force b-of-st b-of-bl)
+(defun general-close-python-close (closer pps force b-of-st b-of-bl)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
   (let* ((closer (or closer

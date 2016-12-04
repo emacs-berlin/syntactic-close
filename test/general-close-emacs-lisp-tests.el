@@ -69,7 +69,7 @@
 
 (ert-deftest general-close--arglist-test ()
   (general-close-test-with-elisp-buffer
-      "(defun asdf"
+      "(defun asdf ("
       (general-close)
     (should (looking-back "asdf ()"))))
 
