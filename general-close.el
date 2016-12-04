@@ -1665,7 +1665,5 @@ With \\[universal-argument]: close everything at point. "
       (4 (general-close-intern beg list-separator-char electric iact t))
       (_ (general-close-intern beg list-separator-char electric iact force)))))
 
-(require 'general-close-modes)
-
 (provide 'general-close)
 ;;; general-close.el ends here

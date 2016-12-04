@@ -53,7 +53,6 @@
                   "general-close-python-tests"
                   "general-close-ruby-tests"
 		  )))
-      (load (expand-file-name "general-close-modes" source-directory))
       (load (expand-file-name "general-close" source-directory))
 
       (load (expand-file-name "general-close-setup-ert-tests" current-dir))
