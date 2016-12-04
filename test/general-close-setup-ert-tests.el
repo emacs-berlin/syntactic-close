@@ -31,7 +31,7 @@
   "Avoid error")
 ;; (setq general-close-debug-p t)
 
-(unless (featurep 'haskell) 
+(unless (featurep 'haskell)
   (add-to-list 'load-path (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437"))
   (if (file-readable-p
        (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
@@ -71,6 +71,7 @@ BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
   (declare (indent 1) (debug t))
   `(with-temp-buffer
+
      (let (hs-minor-mode)
        (funcall ,mode)
        (insert ,contents)
@@ -86,14 +87,14 @@ BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
   (declare (indent 1) (debug t))
   `(with-temp-buffer
-     (and (featurep 'python) (unload-feature 'python))
+
      (let (hs-minor-mode)
        (insert ,contents)
        (python-mode)
-       (when general-close-debug-p (switch-to-buffer (current-buffer))
+       (when ,general-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
-       ,@body))
-  (sit-for 0.1))
+       ,@body)
+     (sit-for 1)))
 
 (defmacro general-close-test-with-python-buffer-point-min (contents &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
@@ -175,7 +176,6 @@ BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
   (declare (indent 2) (debug t))
   `(with-temp-buffer
-     (switch-to-buffer (current-buffer))
      ;; (and (featurep 'python) (unload-feature 'python))
      (let (hs-minor-mode)
        (emacs-lisp-mode)

@@ -171,25 +171,13 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
     (general-close)
     (should (eq (char-before) ?:))))
 
-(ert-deftest general-close-python-colon-test-5 ()
+(ert-deftest general-close-python-no-colon-test-1 ()
   (general-close-test-with-python-buffer
-      "#! /usr/bin/env python3
-with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe:"
-    (general-close)
-    (should (ar-empty-line-p))))
-
-(ert-deftest general-close-python-colon-test-4 ()
-  (general-close-test-with-python-buffer
-      "class TestInit(unittest.TestCase):
-    def setUp(self):
-        self.bot = bot.Bot(\"jid\", \"password\")"
-    (general-close)
-    (should (eq 8 (current-indentation)))))
-
-(ert-deftest general-close-python-dict-test-1 ()
-  (general-close-test-with-python-buffer
-     "myExample = {'someItem': 2, 'otherItem': 20}"
-    (provide 'general-close-python-tests)))
+      "print(1)"
+    (let ((orig (point)))
+      (general-close)
+      (should (eq (char-before) ?\)))
+      (should (eq (point) orig)))))
 
 (ert-deftest general-close-python-electric-test-1 ()
   (general-close-test-with-python-buffer
@@ -198,62 +186,27 @@ with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe:"
       (general-close)
       (should (eq (char-before) ?')))))
 
-(ert-deftest general-close-python-electric-test-2 ()
-  (general-close-test-with-python-buffer
-      "['a'"
-    (let ((general-close-electric-listify-p t))
-      (general-close)
-      (should (eq (char-before (point)) ?,)))))
-
-(ert-deftest general-close-python-electric-test-3 ()
-  (general-close-test-with-python-buffer
-      "['a',"
-    (let ((general-close-electric-listify-p t))
-      (general-close)
-      (should (eq (char-before) ?')))))
-
 (ert-deftest general-close-python-electric-test-4 ()
   (general-close-test-with-python-buffer
-      "['a','b',"
+      "['a','b'"
     (let ((general-close-electric-listify-p t))
       ;; force final closing
       (general-close '(4))
       (should (eq (char-before) ?\])))))
 
-(ert-deftest general-close-python-electric-test-5 ()
-  (general-close-test-with-python-buffer
-      "[\"a\""
-    (let (general-close-electric-listify-p)
-      (general-close)
-      (should (eq (char-before) ?,)))))
-
 (ert-deftest general-close-python-electric-test-6 ()
   (general-close-test-with-python-buffer
-      "[\"a\",\""
-    (let ((general-close-electric-listify-p t))
-      (general-close '(4))
-      (should (eq (char-before) ?\])))))
-
-(ert-deftest general-close-python-electric-test-7 ()
-  (general-close-test-with-python-buffer
       "[\"a\""
-    (let (general-close-electric-listify-p)
+    (let ((general-close-electric-listify-p t))
       (general-close '(4))
       (should (eq (char-before) ?\])))))
 
 (ert-deftest general-close-python-electric-test-8 ()
   (general-close-test-with-python-buffer
-      "def potenz(x,"
+      "def potenz(x"
     (let ((general-close-electric-listify-p t))
       (general-close)
-      (should (eq (char-before) ?y)))))
-
-(ert-deftest general-close-python-electric-test-9 ()
-  (general-close-test-with-python-buffer
-      "def potenz(x,y"
-    (let ((general-close-electric-listify-p t))
-      (general-close)
-      (should (eq (char-before) ?,)))))
+      (should (eq (char-before) ?\))))))
 
 (ert-deftest general-close-python-electric-test-10 ()
   (general-close-test-with-python-buffer

@@ -474,9 +474,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	    (t (general-close--return-complement-char-maybe (nth 8 pps))
 	))
       (setq done t))
-     ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
-      (setq general-close-command-separator-char ?\:)
-      (setq done (general-close--handle-separator-modes orig closer)))
      (closer (setq done (general-close--insert-delimiter-char-maybe orig closer)))
      (t (setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re))))
     done))
@@ -550,19 +547,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	(insert closer)
 	(setq done t)))
     done))
-
-(defun general-close--cleanup-inserts ()
-  (skip-chars-backward " \t\r\n\f")
-  (let ((orig (point))
-	(pps (parse-partial-sexp (point-min) (point))))
-    (cond ((eq (char-before) general-close-list-separator-char)
-	   (delete-char -1)
-	   (when (< (point) orig)
-	     (general-close--cleanup-inserts)))
-	  ((and (nth 3 pps)(eq 1 (nth 0 pps))(eq 7 (syntax-class (syntax-after (1- (point))))))
-	   (delete-char -1)
-	   (when (< (point) orig)
-	     (general-close--cleanup-inserts))))))
 
 (defun general-close-fetch-delimiter (pps)
   "In some cases in (nth 3 pps only returns `t'. "
@@ -645,12 +629,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
      ((and (eq 2 (nth 1 pps)) (looking-back "\\[\\[:[a-z]+" (1- (nth 1 pps))))
       (insert ":")
       (setq done t))
-     ;; ((and (eq 1 (nth 1 pps))
-     ;; 	   (save-excursion
-     ;; 	     (beginning-of-line)
-     ;; 	     (looking-at general-close-emacs-lisp-function-re)))
-     ;;  (general-close-insert-with-padding-maybe "()" nil t)
-     ;;  (setq done t))
      ((save-excursion
 	(skip-chars-backward " \t\r\n\f")
 	(looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
@@ -685,30 +663,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	(setq erg (string-to-char erg)))
       erg)))
 
-(defun general-close--raise-symbol-maybe (symbol)
-  "Return the symbol following in asci decimal-values.
-
-If at char `z', follow up with `a'
-If arg SYMBOL is a string, return it unchanged"
-  (cond
-   ((stringp symbol)
-    (cond ((string-match "^[0-9]+$" symbol)
-	   (prin1-to-string (1+ (car (read-from-string symbol)))))
-	  (t symbol)))
-   ((eq 122 symbol)
-    ;; if at char `z', follow up with `a'
-    97)
-   ((eq symbol 90)
-    65)
-   ((and (< symbol 123)(< 96 symbol))
-    (1+ symbol))
-   ((and (< symbol 133)(< 64 symbol))
-    (1+ symbol))
-   ;; raise until number 9
-   ((and (< 47 symbol)(< symbol 57))
-    (1+ symbol))
-   (t (prin1-to-string (1+ (car (read-from-string (char-to-string symbol))))))))
-
 (defun general-close-python-close (closer pps force b-of-st b-of-bl)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
@@ -738,10 +692,7 @@ If arg SYMBOL is a string, return it unchanged"
 	  (insert ":")
 	  (setq done t))
 	 ((and (nth 3 pps)(setq closer (general-close-in-string-maybe))(setq done t))
-	  (insert closer))
-	 (t (eolp)
-	    (ignore-errors (newline-and-indent))
-	    (setq done t)))
+	  (insert closer)))
 	done)
       done)))
 
