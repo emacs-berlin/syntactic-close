@@ -463,17 +463,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
 		    ;; (eq (char-after) ?\))
 		    nafter) (insert " "))))))
 
-(defun general-close--semicolon-separator-modes-dispatch (orig closer pps)
-  (let ((closer (or closer (and (nth 1 pps) (nth-1-pps-complement-char-maybe pps))))
-	done erg)
-    (cond
-     ((progn (save-excursion (beginning-of-line) (looking-at general-close-pre-assignment-re)))
-      (general-close-insert-with-padding-maybe "=")
-      (setq done t))
-     (t (setq general-close-command-separator-char 59)
-	(setq done (general-close--handle-separator-modes orig closer))))
-    done))
-
 (defun general-close--others (orig closer pps)
   (let (done erg)
     (cond
@@ -485,29 +474,12 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	    (t (general-close--return-complement-char-maybe (nth 8 pps))
 	))
       (setq done t))
-     ;; a command separator may precede closing delimiter
-     ((and
-       ;; (nth 1 pps)
-       (member major-mode general-close--semicolon-separator-modes))
-      (setq done (general-close--semicolon-separator-modes-dispatch orig closer pps)))
      ((and (not (nth 1 pps)) (member major-mode general-close--colon-separator-modes))
       (setq general-close-command-separator-char ?\:)
       (setq done (general-close--handle-separator-modes orig closer)))
      (closer (setq done (general-close--insert-delimiter-char-maybe orig closer)))
      (t (setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re))))
     done))
-
-(defun general-close--comint-send ()
-  (let (done)
-    (comint-send-input)
-    (goto-char (point-max))
-    (setq done t)
-    done))
-
-(defun general-close--insert-and-fixup (strg)
-  (if (eq (char-before) ?\ )
-      (insert (concat strg " "))
-      (insert (concat " " strg " "))))
 
 (defun general-close--insert-assignment-maybe (beg regexp)
   (let (done)
@@ -516,21 +488,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	    (skip-chars-forward " \t\r\n\f")
 	    (looking-at regexp))
       (general-close-insert-with-padding-maybe "=")
-      (setq done t))
-    done))
-
-(defun general-close--repeat-type-maybe (beg regexp)
-  (let (done)
-    (when (save-excursion
-	    (skip-chars-backward " \t\r\n\f")
-	    (and (looking-back "->" beg)
-	    (goto-char beg)
-	    (looking-at regexp)))
-      (fixup-whitespace)
-      (if (eq (char-after) ?\ )
-	  (forward-char 1)
-	(insert 32))
-      (insert (match-string-no-properties 2))
       (setq done t))
     done))
 
