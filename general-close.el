@@ -190,14 +190,6 @@ Default is nil"
   :tag "general-close--semicolon-separator-modes"
   :group 'general-close)
 
-(defvar general-close-comint-pre-assignment-re   "let [[:alpha:]][A-Za-z0-9_]")
-(defcustom general-close-comint-pre-assignment-re
-  "let [[:alpha:]][A-Za-z0-9_]"
-  "Insert \"=\" when looking back. "
-  :type 'string
-  :tag "general-close-comint-pre-assignment-re"
-  :group 'general-close)
-
 (defvar general-close-pre-assignment-re "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
 
 (setq general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
@@ -209,75 +201,17 @@ Default is nil"
   :tag "general-close-pre-assignment-re"
   :group 'general-close)
 
-(defvar general-close-comint-pre-right-arrow-re   "let [[:alpha:]][A-Za-z0-9_]+ +::")
-;; (setq general-close-comint-pre-right-arrow-re   "let [[:alpha:]][A-Za-z0-9_]+ +::")
-(defcustom general-close-comint-pre-right-arrow-re
-  "let [[:alpha:]][A-Za-z0-9_]+ +::"
-  "Insert \"=\" when looking back. "
-  :type 'string
-  :tag "general-close-comint-pre-right-arrow-re"
-  :group 'general-close)
-
-(defcustom general-close-pre-right-arrow-re-raw
-  (concat
-   ;; asdf :: Int
-   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([^ ]+\\)"
-   "\\|"
-   ;; [(x,y)|x<-[1..3],y<-[4,5]]
-   "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: +\\([[:alpha:]]+[A-Za-z0-9_]*\\),\\([[:alpha:]]+[A-Za-z0-9_]*\\) +|")
-  ""
-  ;; :type '(repeat string)
-  :type '(repeat regexp)
-  :tag "general-close-pre-right-arrow-re-raw"
-  :group 'python-mode)
-
-(defvar general-close-pre-right-arrow-re ""
-  "Content of this var is controlled by customizable `general-close-pre-right-arrow-re-raw'")
-
-(setq general-close-pre-right-arrow-re-raw
-      (concat
-       ;; asdf :: Int
-       "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([[:alnum:]]+\\)"
-       "\\|"
-       ;; add :: (Int,Int)
-       "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: +\\([[:alpha:]]+[A-Za-z0-9_]*\\),\\([[:alpha:]]+[A-Za-z0-9_]*\\) +|")
-      ;; [(x,y)|x<-[1..3],y<-[4,5]]
-
-      )
-
-(setq general-close-pre-right-arrow-re
-  (concat
-   "[ \t]*\\_<"
-   general-close-pre-right-arrow-re-raw
-   "\\_>[ \t]*"))
-;; (setq general-close-pre-right-arrow-re "\\([[:alpha:]][A-Za-z0-9_]+\\) +:: \\([[:alnum:]]+\\)$")
-
-(defvar general-close-typedef-re "[a-z][A-Za-z_]* *$")
-
-(defvar general-close-default-type "Int")
-
-(defvar general-close-default-type-re "[[:alpha:]][A-Za-z0-9_]+[ \t]+::[ \t]*$")
-
 (defvar general-close-emacs-lisp-block-re
   (concat
    "[ \t]*\\_<"
    "(if\\|(cond\\|when\\|unless"
    "\\_>[ \t]*"))
 
-;; (string-match "[ 	]*\\((defun\\|(defmacro\\)\\_>[ 	]*" "(defun asdf")
 (defvar general-close-emacs-lisp-function-re
   (concat
    "[ \t]*"
    "(defun\\|(defmacro"
    "\\_>[ \t]*"))
-
-(defvar sml-block-re (list "abstraction" "abstype" "and" "andalso" "as" "before" "case"
-                 "datatype" "else" "end" "eqtype" "exception" "do" "fn"
-                 "fun" "functor" "handle" "if" "in" "include" "infix"
-                 "infixr" "let" "local" "nonfix" "o" "of" "op" "open" "orelse"
-                 "overload" "raise" "rec" "sharing" "sig" "signature"
-                 "struct" "structure" "then" "type" "val" "where" "while"
-                 "with" "withtype"))
 
 (defvar general-close-sml-fun-after-arglist-re
   (concat
@@ -663,16 +597,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
       (setq done t))
     done))
 
-(defun general-close--right-arrow-maybe (beg regexp)
-  (let (done)
-    (when (save-excursion
-	    (goto-char beg)
-	    (skip-chars-forward " \t\r\n\f")
-	    (looking-at regexp))
-      (general-close-insert-with-padding-maybe "->")
-      (setq done t))
-    done))
-
 (defun general-close--default-type-maybe (beg regexp)
   (let (done)
     (when (save-excursion
@@ -695,26 +619,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	     (looking-at regexp)))
       (general-close-insert-with-padding-maybe "::")
       (setq done t))
-    done))
-
-(defun general-close--which-right-arrow-regex ()
-  (cond ((member major-mode  (list 'haskell-interactive-mode 'inferior-haskell-mode))
-	 general-close-comint-pre-right-arrow-re)
-	(t general-close-pre-right-arrow-re)))
-
-(defun general-close-comint (beg &optional closer)
-  (let ((right-arrow-re (general-close--which-right-arrow-regex))
-	done)
-    (cond (closer
-	   (insert closer)
-	   (setq done t))
-	  ((eq (char-before) general-close-command-separator-char)
-	   (setq done (general-close--comint-send)))
-	  ((setq done (general-close--right-arrow-maybe beg right-arrow-re)))
-	  ;; if looking back at "let myVar " assume "="
-	  ((setq done (general-close--insert-assignment-maybe beg general-close-pre-assignment-re)))
-	  (t (insert general-close-command-separator-char)
-	     (setq done (general-close--comint-send))))
     done))
 
 (defun general-close--comments-intern (orig start end)
@@ -768,26 +672,13 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	 (match-end 0))
 	(t (point-min))))
 
-(defun general-close--in-known-comint (beg &optional closer)
-  (let (done)
-    (setq done (general-close-comint beg closer))
-    (unless done
-      ;; maybe no char, but input to send
-      (comint-send-input)
-      (newline)
-      (setq done t))
-    done))
-
 (defun general-close--common (beg pps)
   (let ((closer (general-close--fetch-delimiter-maybe pps))
 	done)
-    (when (member major-mode general-close-known-comint-modes)
-      (setq done (general-close--in-known-comint beg closer)))
-    (unless done
-      (when closer
-	(unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
-	  (insert closer)
-	  (setq done t))))
+    (when closer
+      (unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
+	(insert closer)
+	(setq done t)))
     done))
 
 (defun general-close--cleanup-inserts ()
