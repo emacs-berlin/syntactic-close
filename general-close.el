@@ -54,8 +54,6 @@
 ;; (require 'thingatpt-utils-base)
 ;; (require 'ar-navigate)
 
-;; (require 'general-close-modes)
-
 ;; Stuff prefixed "ar-" to be removed when modules are ready
 (defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
   "general-close-empty-line-p-chars"
@@ -441,15 +439,6 @@ conditionals closed by a colon for example. ")
   (interactive)
   (setq general-close-electric-listify-p (not general-close-electric-listify-p))
   (when (called-interactively-p 'any) (message "general-close-electric-listify-p: %s" general-close-electric-listify-p)))
-
-(defun general-close-empty-line-p (&optional iact)
-  "Returns t if cursor is at an empty line, nil otherwise."
-  (interactive "p")
-  (save-excursion
-    (beginning-of-line)
-    (when iact
-      (message "%s" (looking-at general-close-empty-line-p-chars)))
-    (looking-at general-close-empty-line-p-chars)))
 
 (defun general-close-toggle-verbosity ()
   "If `general-close-verbose-p' is nil, switch it on.
