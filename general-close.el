@@ -21,19 +21,7 @@
 
 ;;; Commentary: M-x general-close RET: close any syntactic element.
 
-;; With optional `general-close-electric-listify-p' set to `t':
-
-;; ['a','b   ==> ['a','b'
-;; ['a','b'  ==> ['a','b',
-
-;; With `C-u'
-;; ['a','b', ==> ['a','b']
-
-;; An explicit M-x general-close RET will then revert the
-;; timer-triggered auto-closed, allowing to continue with contents
-
-;; Some valid Emacs Lisp suitable for testing
-;; (setq foo (list "([{123}])"))
+;; ['a','b' ==> ['a','b']
 
 ;; A first draft was published at emacs-devel list:
 ;; http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
@@ -44,17 +32,12 @@
 (require 'sgml-mode)
 (require 'comint)
 
+(defgroup general-close nil
+  "Insert closing delimiter whichever needed. "
+  :group 'languages
+  :tag "general-close"
+  :prefix "general-close-")
 
-;; (require 'haskell)
-;; (require 'haskell-mode)
-;; (require 'sh-script)
-;; (require 'python-mode)
-;; (require 'beg-end)
-;; (require 'ar-subr)
-;; (require 'thingatpt-utils-base)
-;; (require 'ar-navigate)
-
-;; Stuff prefixed "ar-" to be removed when modules are ready
 (defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
   "general-close-empty-line-p-chars"
   :type 'regexp
@@ -80,21 +63,6 @@
        (general-close-empty-line-p)))))
 ;;
 
-
-(defvar general-close-python-keywords "\\<\\(ArithmeticError\\|AssertionError\\|AttributeError\\|BaseException\\|BufferError\\|BytesWarning\\|DeprecationWarning\\|EOFError\\|Ellipsis\\|EnvironmentError\\|Exception\\|False\\|FloatingPointError\\|FutureWarning\\|GeneratorExit\\|IOError\\|ImportError\\|ImportWarning\\|IndentationError\\|IndexError\\|KeyError\\|KeyboardInterrupt\\|LookupError\\|MemoryError\\|NameError\\|NoneNotImplementedError\\|NotImplemented\\|OSError\\|OverflowError\\|PendingDeprecationWarning\\|ReferenceError\\|RuntimeError\\|RuntimeWarning\\|StandardError\\|StopIteration\\|SyntaxError\\|SyntaxWarning\\|SystemError\\|SystemExit\\|TabError\\|True\\|TypeError\\|UnboundLocalError\\|UnicodeDecodeError\\|UnicodeEncodeError\\|UnicodeError\\|UnicodeTranslateError\\|UnicodeWarning\\|UserWarning\\|ValueError\\|Warning\\|ZeroDivisionError\\|__debug__\\|__import__\\|__name__\\|abs\\|all\\|and\\|any\\|apply\\|as\\|assert\\|basestring\\|bin\\|bool\\|break\\|buffer\\|bytearray\\|callable\\|chr\\|class\\|classmethod\\|cmp\\|coerce\\|compile\\|complex\\|continue\\|copyright\\|credits\\|def\\|del\\|delattr\\|dict\\|dir\\|divmod\\|elif\\|else\\|enumerate\\|eval\\|except\\|exec\\|execfile\\|exit\\|file\\|filter\\|float\\|for\\|format\\|from\\|getattr\\|global\\|globals\\|hasattr\\|hash\\|help\\|hex\\|id\\|if\\|import\\|in\\|input\\|int\\|intern\\|is\\|isinstance\\|issubclass\\|iter\\|lambda\\|len\\|license\\|list\\|locals\\|long\\|map\\|max\\|memoryview\\|min\\|next\\|not\\|object\\|oct\\|open\\|or\\|ord\\|pass\\|pow\\|print\\|property\\|quit\\|raise\\|range\\|raw_input\\|reduce\\|reload\\|repr\\|return\\|round\\|set\\|setattr\\|slice\\|sorted\\|staticmethod\\|str\\|sum\\|super\\|tuple\\|type\\|unichr\\|unicode\\|vars\\|while\\|with\\|xrange\\|yield\\|zip\\|\\)\\>"
-  "Contents like py-font-lock-keyword")
-
-
-(defvar general-close-comint-haskell-pre-right-arrow-re   "let [alpha][A-Za-z0-9_]+ +::")
-;; (setq general-close-comint-haskell-pre-right-arrow-re   "let [alpha][A-Za-z0-9_]+ +::")
-(defcustom general-close-comint-haskell-pre-right-arrow-re
-  "let [alpha][A-Za-z0-9_]+ +::"
-  "Insert \"=\" when looking back. "
-  :type 'string
-  :tag "general-close-comint-haskell-pre-right-arrow-re"
-  :group 'general-close)
-
-
 (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
   "Defined in haskell-interactive-mode.el, silence warnings. ")
 
@@ -103,12 +71,6 @@
 
 Default is nil.
 Comint-modes might want to load stuff from " )
-
-(defgroup general-close nil
-  "Insert closing delimiter whichever needed. "
-  :group 'languages
-  :tag "general-close"
-  :prefix "general-close-")
 
 (defcustom general-close-delete-whitespace-backward-p nil
   "If whitespace characters before point should be deleted.
@@ -128,18 +90,6 @@ Default is t"
   :tag "general-close-insert-with-padding-p"
   :group 'general-close)
 
-(defvar general-close-electric-listify-p t)
-(defcustom general-close-electric-listify-p nil
-  "When inside a list, assume list-separator.
-
-If after list-separator, replace it by closing the list
-Default is nil"
-
-  :type 'boolean
-  :tag "general-close-electric-listify-p"
-  :group 'general-close)
-(make-variable-buffer-local 'general-close-electric-listify-p)
-
 (defvar general-close-list-separator-char 44)
 (defcustom general-close-list-separator-char 44
   "Char separating elements of a list.
@@ -151,28 +101,6 @@ Default is `,'"
   :tag "general-close-list-separator-char"
   :group 'general-close)
 (make-variable-buffer-local 'general-close-list-separator-char)
-
-(defcustom general-close-list-element-delimiter-1 39
-  "Char delimiting elements of a list.
-
-Takes effect with electric mode
-Default is `''"
-
-  :type 'character
-  :tag "general-close-list-element-delimiter-1"
-  :group 'general-close)
-(make-variable-buffer-local 'general-close-list-element-delimiter-1)
-
-(defcustom general-close-list-element-delimiter-2 34
-  "Char delimiting elements of a list.
-
-Takes effect with `electric' mode
-Default is `\"'"
-
-  :type 'character
-  :tag "general-close-list-element-delimiter-2"
-  :group 'general-close)
-(make-variable-buffer-local 'general-close-list-element-delimiter-2)
 
 (defcustom general-close-guess-p nil
   "When non-nil, guess default arguments, list-separators etc. "
@@ -412,13 +340,9 @@ conditionals closed by a colon for example. ")
 (defvar general-close-command-separator-char ?\;
   "This char might be modified internally. ")
 
-(defvar general-close-list-separator-char ?,
-  "This char might be modified internally. ")
-
 (defvar general-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode)
   "`parse-partial-sexp' must scan only from last prompt. ")
 (setq general-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode))
-
 
 (defvar general-close-empty-line-p-chars "^[ \t\r]*$")
 (defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
@@ -433,12 +357,6 @@ conditionals closed by a colon for example. ")
   (interactive)
   "Set value of `general-close--current-source-buffer' to current buffer. "
   (setq general-close--current-source-buffer (current-buffer)))
-
-(defun general-close-toggle-electric-listify ()
-  "Switch the value of `general-close-electric-listify-p' in current session. "
-  (interactive)
-  (setq general-close-electric-listify-p (not general-close-electric-listify-p))
-  (when (called-interactively-p 'any) (message "general-close-electric-listify-p: %s" general-close-electric-listify-p)))
 
 (defun general-close-toggle-verbosity ()
   "If `general-close-verbose-p' is nil, switch it on.
@@ -536,26 +454,6 @@ Does not require parenthesis syntax WRT \"{[(\" "
     (goto-char (nth 1 pps))
     (general-close--return-complement-char-maybe (char-after))))
 
-(defun general-close--fetch-electric-delimiter-maybe (pps &optional force)
-  ""
-  (cond ((and (nth 1 pps)(not force)
-	      (save-excursion
-		(progn
-		  (skip-chars-backward " \t\r\n\f")
-		  (eq (char-before) general-close-list-separator-char))))
-	 (char-before (1- (point))))
-	((and (nth 1 pps)(not force)
-	      (save-excursion
-		(progn
-		  (skip-chars-backward " \t\r\n\f")
-		  (member (char-before (1- (point))) (list ?' ?\")))))
-	 (char-before (1- (point))))
-	((and (not force) (nth 1 pps)
-	      (save-excursion
-		(progn (skip-chars-backward " \t\r\n\f")
-		       (not (eq (char-before) general-close-list-separator-char)))))
-	 general-close-list-separator-char)))
-
 (defun general-close-in-string-interpolation-maybe (&optional pps)
   "Return nearest openener.
 
@@ -614,22 +512,22 @@ Check if list opener inside a string. "
       (insert closer)
       closer))))
 
-(defun general-close--insert-separator-maybe (orig)
-  "Returns `t', if separator was inserted. "
-  (let (erg)
-    (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-      (delete-region (point) orig))
-    (when
-	(not (eq (char-before) general-close-command-separator-char))
-      (when (save-excursion
-	      (forward-char -1)
-	      (when (ignore-errors (setq erg (nth 1 (parse-partial-sexp (point-min) (point)))))
-		(goto-char erg))
-	      (back-to-indentation)
-	      ;; ert does no font-lock
-	      (or (and general-close-keywords (looking-at general-close-keywords))
-		  (face-at-point)))
-	(insert general-close-command-separator-char) t))))
+;; (defun general-close--insert-separator-maybe (orig)
+;;   "Returns `t', if separator was inserted. "
+;;   (let (erg)
+;;     (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+;;       (delete-region (point) orig))
+;;     (when
+;; 	(not (eq (char-before) general-close-command-separator-char))
+;;       (when (save-excursion
+;; 	      (forward-char -1)
+;; 	      (when (ignore-errors (setq erg (nth 1 (parse-partial-sexp (point-min) (point)))))
+;; 		(goto-char erg))
+;; 	      (back-to-indentation)
+;; 	      ;; ert does no font-lock
+;; 	      (or (and general-close-keywords (looking-at general-close-keywords))
+;; 		  (face-at-point)))
+;; 	(insert general-close-command-separator-char) t))))
 
 (defun general-close--handle-separator-modes (orig closer)
   "Some languages close expressions with a special char, often `:'
@@ -654,13 +552,9 @@ See `general-close-command-separator-char'"
 	   (insert closer)
 	   closer)
 	  ;; Semicolon inserted where it probably shouldn't be? #12
-	  ;; ((and (eq closer ?\)) (eq (char-before) ?\)))
-	  ;;  (insert general-close-command-separator-char)
-	  ;;  closer)
-	  ((and closer general-close-electric-listify-p (not (eq (char-before) general-close-list-separator-char)))
-	   (skip-chars-backward " \t\r\n\f")
-	   (insert general-close-list-separator-char)
-	   (setq done t))
+	  ((and (eq closer ?\)) (eq (char-before) ?\)))
+	   (insert general-close-command-separator-char)
+	   closer)
 	  (closer
 	   (skip-chars-backward " \t\r\n\f")
 	   (insert closer)
@@ -896,18 +790,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	  (setq done t))))
     done))
 
-(defun general-close--guess-list-element-delimiter ()
-  (save-excursion
-    (forward-char -1)
-    (cond
-     ((eq (char-before) general-close-list-element-delimiter-1)
-      general-close-list-element-delimiter-1)
-     ((eq (char-before) general-close-list-element-delimiter-2)
-      general-close-list-element-delimiter-2))))
-
 (defun general-close--cleanup-inserts ()
-  ;; (when (< 0 (abs (skip-chars-backward (concat "^" (char-to-string general-close-list-separator-char)))))
-  ;;   (delete-region (point) orig))
   (skip-chars-backward " \t\r\n\f")
   (let ((orig (point))
 	(pps (parse-partial-sexp (point-min) (point))))
@@ -925,32 +808,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
   (save-excursion
     (goto-char (nth 8 pps))
     (char-after)))
-
-(defun general-close--electric (pps closer &optional force)
-  (let (done separator)
-    (if (and closer force)
-	(progn
-	  ;; (general-close--cleanup-inserts)
-	  (insert closer)
-	  (setq done t))
-      (cond ((nth 3 pps)
-	     (if
-		 (eq t (nth 3 pps))
-		 (insert (char-to-string (general-close-fetch-delimiter pps)))
-	       (insert (nth 3 pps)))
-	     (setq done t))
-	    ((eq (char-before) general-close-list-separator-char)
-	     ;; open a new list element
-	     (if (setq separator (general-close--guess-list-element-delimiter))
-		 (progn
-		   (insert separator)
-		   (setq done t))
-	       (delete-char -1)
-	       (insert closer)
-	       (setq done t)))
-	    (t (insert general-close-list-separator-char)
-	       (setq done t))))
-    done))
 
 (defun general-close--guess-from-string-interpolation-maybe (pps)
   "Returns the character of innermost sexp in inside. "
@@ -995,7 +852,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	     (setq done t)))
     done))
 
-(defun general-close-python-listclose (list-separator-char closer force pps electric)
+(defun general-close-python-listclose (list-separator-char closer force pps)
   "If inside list, assume another item first. "
   (let (done)
     (cond ((and force (eq (char-before) list-separator-char))
@@ -1007,23 +864,16 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	       (progn
 		 (insert closer)
 		 ;; only closing `"' or `'' was inserted here
-		   (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))))
-		     (insert closer))
+		 (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))))
+		   (insert closer))
 		 (setq done t))
 	     (if (nth 3 pps)
 		 (insert (char-before))
 	       (insert ","))
-	     (unless electric
-	       (setq done t))))
+	     (setq done t)))
 	  ((eq (char-before) list-separator-char)
-	   (if electric
-	       (progn
-		 (save-excursion
-		   (forward-char -1)
-		   (setq closer (char-before)))
-		 (insert closer))
 	     (delete-char -1)
-	     (insert closer))
+	     (insert closer)
 	   (setq done t))
 	  (t (insert closer)
 	     (setq done t)))
@@ -1106,43 +956,7 @@ If arg SYMBOL is a string, return it unchanged"
     (1+ symbol))
    (t (prin1-to-string (1+ (car (read-from-string (char-to-string symbol))))))))
 
-(defun general-close-python-electric-close (list-separator-char pps closer force)
-  (let (done)
-    (cond
-     ((and closer (eq 2 (nth 0 pps))
-	   (eq 1 (car (syntax-after (1- (point))))))
-      (insert (general-close--guess-symbol))
-      (setq done t))
-     ((and closer (eq 2 (nth 0 pps)))
-      (when (eq 2 (car (syntax-after (1- (point)))))
-	(insert list-separator-char)
-	(setq done t)))
-     ;; simple lists
-     ((eq 1 (car (syntax-after (1- (point)))))
-      ;; translate a single char into its successor
-      ;; if multi-char symbol, repeat
-      (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
-      (setq done t))
-     ((and closer
-	   (eq 1 (nth 0 pps)) (not (nth 3 pps))
-	   (not (member (char-before) (list ?\] list-separator-char))))
-      (insert list-separator-char)
-      (setq done t)
-      (when force
-	(general-close-python-close list-separator-char closer pps force nil nil list-separator-char)))
-     ((and closer
-	   (not (eq (char-before) closer)))
-      (insert closer)
-      (setq done t))
-     (closer
-      (setq done (general-close--electric pps closer force))
-      (unless (eq (char-before) list-separator-char)
-	(general-close-python-close list-separator-char closer pps force)))
-     (t (error "general-close-python-electric-close: nothing found")))
-    done))
-
-;; Python
-(defun general-close-python-close (list-separator-char &optional closer pps force b-of-st b-of-bl electric)
+(defun general-close-python-close (list-separator-char &optional closer pps force b-of-st b-of-bl)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
   (let* ((closer (or closer
@@ -1162,12 +976,8 @@ If arg SYMBOL is a string, return it unchanged"
 	     (general-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
 	     done)
 	(cond
-	 ;; nested lists,
-	 ;; Inside a list-comprehension
-	 ((and (nth 1 pps) (not (member closer (list ?\) ?\" ?'))) electric)
-	  (setq done (general-close-python-electric-close list-separator-char pps closer force)))
 	 (closer
-	  (setq done (general-close-python-listclose list-separator-char closer force pps electric)))
+	  (setq done (general-close-python-listclose list-separator-char closer force pps)))
 	 ((and (not (char-equal ?: (char-before)))
 	       (save-excursion
 		 (funcall general-close-beginning-of-statement)
@@ -1291,38 +1101,6 @@ If arg SYMBOL is a string, return it unchanged"
 	(setq done t)))
     done))
 
-(defun general-close-haskell-twofold-list-cases (list-separator-char pps &optional closer electric)
-  (let* ((sorted (save-excursion (general-closer-uniq-varlist nil nil pps)))
-	 done)
-    ;; [(a*b+a) |a<-[1..3],b<-[4..5]]
-    (cond
-     (;; after a punct-character
-      (and closer electric
-	   (eq 1 (car (syntax-after (1- (point))))))
-      ;; translate a single char into its successor
-      ;; if multi-char symbol, repeat
-      (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
-      (setq done t))
-     ((and closer electric
-	   (eq 2 (car (syntax-after (1- (point)))))(not (save-excursion (progn (skip-chars-backward "[:alnum:]")(skip-chars-backward " \t\r\n\f")(eq (char-before) list-separator-char)))))
-      (insert list-separator-char)
-      (setq done t))
-     ((and closer electric
-	   (not (eq 1 (car (syntax-after (1- (point)))))))
-      ;; works but not needed (?)
-      (save-excursion
-	(goto-char (nth 1 pps))
-	(setq closer (general-close--return-complement-char-maybe (char-after))))
-      (insert closer)
-      (setq done t))
-     ((and closer electric)
-      ;; Inside a list-comprehension
-      (when (eq 2 (car (syntax-after (1- (point)))))
-	(insert list-separator-char)
-	(setq done t)))
-     (t (setq done (general-close-insert-var-in-listcomprh list-separator-char pps sorted))))
-    done))
-
 (defun general-close-haskell-close-in-list-comprehension (list-separator-char pps orig)
   (let ((splitpos
 	 (+ (line-beginning-position)
@@ -1340,159 +1118,6 @@ If arg SYMBOL is a string, return it unchanged"
 	     (goto-char orig)
 	     (setq done
 		   (general-close-insert-var-in-listcomprh list-separator-char pps sorted splitpos))))
-    done))
-
-(defun general-close-haskell-electric-splitter-forms (list-separator-char &optional closer pps orig)
-  (let (done)
-    (cond ((and (not closer)
-    		(not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| list-separator-char))))))
-    	   (cond ((looking-back "<-[ \t]*" (line-beginning-position))
-    		  (general-close-insert-with-padding-maybe "[" nil t)
-    		  (setq done t))
-    		 ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
-    		  (insert list-separator-char)
-    		  (setq done t))
-		 ((looking-back "| +[[:alnum:]]+" (line-beginning-position))
-    		  (general-close-insert-with-padding-maybe "<-"))
-    		 ((nth 1 pps)
-    		  (skip-chars-backward " \t\r\n\f")
-    		  (insert (nth-1-pps-complement-char-maybe pps))
-    		  (setq done t))
-    		 (t (general-close-insert-with-padding-maybe "<-")
-    		    (setq done t))))
-	   (t (setq done (general-close-haskell-close-in-list-comprehension list-separator-char pps orig))))
-    done))
-
-(defun general-close-insert-raised-number-maybe (&optional pps)
-  (interactive "*")
-  (let* ((pps (or pps (parse-partial-sexp (line-beginning-position) (point))))
-	 (erg (when (nth 2 pps)
-		(save-excursion
-		  (and (goto-char (nth 2 pps))
-		       (number-at-point)))))
-	 done)
-    (when erg (insert (format "%s" (1+ erg)))
-	  (setq done t))
-    done))
-
-(defun general-close-haskell-electric-close (list-separator-char &optional closer pps orig)
-  (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
-	 (closer (or closer
-		     (unless splitter
-		       ;; with `|' look for arrows needed
-		       (or (and pps (general-close--fetch-delimiter-maybe pps))
-			   (general-close--generic-fetch-delimiter-maybe)))))
-	 (electric t)
-	 done erg)
-    (cond
-     ((and (eq 2 (nth 0 pps))(member (char-before) (list ?\( ?\[))(eq (char-before (1- (point))) list-separator-char))
-      (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
-      (setq done t))
-     ((and (nth 1 pps) (eq (char-before) general-close-list-separator-char) (not (car-safe (member (char-before (1- (point))) (list ?\) ?\])))))
-      (setq erg  (insert (general-close--raise-symbol-maybe (general-close--guess-symbol))))
-      (setq done t)
-      (insert general-close-list-separator-char))
-     ;; Default list var
-     ((and (nth 1 pps)
-    	   (setq erg
-		 (car-safe (member (char-before) (list ?\( ?\[))))
-	   (looking-back
-	    (concat "[a-z][A-Za-z_]* +\\(::\\|=\\) +.?"
-		    (regexp-quote (char-to-string erg))) (line-beginning-position)))
-      (insert general-close-default-argument-1)
-      (setq done t))
-     ((ignore-errors (eq closer ?\]))
-      (insert closer)
-      (setq done t))
-     (splitter
-      (setq done (general-close-haskell-electric-splitter-forms list-separator-char closer pps orig)))
-     ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
-      (setq done (general-close-haskell-twofold-list-cases list-separator-char pps closer electric)))
-     ((and (eq (char-before) list-separator-char)(not (car-safe (member (char-before (1- (point))) (list ?\) ?\])))))
-      (insert (general-close--raise-symbol-maybe (general-close--guess-symbol)))
-      (setq done t))
-     ((eq (char-before) list-separator-char)(car-safe (member (char-before (1- (point))) (list ?\) ?\])))
-      (insert (general-close--return-complement-char-maybe (char-before (1- (point)))))
-      (setq done t))
-     ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
-     ((and (eq 1 (nth 0 pps)) (eq ?\) closer))
-      (insert closer)
-      (setq done t))
-     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
-     ((looking-back ":: [[:alnum:],()]+?" (line-beginning-position))
-      (general-close-insert-with-padding-maybe "->")
-      (setq done t))
-     ((setq done (general-close--typedef-maybe (line-beginning-position) general-close-typedef-re)))
-     ((setq done (general-close--default-type-maybe (line-beginning-position) general-close-default-type-re)))
-     (closer
-      (insert closer)
-      (setq done t))
-     ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
-     ((setq done (general-close--insert-string-concat-op-maybe))))
-    done))
-
-(defun general-close-haskell-non-electric (list-separator-char &optional closer pps orig)
-  (let* ((splitter (and (eq 1 (count-matches "|" (line-beginning-position) (point)))))
-	 (closer (or closer
-		     (unless splitter
-		       ;; with `|' look for arrows needed
-		       (or (and pps (general-close--fetch-delimiter-maybe pps))
-			   (general-close--generic-fetch-delimiter-maybe)))))
-	 done)
-    (cond
-     ((and (eq 2 (nth 0 pps))(not (eq ?\] closer)))
-      (setq done (general-close-haskell-twofold-list-cases list-separator-char pps closer)))
-     ((and splitter (eq ?\] closer))
-      (skip-chars-backward " \t\r\n\f")
-      (insert closer)
-      (setq done t))
-     ;; in list-comprehension
-     ;; [(a,b) |
-     ;; not just after pipe
-     ((and splitter (not closer)
-	   (not (save-excursion (progn (skip-chars-backward " \t\r\n\f")(member (char-before) (list ?| list-separator-char))))))
-      (cond ((looking-back "<-[ \t]*" (line-beginning-position))
-	     (general-close-insert-with-padding-maybe "[")
-	     (setq done t))
-	    ((save-excursion (skip-chars-backward " \t\r\n\f") (eq (char-before) ?\]))
-	     (insert list-separator-char)
-	     (setq done t))
-	    ((nth 1 pps)
-	     (skip-chars-backward " \t\r\n\f")
-	     (insert (nth-1-pps-complement-char-maybe pps))
-	     (setq done t))
-	    (t (general-close-insert-with-padding-maybe "<-")
-	       (setq done t)))
-      (setq done t))
-     (splitter
-      ;; after pipe fetch a var
-      (setq done (general-close-haskell-close-in-list-comprehension list-separator-char pps  orig)))
-     ((setq done (general-close--repeat-type-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
-     ((and (eq 1 (nth 0 pps)) (eq ?\) closer))
-      (insert closer)
-      (setq done t))
-     ((setq done (general-close--right-arrow-maybe (line-beginning-position) general-close-pre-right-arrow-re)))
-     (closer
-      (insert closer)
-      (setq done t))
-     ((setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re)))
-     ((setq done (general-close--insert-string-concat-op-maybe))))
-    done))
-
-(defun general-close-haskell-close (list-separator-char &optional closer pps orig electric)
-  (let (erg done)
-    (cond ((and (nth 4 pps)
-		(save-excursion
-		  (goto-char (nth 8 pps))
-		  (looking-at "{-")
-		  ;; plain comment closed by newline
-		  (setq erg (general-close--return-complement-string-maybe "{-"))))
-	   (insert erg)
-	   (setq done t)))
-    (unless done
-      (if electric
-	  (setq done (general-close-haskell-electric-close list-separator-char closer pps orig))
-	(setq done (general-close-haskell-non-electric list-separator-char closer pps orig))))
     done))
 
 (defun general-close-inferior-sml-close ()
@@ -1541,11 +1166,6 @@ If arg SYMBOL is a string, return it unchanged"
       (setq done t)))
     done))
 
-;; (let ((frame (window-frame window))
-;; (buffer-list frame)
-
-;; (message "%s" (window--side-check)))))
-;; Php
 (defun general-close--php-check (pps &optional closer)
   (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
 	(orig (point))
@@ -1577,32 +1197,16 @@ If arg SYMBOL is a string, return it unchanged"
     (unless done (goto-char orig))
     done))
 
-(defvar general-close-haskell-listcomprh-vars nil)
-
-(defvar general-close-haskell-listcomprh-startpos nil)
-(defvar general-close-haskell-listcomprh-counter nil)
-
-(defun general-close-set-listcomprh-update (orig pps)
-  (let (pos varlist)
-    (setq general-close-haskell-listcomprh-counter 0)
-    (cond ((save-excursion (and (nth 0 pps) (goto-char (nth 1 pps))(eq (char-after) ?\[))(setq pos (point)))
-	   (goto-char pos)
-	   (while (re-search-forward [^ \t] orig t 1)
-	     ;; (unless (member (match-string-no-properties 0) varlist)
-	     (cl-pushnew (match-string-no-properties 0) varlist))
-	   (goto-char orig)
-	   (nreverse varlist)))))
-
-(defun general-close--modes (pps orig list-separator-char &optional closer force electric)
+(defun general-close--modes (pps orig &optional closer force)
   (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
 	done)
     (pcase major-mode
       (`inferior-sml-mode
        (setq done (general-close-inferior-sml-close)))
       (`sml-mode
-      (setq done (general-close-sml-close pps)))
+       (setq done (general-close-sml-close pps)))
       (`python-mode
-       (setq done (general-close-python-close list-separator-char closer pps force nil nil electric)))
+       (setq done (general-close-python-close closer pps force nil nil )))
       (`emacs-lisp-mode
        (setq done (general-close-emacs-lisp-close closer pps)))
       (`ruby-mode
@@ -1612,25 +1216,17 @@ If arg SYMBOL is a string, return it unchanged"
 	((member major-mode general-close--ml-modes)
 	 (setq done (general-close-ml)))
 	((member major-mode (list 'php-mode 'js-mode 'web-mode))
-	 (setq done (general-close--php-check pps closer)))
-	((member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode 'haskell-mode))
-	 (setq done (general-close-haskell-close list-separator-char closer pps orig electric))))
+	 (setq done (general-close--php-check pps closer))))
        done))))
 
-(defun general-close-electric (&optional arg)
-  "Call `general-close-electric-listify-p' set to `t'. "
-    (interactive "P*")
-  (let ((general-close-electric-listify-p t))
-    (general-close arg nil t)))
-
-(defun general-close-intern (beg list-separator-char electric iact &optional force)
+(defun general-close-intern (beg iact &optional force)
   (let* ((orig (point))
 	 (pps (parse-partial-sexp beg (point)))
 	 (verbose general-close-verbose-p)
 	 done closer)
     ;; ((setq done (general-close--travel-comments-maybe pps)))
     (cond
-     ((setq done (general-close--modes pps orig list-separator-char closer force electric)))
+     ((setq done (general-close--modes pps orig closer force)))
      ((setq done (general-close--others orig closer pps)))
      ((setq done (general-close--common beg pps))))
     (unless done
@@ -1639,20 +1235,16 @@ If arg SYMBOL is a string, return it unchanged"
 	   (indent-according-to-mode)))
     (or (< orig (point)) (and iact verbose (message "%s" "nil")))))
 
-(defun general-close (&optional arg beg electric force)
+(defun general-close (&optional arg beg force)
   "Command will insert closing delimiter whichever needed.
-
-Smart insert default values when `general-close-electric-listify-p' is non-nil.
 
 With \\[universal-argument]: close everything at point. "
   (interactive "P*")
   (let ((beg (or beg (general-close--point-min)))
-	(list-separator-char general-close-list-separator-char)
-	(electric (or electric general-close-electric-listify-p))
 	(iact (called-interactively-p 'any)))
     (pcase (prefix-numeric-value arg)
-      (4 (general-close-intern beg list-separator-char electric iact t))
-      (_ (general-close-intern beg list-separator-char electric iact force)))))
+      (4 (general-close-intern beg iact t))
+      (_ (general-close-intern beg iact force)))))
 
 (provide 'general-close)
 ;;; general-close.el ends here

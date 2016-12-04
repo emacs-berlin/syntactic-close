@@ -159,10 +159,10 @@
     (should (eq (char-before) ?'))))
 
 (ert-deftest colon-after-arguments-list-test ()
-  (general-close-test-with-python-buffer "def datei(datei, verzeichnis)"
-    (let (general-close-electric-listify-p)
-      (general-close)
-      (should (eq (char-before) ?:)))))
+  (general-close-test-with-python-buffer
+      "def datei(datei, verzeichnis)"
+    (general-close)
+    (should (eq (char-before) ?:))))
 
 (ert-deftest general-close-python-colon-test-1 ()
   (general-close-test-with-python-buffer
