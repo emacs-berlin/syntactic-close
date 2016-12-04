@@ -54,15 +54,6 @@
       (message "%s" (looking-at general-close-empty-line-p-chars)))
     (looking-at general-close-empty-line-p-chars)))
 
-(defun general-close-previous-line-empty-or-BOB-p ()
-  (save-excursion
-    (beginning-of-line)
-    (or
-     (bobp)
-     (when (forward-line -1)
-       (general-close-empty-line-p)))))
-;;
-
 (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
   "Defined in haskell-interactive-mode.el, silence warnings. ")
 
@@ -94,7 +85,7 @@ Default is t"
 (defcustom general-close-list-separator-char 44
   "Char separating elements of a list.
 
-Takes effect with electric mode
+
 Default is `,'"
 
   :type 'character
@@ -108,25 +99,6 @@ Default is `,'"
   :tag "general-close-guess-p"
   :group 'general-close)
 (make-variable-buffer-local 'general-close-guess-p)
-
-(defcustom general-close-electric-indent-p nil
-  "When `t', after insert at empty line indent according to mode.
-
-Default is nil"
-
-  :type 'boolean
-  :tag "general-close-electric-indent-p"
-  :group 'general-close)
-(make-variable-buffer-local 'general-close-electric-indent-p)
-
-(defcustom general-close-electric-newline-p nil
-  "Insert a newline if feasible.
-
-Default is nil"
-
-  :type 'boolean
-  :tag "general-close-electric-newline-p"
-  :group 'general-close)
 
 (defcustom general-close-auto-p nil
   "Enable auto-close. Experienced users only.
@@ -597,30 +569,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
       (setq done t))
     done))
 
-(defun general-close--default-type-maybe (beg regexp)
-  (let (done)
-    (when (save-excursion
-	    (and
-	     (goto-char beg)
-	     (general-close-previous-line-empty-or-BOB-p)
-	     (skip-chars-forward " \t\r\n\f")
-	     (looking-at regexp)))
-      (general-close-insert-with-padding-maybe general-close-default-type)
-      (setq done t))
-    done))
-
-(defun general-close--typedef-maybe (beg regexp)
-  (let (done)
-    (when (save-excursion
-	    (and
-	     (goto-char beg)
-	     (general-close-previous-line-empty-or-BOB-p)
-	     (skip-chars-forward " \t\r\n\f")
-	     (looking-at regexp)))
-      (general-close-insert-with-padding-maybe "::")
-      (setq done t))
-    done))
-
 (defun general-close--comments-intern (orig start end)
   (if (looking-at start)
       (progn (goto-char orig)
@@ -662,7 +610,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 
 (defun general-close--point-min ()
   (cond ((and (member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode)))
-	 haskell-interactive-mode-prompt-start)
+	 (ignore-errors haskell-interactive-mode-prompt-start))
 	((save-excursion
 	   (and (member major-mode general-close-known-comint-modes) comint-prompt-regexp
 		(message "%s" (current-buffer))
@@ -1115,15 +1063,10 @@ If arg SYMBOL is a string, return it unchanged"
 	 (pps (parse-partial-sexp beg (point)))
 	 (verbose general-close-verbose-p)
 	 done closer)
-    ;; ((setq done (general-close--travel-comments-maybe pps)))
     (cond
      ((setq done (general-close--modes pps orig closer force)))
      ((setq done (general-close--others orig closer pps)))
      ((setq done (general-close--common beg pps))))
-    (unless done
-      (and general-close-electric-newline-p (not (general-close-empty-line-p))
-	   (newline)
-	   (indent-according-to-mode)))
     (or (< orig (point)) (and iact verbose (message "%s" "nil")))))
 
 (defun general-close (&optional arg beg force)
