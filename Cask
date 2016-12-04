@@ -3,7 +3,7 @@
 
 (package-file "general-close.el")
 
-(files "general-close.el" "general-close-modes.el")
+(files "general-close.el")
 
 (development
  (depends-on "php-mode")
