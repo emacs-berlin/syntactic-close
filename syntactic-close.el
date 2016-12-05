@@ -98,27 +98,6 @@ Default is t"
   :tag "syntactic-close--semicolon-separator-modes"
   :group 'syntactic-close)
 
-(defcustom syntactic-close--singlequote-modes
-  (list
-   'haskell-mode
-   'inferior-haskell
-   )
-  "List of modes using singlequote as delimiters without string-syntax. "
-
-  :type 'list
-  :tag "syntactic-close--singlequote-modes"
-  :group 'syntactic-close)
-
-(defcustom syntactic-close--colon-separator-modes
-  (list
-   'python-mode
-   )
-  "List of modes which commands which require a colon after arguments list. "
-
-  :type 'list
-  :tag "syntactic-close--semicolon-separator-modes"
-  :group 'syntactic-close)
-
 (defcustom syntactic-close--ml-modes
   (list
    'html-mode
@@ -302,8 +281,8 @@ Check if list opener inside a string. "
 		   (and (setq erg (syntactic-close--in-string-p-intern pps))
 			(setq closer (make-string (nth 2 erg)(nth 1 erg)))))
 		 closer))))
-     ((and (member major-mode syntactic-close--singlequote-modes) (eq (char-before (1- (point))) ?'))
-      "'")
+     ;; ((and (member major-mode syntactic-close--singlequote-modes) (eq (char-before (1- (point))) ?'))
+     ;;  "'")
      ((nth 1 pps)
       (save-excursion
 	(goto-char (nth 1 pps))
