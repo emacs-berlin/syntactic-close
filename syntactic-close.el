@@ -92,7 +92,7 @@ Default is t"
    'sml-mode
    'web-mode
    )
-  "List of modes which commands must be closed by `syntactic-close-command-separator-char. "
+  "List of modes which commands must be closed by a separator. "
 
   :type 'list
   :tag "syntactic-close--semicolon-separator-modes"
@@ -107,20 +107,8 @@ Default is t"
    'xxml-mode
    )
   "List of modes using markup language. "
-
   :type 'list
   :tag "syntactic-close--semicolon-separator-modes"
-  :group 'syntactic-close)
-
-(defvar syntactic-close-pre-assignment-re "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
-
-(setq syntactic-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
-
-(defcustom syntactic-close-pre-assignment-re
-  "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$"
-  "Insert \"=\" when looking back. "
-  :type 'string
-  :tag "syntactic-close-pre-assignment-re"
   :group 'syntactic-close)
 
 (defvar syntactic-close-emacs-lisp-block-re
@@ -129,39 +117,11 @@ Default is t"
    "(if\\|(cond\\|when\\|unless"
    "\\_>[ \t]*"))
 
-(defvar syntactic-close-sml-fun-after-arglist-re
-  (concat
-   "[ \t]*"
-   "fun"
-   "\\_>[ \t]*"))
-
-(defvar syntactic-close-sml-function-before-arglist-re
-  (concat
-   "[ \t]*"
-   "fun"
-   "\\_>[ \t]+[^(]+$"))
-(setq syntactic-close-sml-function-before-arglist-re
-  (concat
-   "[ \t]*"
-   "fun"
-   "\\_>[ \t]+[^(]+$"))
-
-(defvar syntactic-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
-(setq syntactic-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
-
 (defvar syntactic-close-verbose-p nil)
-
-(defvar syntactic-close-keywords nil
-  "Knowing keywords avoids call for face-at-point:
-
-conditionals closed by a colon for example. ")
 
 (unless (boundp 'py-block-re)
   (defvar py-block-re "[ \t]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n\t]*"
   "Matches the beginning of a compound statement. "))
-
-(defvar syntactic-close-command-separator-char ?\;
-  "This char might be modified internally. ")
 
 (defvar syntactic-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode)
   "`parse-partial-sexp' must scan only from last prompt. ")
@@ -192,12 +152,6 @@ Otherwise switch it off. "
     (?\[ ?\])
     (?} ?{)
     (?{ ?})))
-
-(defun syntactic-close--return-complement-string-maybe (erg)
-  (cond
-   ((string= erg "{-")
-    "-}")
-   ))
 
 (defun syntactic-close--in-string-p-intern (pps)
   "Return the delimiting string. "
@@ -488,30 +442,6 @@ When `syntactic-close-insert-with-padding-p' is `t', the default "
       (insert closer)
       (setq done t)))
     done))
-
-;; See also syntactic-close--fetch-delimiter-maybe - redundancy?
-(defun syntactic-close--guess-symbol (&optional pos)
-  (save-excursion
-    (let ((erg (when pos
-		 (progn (goto-char pos)
-			(char-after))))
-	  end)
-      (unless erg
-	(save-excursion
-	  (progn
-	    (forward-char -1)
-	    (skip-chars-backward "[:punct:] \t")
-	    (when (looking-back "[[:alnum:]]+" (line-beginning-position))
-	      (setq end (point))
-	      (skip-chars-backward "[:alnum:]" (line-beginning-position))
-	      (setq erg (buffer-substring-no-properties (point) end))))))
-      (when (string= "" erg)
-	(setq erg (cond ((member (char-before (1- (point))) (list ?' ?\"))
-			 (char-before (1- (point)))))))
-      (unless
-	  (or (characterp erg)(< 1 (length erg))(string= "" erg))
-	(setq erg (string-to-char erg)))
-      erg)))
 
 (defun syntactic-close-python-close (closer pps force b-of-st b-of-bl)
   "Might deliver equivalent to `py-dedent'"
