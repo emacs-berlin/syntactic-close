@@ -61,12 +61,6 @@
     (general-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest general-close--char-class-test-3 ()
-  (general-close-test-with-elisp-buffer
-    "(string-match \"[[:alpha"
-    (general-close)
-    (should (eq (char-before) ?:))))
-
 (ert-deftest general-close--arglist-test ()
   (general-close-test-with-elisp-buffer
       "(defun asdf ("

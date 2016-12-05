@@ -434,13 +434,11 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	 (match-end 0))
 	(t (point-min))))
 
-(defun general-close--common (pps)
-  (let ((closer (general-close--fetch-delimiter-maybe pps))
-	done)
-    (when closer
-      (unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
-	(insert closer)
-	(setq done t)))
+(defun general-close--common (closer)
+  (let (done)
+    (unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
+      (insert closer)
+      (setq done t))
     done))
 
 (defun general-close-fetch-delimiter (pps)
@@ -699,9 +697,9 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	 (closer (general-close--fetch-delimiter-maybe pps))
 	 done)
     (cond
+     ((setq done (when closer (general-close--common closer))))
      ((setq done (general-close--modes pps orig closer force)))
-     ((setq done (general-close--others orig closer pps)))
-     ((setq done (general-close--common pps))))
+     ((setq done (general-close--others orig closer pps))))
     (or (< orig (point)) (and iact verbose (message "%s" "nil")))))
 
 (defun general-close (&optional arg beg force)

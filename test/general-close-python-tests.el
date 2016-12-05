@@ -164,13 +164,6 @@
     (general-close)
     (should (eq (char-before) ?:))))
 
-(ert-deftest general-close-python-colon-test-1 ()
-  (general-close-test-with-python-buffer
-      "#! /usr/bin/env python3
-with open(verzeichnis + \"/\" + datei, \"w\") as ausgabe"
-    (general-close)
-    (should (eq (char-before) ?:))))
-
 (ert-deftest general-close-python-no-colon-test-1 ()
   (general-close-test-with-python-buffer
       "print(1)"
