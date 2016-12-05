@@ -1,4 +1,4 @@
-;;; general-close-ml-tests.el ---  Tests -*- lexical-binding: t; -*-
+;;; syntactic-close-ml-tests.el ---  Tests -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -18,47 +18,47 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary: A still naive implementation of a general-close command
+;;; Commentary: A still naive implementation of a syntactic-close command
 
 ;;
 
 ;;; Code:
 
-(ert-deftest general-close--nxml-close-test-1 ()
-  (general-close-test-with-nxml-buffer
+(ert-deftest syntactic-close--nxml-close-test-1 ()
+  (syntactic-close-test-with-nxml-buffer
     "<catalog"
     (nxml-mode)
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?>))))
 
-(ert-deftest general-close--html-close-test ()
-  (general-close-test-with-html-buffer
+(ert-deftest syntactic-close--html-close-test ()
+  (syntactic-close-test-with-html-buffer
     "<html"
     (html-mode)
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?>))))
 
-(ert-deftest general-close--nxml-close-test-2 ()
-  (general-close-test-with-nxml-buffer
+(ert-deftest syntactic-close--nxml-close-test-2 ()
+  (syntactic-close-test-with-nxml-buffer
       "<CATALOG>
   <PLANT>
     <COMMON>Bloodroot</COMMON>
     <BOTANICAL>Sanguinaria canadensis"
-    (general-close)
+    (syntactic-close)
     (save-excursion
       (forward-char -1)
       (skip-syntax-backward "w")
       (should (looking-at "BOTANICAL")))
-    (general-close)
+    (syntactic-close)
     (forward-char -1)
     (skip-syntax-backward "w")
     (should (looking-at "PLANT"))))
 
-(ert-deftest general-close--nxml-close-comment-test ()
-  (general-close-test-with-nxml-buffer
+(ert-deftest syntactic-close--nxml-close-comment-test ()
+  (syntactic-close-test-with-nxml-buffer
       "<!-- <CATALOG> "
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?>))))
 
-(provide 'general-close-ml-tests)
-;;; general-close-emacs-lisp-tests.el ends here
+(provide 'syntactic-close-ml-tests)
+;;; syntactic-close-emacs-lisp-tests.el ends here

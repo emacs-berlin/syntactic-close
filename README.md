@@ -1,4 +1,4 @@
-General Close [![Build Status](https://travis-ci.org/emacs-berlin/general-close.svg?branch=master)](https://travis-ci.org/emacs-berlin/general-close)
+General Close [![Build Status](https://travis-ci.org/emacs-berlin/syntactic-close.svg?branch=master)](https://travis-ci.org/emacs-berlin/syntactic-close)
 ===
 
 Insert a closing delimiter char, i.e. a parenthesis, bracket, brace or

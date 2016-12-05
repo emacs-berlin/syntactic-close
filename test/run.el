@@ -24,10 +24,10 @@
 
 ;;; Code:
 
-(defun general-close-runs-this-script-p ()
+(defun syntactic-close-runs-this-script-p ()
   t)
 
-(defun general-close-run-tests-main ()
+(defun syntactic-close-run-tests-main ()
   "Main entry point of the test runner."
   (let* ((load-prefer-newer t)
          (current-file (if load-in-progress load-file-name (buffer-file-name)))
@@ -42,30 +42,30 @@
 
     (let ((debug-on-error t)
           (tests (list
-		  "general-close-ml-tests"
-                  "general-close-c-tests"
-		  "general-close-c++-tests"
-		  "general-close-sml-tests"
-		  "general-close-haskell-tests"
-                  "general-close-emacs-lisp-tests"
-                  "general-close-js-tests"
-                  "general-close-php-tests"
-                  "general-close-python-tests"
-                  "general-close-ruby-tests"
+		  "syntactic-close-ml-tests"
+                  "syntactic-close-c-tests"
+		  "syntactic-close-c++-tests"
+		  "syntactic-close-sml-tests"
+		  "syntactic-close-haskell-tests"
+                  "syntactic-close-emacs-lisp-tests"
+                  "syntactic-close-js-tests"
+                  "syntactic-close-php-tests"
+                  "syntactic-close-python-tests"
+                  "syntactic-close-ruby-tests"
 		  )))
-      (load (expand-file-name "general-close" source-directory))
+      (load (expand-file-name "syntactic-close" source-directory))
 
-      (load (expand-file-name "general-close-setup-ert-tests" current-dir))
+      (load (expand-file-name "syntactic-close-setup-ert-tests" current-dir))
 
       (dolist (test-file tests)
         (load (expand-file-name test-file current-dir))))
 
     (let ((debug-on-error t)
           (ert-selector (pop argv)))
-      (ert-run-tests-batch-and-exit (and "general-close-" ert-selector)))))
+      (ert-run-tests-batch-and-exit (and "syntactic-close-" ert-selector)))))
 
-(when (and noninteractive (general-close-runs-this-script-p))
-  (general-close-run-tests-main))
+(when (and noninteractive (syntactic-close-runs-this-script-p))
+  (syntactic-close-run-tests-main))
 
 (provide 'run)
 ;;; run.el ends here

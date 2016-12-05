@@ -1,4 +1,4 @@
-;;; general-close-ruby-tests.el --- Ruby tests -*- lexical-binding: t; -*-
+;;; syntactic-close-ruby-tests.el --- Ruby tests -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -24,37 +24,37 @@
 
 ;;; Code:
 
-(ert-deftest general-close-close-ruby-class-test ()
-  (general-close-test-with-ruby-buffer "class MyClass
+(ert-deftest syntactic-close-close-ruby-class-test ()
+  (syntactic-close-test-with-ruby-buffer "class MyClass
   private
   def a_method; true; end
   def another_method; false; end
 "
-    (general-close)
+    (syntactic-close)
     (should (looking-back "end"))
     (should (eq 0 (current-indentation)))))
 
-(ert-deftest general-close-close-ruby-string-test ()
-  (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail"
-    (general-close)
+(ert-deftest syntactic-close-close-ruby-string-test ()
+  (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail"
+    (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest general-close-close-ruby-paren-test ()
-  (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\""
-    (general-close)
+(ert-deftest syntactic-close-close-ruby-paren-test ()
+  (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\""
+    (syntactic-close)
     ;; (sit-for 1 t)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest general-close-close-ruby-pipe-test ()
-  (general-close-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW"
-    (general-close)
+(ert-deftest syntactic-close-close-ruby-pipe-test ()
+  (syntactic-close-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW"
+    (syntactic-close)
     (should (eq (char-before) ?|))))
 
-(ert-deftest general-close-close-ruby-string-interpolation-test-2 ()
-  (general-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
+(ert-deftest syntactic-close-close-ruby-string-interpolation-test-2 ()
+  (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
   \"Sending from #{from} to #{to} via #{via}"
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-(provide 'general-close-ruby-tests)
-;;; general-close-ruby-tests.el ends here
+(provide 'syntactic-close-ruby-tests)
+;;; syntactic-close-ruby-tests.el ends here

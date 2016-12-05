@@ -1,4 +1,4 @@
-;;; general-close-emacs-lisp-tests.el ---  Tests -*- lexical-binding: t; -*-
+;;; syntactic-close-emacs-lisp-tests.el ---  Tests -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -18,54 +18,54 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary: A still naive implementation of a general-close command
+;;; Commentary: A still naive implementation of a syntactic-close command
 
 ;;
 
 ;;; Code:
 
-(ert-deftest general-close--elisp-nested-bracket-paren-test ()
-  (general-close-test-with-elisp-buffer
+(ert-deftest syntactic-close--elisp-nested-bracket-paren-test ()
+  (syntactic-close-test-with-elisp-buffer
     "(list ([\n;;{123\n;;{123\n"
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\]))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\)))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest general-close--elisp-list-test ()
-  (general-close-test-with-elisp-buffer
+(ert-deftest syntactic-close--elisp-list-test ()
+  (syntactic-close-test-with-elisp-buffer
     "(member (list 'asdf"
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\)))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest general-close--elisp-interactive-spec-test ()
-  (general-close-test-with-elisp-buffer
+(ert-deftest syntactic-close--elisp-interactive-spec-test ()
+  (syntactic-close-test-with-elisp-buffer
     "(defun foo ()
   (interactive "
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest general-close--char-class-test-1 ()
-  (general-close-test-with-elisp-buffer
+(ert-deftest syntactic-close--char-class-test-1 ()
+  (syntactic-close-test-with-elisp-buffer
     "(string-match \"[[:alpha:]"
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\]))))
  
-(ert-deftest general-close--char-class-test-2 ()
-  (general-close-test-with-elisp-buffer
+(ert-deftest syntactic-close--char-class-test-2 ()
+  (syntactic-close-test-with-elisp-buffer
     "(string-match \"[[:alpha:]]"
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest general-close--arglist-test ()
-  (general-close-test-with-elisp-buffer
+(ert-deftest syntactic-close--arglist-test ()
+  (syntactic-close-test-with-elisp-buffer
       "(defun asdf ("
-      (general-close)
+      (syntactic-close)
     (should (looking-back "asdf ()"))))
 
-(provide 'general-close-emacs-lisp-tests)
-;;; general-close-emacs-lisp-tests.el ends here
+(provide 'syntactic-close-emacs-lisp-tests)
+;;; syntactic-close-emacs-lisp-tests.el ends here

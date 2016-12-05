@@ -1,4 +1,4 @@
-;;; general-close.el --- Insert closing delimiter -*- lexical-binding: t; -*-
+;;; syntactic-close.el --- Insert closing delimiter -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -19,7 +19,7 @@
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-;;; Commentary: M-x general-close RET: close any syntactic element.
+;;; Commentary: M-x syntactic-close RET: close any syntactic element.
 
 ;; ['a','b' ==> ['a','b']
 
@@ -32,79 +32,79 @@
 (require 'sgml-mode)
 (require 'comint)
 
-(defgroup general-close nil
+(defgroup syntactic-close nil
   "Insert closing delimiter whichever needed. "
   :group 'languages
-  :tag "general-close"
-  :prefix "general-close-")
+  :tag "syntactic-close"
+  :prefix "syntactic-close-")
 
-(defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
-  "general-close-empty-line-p-chars"
+(defcustom syntactic-close-empty-line-p-chars "^[ \t\r]*$"
+  "syntactic-close-empty-line-p-chars"
   :type 'regexp
   :group 'convenience)
 
 (unless (functionp 'empty-line-p)
-  (defalias 'empty-line-p 'general-close-empty-line-p))
-(defun general-close-empty-line-p (&optional iact)
+  (defalias 'empty-line-p 'syntactic-close-empty-line-p))
+(defun syntactic-close-empty-line-p (&optional iact)
   "Returns t if cursor is at an empty line, nil otherwise."
   (interactive "p")
   (save-excursion
     (beginning-of-line)
     (when iact
-      (message "%s" (looking-at general-close-empty-line-p-chars)))
-    (looking-at general-close-empty-line-p-chars)))
+      (message "%s" (looking-at syntactic-close-empty-line-p-chars)))
+    (looking-at syntactic-close-empty-line-p-chars)))
 
 (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
   "Defined in haskell-interactive-mode.el, silence warnings. ")
 
-(defcustom general-close-delete-whitespace-backward-p nil
+(defcustom syntactic-close-delete-whitespace-backward-p nil
   "If whitespace characters before point should be deleted.
 
 Default is nil"
 
   :type 'boolean
-  :tag "general-close-delete-whitespace-backward-p"
-  :group 'general-close)
+  :tag "syntactic-close-delete-whitespace-backward-p"
+  :group 'syntactic-close)
 
-(defcustom general-close-insert-with-padding-p t
+(defcustom syntactic-close-insert-with-padding-p t
   "Ensure a whitespace character before point.
 
 Default is t"
 
   :type 'boolean
-  :tag "general-close-insert-with-padding-p"
-  :group 'general-close)
+  :tag "syntactic-close-insert-with-padding-p"
+  :group 'syntactic-close)
 
-(defvar general-close-list-separator-char 44)
-(defcustom general-close-list-separator-char 44
+(defvar syntactic-close-list-separator-char 44)
+(defcustom syntactic-close-list-separator-char 44
   "Char separating elements of a list.
 
 Default is `,'"
 
   :type 'character
-  :tag "general-close-list-separator-char"
-  :group 'general-close)
-(make-variable-buffer-local 'general-close-list-separator-char)
+  :tag "syntactic-close-list-separator-char"
+  :group 'syntactic-close)
+(make-variable-buffer-local 'syntactic-close-list-separator-char)
 
-(defcustom general-close-guess-p nil
+(defcustom syntactic-close-guess-p nil
   "When non-nil, guess default arguments, list-separators etc. "
   :type 'boolean
-  :tag "general-close-guess-p"
-  :group 'general-close)
-(make-variable-buffer-local 'general-close-guess-p)
+  :tag "syntactic-close-guess-p"
+  :group 'syntactic-close)
+(make-variable-buffer-local 'syntactic-close-guess-p)
 
-(defcustom general-close-auto-p nil
+(defcustom syntactic-close-auto-p nil
   "Enable auto-close. Experienced users only.
 
 If `t', lists will be auto-filled.
 Default is nil"
 
   :type 'boolean
-  :tag "general-close-auto-p"
-  :group 'general-close)
-(make-variable-buffer-local 'general-close-auto-p)
+  :tag "syntactic-close-auto-p"
+  :group 'syntactic-close)
+(make-variable-buffer-local 'syntactic-close-auto-p)
 
-(defcustom general-close--semicolon-separator-modes
+(defcustom syntactic-close--semicolon-separator-modes
   (list
    'inferior-sml-mode
    'js-mode
@@ -114,13 +114,13 @@ Default is nil"
    'sml-mode
    'web-mode
    )
-  "List of modes which commands must be closed by `general-close-command-separator-char. "
+  "List of modes which commands must be closed by `syntactic-close-command-separator-char. "
 
   :type 'list
-  :tag "general-close--semicolon-separator-modes"
-  :group 'general-close)
+  :tag "syntactic-close--semicolon-separator-modes"
+  :group 'syntactic-close)
 
-(defcustom general-close--singlequote-modes
+(defcustom syntactic-close--singlequote-modes
   (list
    'haskell-mode
    'inferior-haskell
@@ -128,20 +128,20 @@ Default is nil"
   "List of modes using singlequote as delimiters without string-syntax. "
 
   :type 'list
-  :tag "general-close--singlequote-modes"
-  :group 'general-close)
+  :tag "syntactic-close--singlequote-modes"
+  :group 'syntactic-close)
 
-(defcustom general-close--colon-separator-modes
+(defcustom syntactic-close--colon-separator-modes
   (list
    'python-mode
    )
   "List of modes which commands which require a colon after arguments list. "
 
   :type 'list
-  :tag "general-close--semicolon-separator-modes"
-  :group 'general-close)
+  :tag "syntactic-close--semicolon-separator-modes"
+  :group 'syntactic-close)
 
-(defcustom general-close--ml-modes
+(defcustom syntactic-close--ml-modes
   (list
    'html-mode
    'nxml-mode
@@ -152,49 +152,49 @@ Default is nil"
   "List of modes using markup language. "
 
   :type 'list
-  :tag "general-close--semicolon-separator-modes"
-  :group 'general-close)
+  :tag "syntactic-close--semicolon-separator-modes"
+  :group 'syntactic-close)
 
-(defvar general-close-pre-assignment-re "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
+(defvar syntactic-close-pre-assignment-re "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
 
-(setq general-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
+(setq syntactic-close-pre-assignment-re   "[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]*[ \t]*$\\|[[:alpha:]][A-Za-z0-9_]*[ \t]*$")
 
-(defcustom general-close-pre-assignment-re
+(defcustom syntactic-close-pre-assignment-re
   "[[:alpha:]][A-Za-z0-9_]+[ \t]*[^=]*$"
   "Insert \"=\" when looking back. "
   :type 'string
-  :tag "general-close-pre-assignment-re"
-  :group 'general-close)
+  :tag "syntactic-close-pre-assignment-re"
+  :group 'syntactic-close)
 
-(defvar general-close-emacs-lisp-block-re
+(defvar syntactic-close-emacs-lisp-block-re
   (concat
    "[ \t]*\\_<"
    "(if\\|(cond\\|when\\|unless"
    "\\_>[ \t]*"))
 
-(defvar general-close-sml-fun-after-arglist-re
+(defvar syntactic-close-sml-fun-after-arglist-re
   (concat
    "[ \t]*"
    "fun"
    "\\_>[ \t]*"))
 
-(defvar general-close-sml-function-before-arglist-re
+(defvar syntactic-close-sml-function-before-arglist-re
   (concat
    "[ \t]*"
    "fun"
    "\\_>[ \t]+[^(]+$"))
-(setq general-close-sml-function-before-arglist-re
+(setq syntactic-close-sml-function-before-arglist-re
   (concat
    "[ \t]*"
    "fun"
    "\\_>[ \t]+[^(]+$"))
 
-(defvar general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
-(setq general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
+(defvar syntactic-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
+(setq syntactic-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
 
-(defvar general-close-verbose-p nil)
+(defvar syntactic-close-verbose-p nil)
 
-(defvar general-close-keywords nil
+(defvar syntactic-close-keywords nil
   "Knowing keywords avoids call for face-at-point:
 
 conditionals closed by a colon for example. ")
@@ -203,28 +203,28 @@ conditionals closed by a colon for example. ")
   (defvar py-block-re "[ \t]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n\t]*"
   "Matches the beginning of a compound statement. "))
 
-(defvar general-close-command-separator-char ?\;
+(defvar syntactic-close-command-separator-char ?\;
   "This char might be modified internally. ")
 
-(defvar general-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode)
+(defvar syntactic-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode)
   "`parse-partial-sexp' must scan only from last prompt. ")
-(setq general-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode))
+(setq syntactic-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode))
 
-(defvar general-close-empty-line-p-chars "^[ \t\r]*$")
-(defcustom general-close-empty-line-p-chars "^[ \t\r]*$"
-  "general-close-empty-line-p-chars"
+(defvar syntactic-close-empty-line-p-chars "^[ \t\r]*$")
+(defcustom syntactic-close-empty-line-p-chars "^[ \t\r]*$"
+  "syntactic-close-empty-line-p-chars"
   :type 'regexp
   :group 'convenience)
 
-(defun general-close-toggle-verbosity ()
-  "If `general-close-verbose-p' is nil, switch it on.
+(defun syntactic-close-toggle-verbosity ()
+  "If `syntactic-close-verbose-p' is nil, switch it on.
 
 Otherwise switch it off. "
   (interactive)
-  (setq general-close-verbose-p (not general-close-verbose-p))
-  (when (called-interactively-p 'any) (message "general-close-verbose-p: %s" general-close-verbose-p)))
+  (setq syntactic-close-verbose-p (not syntactic-close-verbose-p))
+  (when (called-interactively-p 'any) (message "syntactic-close-verbose-p: %s" syntactic-close-verbose-p)))
 
-(defun general-close--return-complement-char-maybe (erg)
+(defun syntactic-close--return-complement-char-maybe (erg)
   "For example return \"}\" for \"{\" but keep \"\\\"\". "
   (pcase erg
     (34 ?\")
@@ -236,18 +236,18 @@ Otherwise switch it off. "
     (?} ?{)
     (?{ ?})))
 
-(defun general-close--return-complement-string-maybe (erg)
+(defun syntactic-close--return-complement-string-maybe (erg)
   (cond
    ((string= erg "{-")
     "-}")
    ))
 
-(defun general-close--in-string-p-intern (pps)
+(defun syntactic-close--in-string-p-intern (pps)
   "Return the delimiting string. "
   (goto-char (nth 8 pps))
   (buffer-substring-no-properties (point) (progn  (skip-chars-forward (char-to-string (char-after))) (point))))
 
-(defun general-close-in-string-maybe (&optional pps)
+(defun syntactic-close-in-string-maybe (&optional pps)
   "if inside a double- triple- or singlequoted string,
 
 Return delimiting chars "
@@ -255,18 +255,18 @@ Return delimiting chars "
   (save-excursion
     (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
 	   (erg (when (nth 3 pps)
-		  (general-close--in-string-p-intern pps))))
+		  (syntactic-close--in-string-p-intern pps))))
       (unless erg
 	(when (looking-at "\"")
 	  (forward-char 1)
 	  (setq pps (parse-partial-sexp (line-beginning-position) (point)))
 	  (when (nth 3 pps)
-	    (setq erg (general-close--in-string-p-intern pps)))))
-      (when (and general-close-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+	    (setq erg (syntactic-close--in-string-p-intern pps)))))
+      (when (and syntactic-close-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
 ;; currently unused
-(defun general-close-stack-based ()
+(defun syntactic-close-stack-based ()
   "Command will insert closing delimiter whichever needed.
 
 Does not require parenthesis syntax WRT \"{[(\" "
@@ -278,7 +278,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	       (push (char-before) stack)
 	       (forward-char -1))
 	      ((member (char-before) (list ?\( ?\" ?{ ?\[))
-	       (setq closer (general-close--return-complement-char-maybe (char-before)))
+	       (setq closer (syntactic-close--return-complement-char-maybe (char-before)))
 	       (if (eq (car stack) closer)
 		   (progn
 		     (pop stack)
@@ -291,9 +291,9 @@ Does not require parenthesis syntax WRT \"{[(\" "
   "Return complement character from (nth 1 pps). "
   (save-excursion
     (goto-char (nth 1 pps))
-    (general-close--return-complement-char-maybe (char-after))))
+    (syntactic-close--return-complement-char-maybe (char-after))))
 
-(defun general-close-in-string-interpolation-maybe (&optional pps)
+(defun syntactic-close-in-string-interpolation-maybe (&optional pps)
   "Return nearest openener.
 
 Check if list opener inside a string. "
@@ -305,37 +305,37 @@ Check if list opener inside a string. "
 		(setq erg (nth 1 (setq last (parse-partial-sexp (1+ (nth 8 pps)) (point)))))(< (nth 8 pps) erg))
 	   (setq erg (nth-1-pps-complement-char-maybe last)))
 	  ((nth 3 pps)
-	   (setq erg (general-close-in-string-maybe pps))))
+	   (setq erg (syntactic-close-in-string-maybe pps))))
     erg))
 
-;; See also general-close--guess-symbol
-(defun general-close--fetch-delimiter-maybe (pps)
+;; See also syntactic-close--guess-symbol
+(defun syntactic-close--fetch-delimiter-maybe (pps)
   "Close the innermost list resp. string. "
   (let (erg closer strg)
     (cond
      ((nth 3 pps)
-      (cond ((setq closer (general-close-in-string-interpolation-maybe pps)))
+      (cond ((setq closer (syntactic-close-in-string-interpolation-maybe pps)))
 
 	    (t (save-excursion
 		 (setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
-		 (if (setq closer (general-close--list-inside-string-maybe strg))
+		 (if (setq closer (syntactic-close--list-inside-string-maybe strg))
 		     closer
 		   ;; returns a list to construct TQS maybe
-		   (and (setq erg (general-close--in-string-p-intern pps))
+		   (and (setq erg (syntactic-close--in-string-p-intern pps))
 			(setq closer (make-string (nth 2 erg)(nth 1 erg)))))
 		 closer))))
-     ((and (member major-mode general-close--singlequote-modes) (eq (char-before (1- (point))) ?'))
+     ((and (member major-mode syntactic-close--singlequote-modes) (eq (char-before (1- (point))) ?'))
       "'")
      ((nth 1 pps)
       (save-excursion
 	(goto-char (nth 1 pps))
-	(general-close--return-complement-char-maybe (char-after)))))))
+	(syntactic-close--return-complement-char-maybe (char-after)))))))
 
-(defun general-close--insert-delimiter-char-maybe (orig closer)
+(defun syntactic-close--insert-delimiter-char-maybe (orig closer)
   (when closer
     (save-excursion
       (when (and (not (looking-back "^[ \t]+" nil))
-                 general-close-delete-whitespace-backward-p
+                 syntactic-close-delete-whitespace-backward-p
 		 (< 0 (abs (skip-chars-backward " \t\r\n\f")))
 		 ;;  not in comment
 		 (not (nth 4 (parse-partial-sexp (point-min) (point)))))
@@ -348,12 +348,12 @@ Check if list opener inside a string. "
       (insert closer)
       closer))))
 
-(defun general-close-insert-with-padding-maybe (strg &optional nbefore nafter)
+(defun syntactic-close-insert-with-padding-maybe (strg &optional nbefore nafter)
   "Takes a string. Insert a space before and after maybe.
 
-When `general-close-insert-with-padding-p' is `t', the default "
+When `syntactic-close-insert-with-padding-p' is `t', the default "
   (skip-chars-backward " \t\r\n\f")
-  (if general-close-insert-with-padding-p
+  (if syntactic-close-insert-with-padding-p
       (cond ((looking-back "([ \t]*" (line-beginning-position))
 	     (delete-region (match-beginning 0) (match-end 0))
 	     (insert strg)
@@ -370,37 +370,37 @@ When `general-close-insert-with-padding-p' is `t', the default "
 		    ;; (eq (char-after) ?\))
 		    nafter) (insert " "))))))
 
-(defun general-close--others (orig closer pps)
+(defun syntactic-close--others (orig closer pps)
   (let (done erg)
     (cond
      ((nth 3 pps)
       (cond ((characterp (nth 3 pps))
 	     (insert (nth 3 pps)))
-	    ((setq erg (general-close-in-string-interpolation-maybe pps))
-	     (general-close--return-complement-char-maybe erg))
-	    (t (general-close--return-complement-char-maybe (nth 8 pps))))
+	    ((setq erg (syntactic-close-in-string-interpolation-maybe pps))
+	     (syntactic-close--return-complement-char-maybe erg))
+	    (t (syntactic-close--return-complement-char-maybe (nth 8 pps))))
       (setq done t))
-     (closer (setq done (general-close--insert-delimiter-char-maybe orig closer))))
+     (closer (setq done (syntactic-close--insert-delimiter-char-maybe orig closer))))
     done))
 
-(defun general-close--comments-intern (orig start end)
+(defun syntactic-close--comments-intern (orig start end)
   (if (looking-at start)
       (progn (goto-char orig)
 	     (insert end))
     (goto-char orig)
     (newline-and-indent)))
 
-(defun general-close--insert-comment-end-maybe (pps)
+(defun syntactic-close--insert-comment-end-maybe (pps)
   (let ((orig (point))
 	done)
     (cond
      ((eq major-mode 'haskell-mode)
       (goto-char (nth 8 pps))
-      (general-close--comments-intern orig "{-" "-}")
+      (syntactic-close--comments-intern orig "{-" "-}")
       (setq done t))
      ((or (eq major-mode 'c++-mode) (eq major-mode 'c-mode))
       (goto-char (nth 8 pps))
-      (general-close--comments-intern orig "/*" "*/")
+      (syntactic-close--comments-intern orig "/*" "*/")
       (setq done t))
      (t (if (string= "" comment-end)
 	    (if (eq system-type 'windows-nt)
@@ -410,11 +410,11 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	(setq done t) ))
     done))
 
-(defun general-close--travel-comments-maybe (pps)
+(defun syntactic-close--travel-comments-maybe (pps)
   (let (done)
     (or (and (nth 4 pps) (nth 8 pps)
 	     ;; (not (string= "" comment-end))
-	     (setq done (general-close--insert-comment-end-maybe pps)))
+	     (setq done (syntactic-close--insert-comment-end-maybe pps)))
 	(while (and (setq pps (parse-partial-sexp (line-beginning-position) (point))) (nth 4 pps) (nth 8 pps))
 	  (unless (eobp)
 	    (forward-line 1)
@@ -422,11 +422,11 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	    (skip-chars-backward " \t\r\n\f" (line-beginning-position)))))
     done))
 
-(defun general-close--point-min ()
+(defun syntactic-close--point-min ()
   (cond ((and (member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode)))
 	 (ignore-errors haskell-interactive-mode-prompt-start))
 	((save-excursion
-	   (and (member major-mode general-close-known-comint-modes) comint-prompt-regexp
+	   (and (member major-mode syntactic-close-known-comint-modes) comint-prompt-regexp
 		(message "%s" (current-buffer))
 		(re-search-backward comint-prompt-regexp nil t 1)
 		(looking-at comint-prompt-regexp)
@@ -434,20 +434,20 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	 (match-end 0))
 	(t (point-min))))
 
-(defun general-close--common (closer)
+(defun syntactic-close--common (closer)
   (let (done)
-    (unless (and (eq closer ?})(member major-mode general-close--semicolon-separator-modes))
+    (unless (and (eq closer ?})(member major-mode syntactic-close--semicolon-separator-modes))
       (insert closer)
       (setq done t))
     done))
 
-(defun general-close-fetch-delimiter (pps)
+(defun syntactic-close-fetch-delimiter (pps)
   "In some cases in (nth 3 pps only returns `t'. "
   (save-excursion
     (goto-char (nth 8 pps))
     (char-after)))
 
-(defun general-close--guess-from-string-interpolation-maybe (pps)
+(defun syntactic-close--guess-from-string-interpolation-maybe (pps)
   "Returns the character of innermost sexp in inside. "
   (when (and (nth 1 pps) (nth 3 pps))
     (let* ((listchar (save-excursion (goto-char (nth 1 pps))
@@ -457,20 +457,20 @@ When `general-close-insert-with-padding-p' is `t', the default "
 			    (1- (point)))))
       (if
 	  (< (nth 8 pps) inner-listpos)
-	  (general-close--return-complement-char-maybe listchar)
+	  (syntactic-close--return-complement-char-maybe listchar)
 	(save-excursion (goto-char (nth 8 pps))(char-after))))))
 
-(defun general-close--guess-closer (pps)
+(defun syntactic-close--guess-closer (pps)
   (save-excursion
     (cond ((and (nth 1 pps) (nth 3 pps))
-	   (if (general-close--guess-from-string-interpolation-maybe pps)
+	   (if (syntactic-close--guess-from-string-interpolation-maybe pps)
 	       (progn
 		 (goto-char (nth 1 pps))
-		 (general-close--return-complement-char-maybe (char-after)))
+		 (syntactic-close--return-complement-char-maybe (char-after)))
 	     (progn (goto-char (nth 8 pps)) (char-after)))))))
 
 ;; Ml
-(defun general-close-ml ()
+(defun syntactic-close-ml ()
   (interactive "*")
   (let ((oldmode major-mode) done)
     (cond ((save-excursion
@@ -490,7 +490,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	     (setq done t)))
     done))
 
-(defun general-close-python-listclose (closer force pps)
+(defun syntactic-close-python-listclose (closer force pps)
   "If inside list, assume another item first. "
   (let (done)
     (cond ((member (char-before) (list ?' ?\"))
@@ -498,7 +498,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	       (progn
 		 (insert closer)
 		 ;; only closing `"' or `'' was inserted here
-		 (when (setq closer (general-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))))
+		 (when (setq closer (syntactic-close--fetch-delimiter-maybe (parse-partial-sexp (point-min) (point))))
 		   (insert closer))
 		 (setq done t))
 	     (if (nth 3 pps)
@@ -510,8 +510,8 @@ When `general-close-insert-with-padding-p' is `t', the default "
     done))
 
 ;; Emacs-lisp
-(defun general-close-emacs-lisp-close (closer pps)
-  (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
+(defun syntactic-close-emacs-lisp-close (closer pps)
+  (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	done)
     (cond
      ((and (nth 1 pps) (nth 3 pps)
@@ -524,16 +524,16 @@ When `general-close-insert-with-padding-p' is `t', the default "
       (setq done t))
      ((save-excursion
 	(skip-chars-backward " \t\r\n\f")
-	(looking-back general-close-emacs-lisp-block-re (line-beginning-position)))
-      (general-close-insert-with-padding-maybe (char-to-string 40) t t))
+	(looking-back syntactic-close-emacs-lisp-block-re (line-beginning-position)))
+      (syntactic-close-insert-with-padding-maybe (char-to-string 40) t t))
      (closer
       (skip-chars-backward " \t\r\n\f" (line-beginning-position))
       (insert closer)
       (setq done t)))
     done))
 
-;; See also general-close--fetch-delimiter-maybe - redundancy?
-(defun general-close--guess-symbol (&optional pos)
+;; See also syntactic-close--fetch-delimiter-maybe - redundancy?
+(defun syntactic-close--guess-symbol (&optional pos)
   (save-excursion
     (let ((erg (when pos
 		 (progn (goto-char pos)
@@ -556,11 +556,11 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	(setq erg (string-to-char erg)))
       erg)))
 
-(defun general-close-python-close (closer pps force b-of-st b-of-bl)
+(defun syntactic-close-python-close (closer pps force b-of-st b-of-bl)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
   (let* ((closer (or closer
-		     (general-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))))))
+		     (syntactic-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))))))
 	 done)
     (if closer
 	(progn
@@ -568,29 +568,29 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	  (setq done t))
       (let* (
 	     (pps (or pps (parse-partial-sexp (point-min) (point))))
-	     (general-close-beginning-of-statement
+	     (syntactic-close-beginning-of-statement
 	      (or b-of-st
 		  (if (ignore-errors (functionp 'py-backward-statement))
 		      'py-backward-statement
 		    (lambda ()(beginning-of-line)(back-to-indentation)))))
-	     (general-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
+	     (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
 	     done)
 	(cond
 	 (closer
-	  (setq done (general-close-python-listclose closer force pps)))
+	  (setq done (syntactic-close-python-listclose closer force pps)))
 	 ((and (not (char-equal ?: (char-before)))
 	       (save-excursion
-		 (funcall general-close-beginning-of-statement)
-		 (looking-at general-close-beginning-of-block-re)))
+		 (funcall syntactic-close-beginning-of-statement)
+		 (looking-at syntactic-close-beginning-of-block-re)))
 	  (insert ":")
 	  (setq done t))
-	 ((and (nth 3 pps)(setq closer (general-close-in-string-maybe))(setq done t))
+	 ((and (nth 3 pps)(setq closer (syntactic-close-in-string-maybe))(setq done t))
 	  (insert closer)))
 	done)
       done)))
 
 ;; Ruby
-(defun general-close--generic-fetch-delimiter-maybe ()
+(defun syntactic-close--generic-fetch-delimiter-maybe ()
   (save-excursion
     (and (< 0 (abs (skip-syntax-backward "\\sw")))
 	 (or
@@ -598,7 +598,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	  (eq 7 (car (syntax-after (1- (point))))))
 	 (char-to-string (char-before)))))
 
-(defun general-close--ruby-insert-end ()
+(defun syntactic-close--ruby-insert-end ()
   (let (done)
     (unless (or (looking-back ";[ \t]*" nil))
       (unless (and (bolp)(eolp))
@@ -611,19 +611,19 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	  (indent-according-to-mode))))
     done))
 
-(defun general-close-ruby-close (&optional closer pps)
+(defun syntactic-close-ruby-close (&optional closer pps)
   (let ((closer (or closer
-		    (and pps (general-close--fetch-delimiter-maybe pps))
-		    (general-close--generic-fetch-delimiter-maybe)))
+		    (and pps (syntactic-close--fetch-delimiter-maybe pps))
+		    (syntactic-close--generic-fetch-delimiter-maybe)))
 	done)
     (if closer
 	(progn
 	  (insert closer)
 	  (setq done t))
-      (setq done (general-close--ruby-insert-end))
+      (setq done (syntactic-close--ruby-insert-end))
       done)))
 
-(defun general-close--insert-string-concat-op-maybe ()
+(defun syntactic-close--insert-string-concat-op-maybe ()
   (let (done)
     (save-excursion
       (skip-chars-backward " \t\r\n\f")
@@ -638,15 +638,15 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	(insert " ++ ")))
     done))
 
-(defun general-closer-forward-sexp-maybe (pos)
+(defun syntactic-closer-forward-sexp-maybe (pos)
   (ignore-errors (forward-sexp))
   (when (< pos (point))(point)))
 
-(defun general-close--php-check (pps &optional closer)
-  (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
+(defun syntactic-close--php-check (pps &optional closer)
+  (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	(orig (point))
 	done)
-    (cond ((and (eq closer ?})(general-close-empty-line-p))
+    (cond ((and (eq closer ?})(syntactic-close-empty-line-p))
 	   (insert closer)
 	   (setq done t)
 	   (indent-according-to-mode))
@@ -673,45 +673,45 @@ When `general-close-insert-with-padding-p' is `t', the default "
     (unless done (goto-char orig))
     done))
 
-(defun general-close--modes (pps orig closer &optional force)
+(defun syntactic-close--modes (pps orig closer &optional force)
   (let (done)
     (pcase major-mode
       (`python-mode
-       (setq done (general-close-python-close closer pps force nil nil )))
+       (setq done (syntactic-close-python-close closer pps force nil nil )))
       (`emacs-lisp-mode
-       (setq done (general-close-emacs-lisp-close closer pps)))
+       (setq done (syntactic-close-emacs-lisp-close closer pps)))
       (`ruby-mode
-       (setq done (general-close-ruby-close closer pps)))
+       (setq done (syntactic-close-ruby-close closer pps)))
       (_
        (cond
-	((member major-mode general-close--ml-modes)
-	(setq done (general-close-ml)))
+	((member major-mode syntactic-close--ml-modes)
+	(setq done (syntactic-close-ml)))
 	((member major-mode (list 'php-mode 'js-mode 'web-mode))
-	 (setq done (general-close--php-check pps closer))))
+	 (setq done (syntactic-close--php-check pps closer))))
        done))))
 
-(defun general-close-intern (beg iact &optional force)
+(defun syntactic-close-intern (beg iact &optional force)
   (let* ((orig (point))
 	 (pps (parse-partial-sexp beg (point)))
-	 (verbose general-close-verbose-p)
-	 (closer (general-close--fetch-delimiter-maybe pps))
+	 (verbose syntactic-close-verbose-p)
+	 (closer (syntactic-close--fetch-delimiter-maybe pps))
 	 done)
     (cond
-     ((setq done (when closer (general-close--common closer))))
-     ((setq done (general-close--modes pps orig closer force)))
-     ((setq done (general-close--others orig closer pps))))
+     ((setq done (when closer (syntactic-close--common closer))))
+     ((setq done (syntactic-close--modes pps orig closer force)))
+     ((setq done (syntactic-close--others orig closer pps))))
     (or (< orig (point)) (and iact verbose (message "%s" "nil")))))
 
-(defun general-close (&optional arg beg force)
+(defun syntactic-close (&optional arg beg force)
   "Command will insert closing delimiter whichever needed.
 
 With \\[universal-argument]: close everything at point. "
   (interactive "P*")
-  (let ((beg (or beg (general-close--point-min)))
+  (let ((beg (or beg (syntactic-close--point-min)))
 	(iact (called-interactively-p 'any)))
     (pcase (prefix-numeric-value arg)
-      (4 (general-close-intern beg iact t))
-      (_ (general-close-intern beg iact force)))))
+      (4 (syntactic-close-intern beg iact t))
+      (_ (syntactic-close-intern beg iact force)))))
 
-(provide 'general-close)
-;;; general-close.el ends here
+(provide 'syntactic-close)
+;;; syntactic-close.el ends here

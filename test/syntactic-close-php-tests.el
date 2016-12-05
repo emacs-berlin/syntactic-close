@@ -1,4 +1,4 @@
-;;; general-close-php-tests.el --- -*- lexical-binding: t; -*-
+;;; syntactic-close-php-tests.el --- -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(defvar general-close-php-test-string-1 "<?php
+(defvar syntactic-close-php-test-string-1 "<?php
 \$l = mysql_connect(\"localhost\", \"user\", \"passw\");
 if (!\$l) die(\"Keine Verbindung zu DB\\n\");
 if (mysql_select_db(\"abkuerz\", \$l))
@@ -45,12 +45,12 @@ while (\$zeile = mysql_fetch_array(\$resID)) {
 ?>
 ")
 
-(setq general-close-php-test-string-2 "<?php
+(setq syntactic-close-php-test-string-2 "<?php
 \$l = mysql_connect(\"localhost\", \"user\", \"passw
 ?>
 ")
 
-(setq general-close-php-test-string-3 "<?php
+(setq syntactic-close-php-test-string-3 "<?php
 \$l = mysql_connect(\"localhost\", \"user\", \"passw\");
 if (!\$l) die(\"Keine Verbindung zu DB\\n\");
 if (mysql_select_db(\"abkuerz\", \$l))
@@ -71,7 +71,7 @@ while (\$zeile = mysql_fetch_array(\$resID)) {
 ?>
 ")
 
-(setq general-close-php-test-string-4
+(setq syntactic-close-php-test-string-4
       "<?php
 function €()
 {
@@ -80,54 +80,54 @@ function €()
 ?>
 ")
 
-(setq general-close-php-test-string-5
+(setq syntactic-close-php-test-string-5
       "<td><?php echo \$person->getName(); ?></td"
       )
 
-(ert-deftest general-close-close-php-paren-semicolon-test ()
-  (general-close-test-with-php-buffer-point-min
-      general-close-php-test-string-2
+(ert-deftest syntactic-close-close-php-paren-semicolon-test ()
+  (syntactic-close-test-with-php-buffer-point-min
+      syntactic-close-php-test-string-2
     (search-forward "passw")
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\"))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\)))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\;))))
 
-(ert-deftest general-close-close-php-public-function-test ()
-  (general-close-test-with-php-buffer
+(ert-deftest syntactic-close-close-php-public-function-test ()
+  (syntactic-close-test-with-php-buffer
       "public function Foobar(){
   echo \"Foobar"
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\"))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\;))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?}))))
 
 
-(ert-deftest general-close-close-php-indented-line-test ()
-  (general-close-test-with-php-buffer
+(ert-deftest syntactic-close-close-php-indented-line-test ()
+  (syntactic-close-test-with-php-buffer
       "if ($foobar){
     foreach ($foobar as $key =>  $val) {
          echo $key;
 	 "
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest general-close-close-php-check-indent-test ()
-  (let ((general-close-electric-indent-p t))
-    (general-close-test-with-php-buffer
+(ert-deftest syntactic-close-close-php-check-indent-test ()
+  (let ((syntactic-close-electric-indent-p t))
+    (syntactic-close-test-with-php-buffer
 	"if ($foobar){
     foreach ($foobar as $key =>  $val) {
          echo $key;
 	 "
-      (general-close) 
+      (syntactic-close) 
       (should (eq (current-indentation) 4))
       (newline-and-indent)
-      (general-close)
+      (syntactic-close)
       (should (eq (current-indentation) 0)))))
 
-(provide 'general-close-php-tests)
-;;; general-close-php-tests.el ends here
+(provide 'syntactic-close-php-tests)
+;;; syntactic-close-php-tests.el ends here

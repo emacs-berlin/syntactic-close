@@ -18,7 +18,7 @@ CASK_EMACS = $(EMACS)
 export EMACS
 export CASK_EMACS
 
-SRCS = general-close.el
+SRCS = syntactic-close.el
 OBJS = $(SRCS:.el=.elc)
 
 .PHONY: compile

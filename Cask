@@ -1,9 +1,9 @@
 (source gnu)
 (source melpa)
 
-(package-file "general-close.el")
+(package-file "syntactic-close.el")
 
-(files "general-close.el")
+(files "syntactic-close.el")
 
 (development
  (depends-on "php-mode")

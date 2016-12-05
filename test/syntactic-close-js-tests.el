@@ -1,4 +1,4 @@
-;;; general-close-js-tests.el --- -*- lexical-binding: t; -*-
+;;; syntactic-close-js-tests.el --- -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(defvar general-close-js-test-string-1 " $(document).ready(function() {
+(defvar syntactic-close-js-test-string-1 " $(document).ready(function() {
 
           $('.nav-tabs-custom-2').tabs();
 
@@ -32,7 +32,7 @@
               if (e.type == 'mouseover') {
                   $(this).addClass('hover")
 
-(setq general-close-js-test-string-1 " $(document).ready(function() {
+(setq syntactic-close-js-test-string-1 " $(document).ready(function() {
 
           $('.nav-tabs-custom-2').tabs();
 
@@ -40,57 +40,57 @@
               if (e.type == 'mouseover') {
                   $(this).addClass('hover")
 
-(ert-deftest general-close-close-js-test-1 ()
-  (general-close-test-with-js-buffer
-      general-close-js-test-string-1
-    (let (general-close-electric-listify-p)
+(ert-deftest syntactic-close-close-js-test-1 ()
+  (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+    (let (syntactic-close-electric-listify-p)
       (skip-chars-backward " \t\r\n\f")
-      (general-close)
+      (syntactic-close)
       (should (eq (char-before) ?'))
-      (general-close)
+      (syntactic-close)
       (should (eq (char-before) ?\)))
-      (general-close)
+      (syntactic-close)
       (should (eq (char-before) ?\;))
-      (general-close)
+      (syntactic-close)
       (should (eq (char-before) ?\}))
-      (general-close)
+      (syntactic-close)
       (should (eq (char-before) ?\}))
-      (general-close)
+      (syntactic-close)
       (should (eq (char-before) ?\)))
-      (general-close)
+      (syntactic-close)
       (should (eq (char-before) ?\;))
-      (general-close)
+      (syntactic-close)
       (should (eq (char-before) ?\}))
-      (general-close)
+      (syntactic-close)
       (should (eq (char-before) ?\))))))
 
-(ert-deftest general-close-close-js-test-2 ()
-  (general-close-test-with-js-buffer
+(ert-deftest syntactic-close-close-js-test-2 ()
+  (syntactic-close-test-with-js-buffer
       "function foo(a,b,c,d) {
 if ( (a == b) || (c == d"
 
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\)))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\)))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\;))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest general-close-web-mode-test ()
-  (general-close-test-with-js-buffer
+(ert-deftest syntactic-close-web-mode-test ()
+  (syntactic-close-test-with-js-buffer
     "$(document).ready(function() {
     var test = 0 []"
     (setq major-mode 'web-mode)
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\;))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\}))
-    (general-close)
+    (syntactic-close)
     (should (eq (char-before) ?\)))))
 
 
 
-(provide 'general-close-js-tests)
-;;; general-close-js-tests.el ends here
+(provide 'syntactic-close-js-tests)
+;;; syntactic-close-js-tests.el ends here

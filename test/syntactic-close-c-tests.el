@@ -1,4 +1,4 @@
-;;; general-close-c-tests.el --- -*- lexical-binding: t; -*-
+;;; syntactic-close-c-tests.el --- -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -25,14 +25,14 @@
 ;;; Code:
 
 
-;; Test succeeds at general-close-interactive-tests.el but fails in batch-mode
+;; Test succeeds at syntactic-close-interactive-tests.el but fails in batch-mode
 
-;; (ert-deftest general-close-c-nesting-comment-test ()
-;;   (general-close-test "/* The open system call "
+;; (ert-deftest syntactic-close-c-nesting-comment-test ()
+;;   (syntactic-close-test "/* The open system call "
 ;;     'c-mode
-;;     'general-close-debug-p
-;;     (general-close)
+;;     'syntactic-close-debug-p
+;;     (syntactic-close)
 ;;     (should (eq (char-before) ?/))))
 
-(provide 'general-close-c-tests)
-;;; general-close-c-tests.el ends here
+(provide 'syntactic-close-c-tests)
+;;; syntactic-close-c-tests.el ends here

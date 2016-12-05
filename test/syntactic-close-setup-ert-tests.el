@@ -1,4 +1,4 @@
-;;; general-close-setup-ert-tests.el --- Provide needed forms -*- lexical-binding: t; -*-
+;;; syntactic-close-setup-ert-tests.el --- Provide needed forms -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -22,35 +22,35 @@
 
 ;;; Code:
 
-(setq general-close-install-directory default-directory)
+(setq syntactic-close-install-directory default-directory)
 (message "default-directory: %s" default-directory)
 
 (sit-for 0.1 t)
 
-(defvar general-close-debug-p nil
+(defvar syntactic-close-debug-p nil
   "Avoid error")
-;; (setq general-close-debug-p t)
+;; (setq syntactic-close-debug-p t)
 
 (unless (featurep 'haskell)
-  (add-to-list 'load-path (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437"))
+  (add-to-list 'load-path (concat syntactic-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437"))
   (if (file-readable-p
-       (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
+       (concat syntactic-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
       (progn
-	(message "Lade %s" (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
-	(load (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el") nil t))
-    (message "Nicht gefunden: %s" (concat general-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))))
+	(message "Lade %s" (concat syntactic-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
+	(load (concat syntactic-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el") nil t))
+    (message "Nicht gefunden: %s" (concat syntactic-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))))
 
 ;; .cask/24.4/elpa/php-mode-20160910.1801/
 (unless (featurep 'php-mode)
-  (add-to-list 'load-path (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801"))
+  (add-to-list 'load-path (concat syntactic-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801"))
   (if (file-readable-p
-       (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
+       (concat syntactic-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
       (progn
-	(message "Lade %s" (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
-	(load (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el") nil t))
-    (message "Nicht gefunden: %s" (concat general-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))))
+	(message "Lade %s" (concat syntactic-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
+	(load (concat syntactic-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el") nil t))
+    (message "Nicht gefunden: %s" (concat syntactic-close-install-directory ".cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))))
 
-(defmacro general-close-test (contents mode verbose &rest body)
+(defmacro syntactic-close-test (contents mode verbose &rest body)
   "Create temp buffer inserting CONTENTS.
 
 BODY is code to be executed within the temp buffer "
@@ -66,7 +66,7 @@ BODY is code to be executed within the temp buffer "
   ;; (sit-for 0.1)
   )
 
-(defmacro general-close-test-point-min (contents mode verbose &rest body)
+(defmacro syntactic-close-test-point-min (contents mode verbose &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -82,7 +82,7 @@ BODY is code to be executed within the temp buffer.  Point is
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-python-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-python-buffer (contents &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -92,13 +92,13 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (insert ,contents)
        (python-mode)
-       (when ,general-close-debug-p (switch-to-buffer (current-buffer))
+       (when ,syntactic-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
        ,@body)
      ;; (sit-for 0.1)
      ))
 
-(defmacro general-close-test-with-python-buffer-point-min (contents &rest body)
+(defmacro syntactic-close-test-with-python-buffer-point-min (contents &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -109,13 +109,13 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (python-mode)
        (goto-char (point-min))
-       (when general-close-debug-p (switch-to-buffer (current-buffer))
+       (when syntactic-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
        ,@body)
      ;; (sit-for 0.1)
      ))
 
-(defmacro general-close-test-with-php-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-php-buffer (contents &rest body)
   "Create temp buffer in `php-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -124,12 +124,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (php-mode)
        (insert ,contents)
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-php-buffer-point-min (contents &rest body)
+(defmacro syntactic-close-test-with-php-buffer-point-min (contents &rest body)
   "Create temp buffer in `php-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -139,12 +139,12 @@ BODY is code to be executed within the temp buffer.  Point is
        (php-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-ruby-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-ruby-buffer (contents &rest body)
   "Create temp buffer in `ruby-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -153,12 +153,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (ruby-mode)
        (insert ,contents)
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-ruby-buffer-point-min (contents &rest body)
+(defmacro syntactic-close-test-with-ruby-buffer-point-min (contents &rest body)
   "Create temp buffer in `php-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -168,12 +168,12 @@ BODY is code to be executed within the temp buffer.  Point is
        (ruby-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-elisp-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-elisp-buffer (contents &rest body)
   "Create temp buffer in `emacs-lisp-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -183,12 +183,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (emacs-lisp-mode)
        (insert ,contents)
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-js-buffer-point-min (contents &rest body)
+(defmacro syntactic-close-test-with-js-buffer-point-min (contents &rest body)
   "Create temp buffer in `js-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -199,12 +199,12 @@ BODY is code to be executed within the temp buffer.  Point is
        (js-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-js-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-js-buffer (contents &rest body)
   "Create temp buffer in `js-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -213,12 +213,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (js-mode)
        (insert ,contents)
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-temp-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-temp-buffer (contents &rest body)
   "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -226,12 +226,12 @@ BODY is code to be executed within the temp buffer.  Point is
   `(with-temp-buffer
      (let (hs-minor-mode)
        (insert ,contents)
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-temp-buffer-point-min (contents &rest body)
+(defmacro syntactic-close-test-with-temp-buffer-point-min (contents &rest body)
   "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -240,12 +240,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (insert ,contents)
        (goto-char (point-min))
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-nxml-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-nxml-buffer (contents &rest body)
   "Create temp buffer in `nxml-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -255,12 +255,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (nxml-mode)
        (insert ,contents)
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-html-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-html-buffer (contents &rest body)
   "Create temp buffer in `nxml-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -270,12 +270,12 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (html-mode)
        (insert ,contents)
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(defmacro general-close-test-with-haskell-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-haskell-buffer (contents &rest body)
   "Create temp buffer in `haskell-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -284,13 +284,13 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (insert ,contents)
        (haskell-mode)
-       (when general-close-debug-p (switch-to-buffer (current-buffer))
+       (when syntactic-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
        ,@body)
      ;; (sit-for 0.1)
      ))
 
-(defmacro general-close-test-with-haskell-buffer-point-min (contents &rest body)
+(defmacro syntactic-close-test-with-haskell-buffer-point-min (contents &rest body)
   "Create temp buffer in `haskell-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
@@ -301,14 +301,14 @@ BODY is code to be executed within the temp buffer.  Point is
        (haskell-mode)
        ;; (message "fill-paragraph-function: %s" fill-paragraph-function)
        (goto-char (point-min))
-       (when general-close-debug-p (switch-to-buffer (current-buffer))
+       (when syntactic-close-debug-p (switch-to-buffer (current-buffer))
 	     (font-lock-fontify-buffer))
        ,@body)
      ;; (sit-for 0.1)
      ))
 
 
-(defmacro general-close-test-with-shell-script-buffer (contents &rest body)
+(defmacro syntactic-close-test-with-shell-script-buffer (contents &rest body)
   "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -317,13 +317,13 @@ BODY is code to be executed within the temp buffer.  Point is
      (let (hs-minor-mode)
        (insert ,contents)
        (shell-script-mode)
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
 
        ,@body)))
 
-(defmacro general-close-test-with-shell-script-buffer-point-min (contents &rest body)
+(defmacro syntactic-close-test-with-shell-script-buffer-point-min (contents &rest body)
   "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
@@ -333,10 +333,10 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (shell-script-mode)
        (goto-char (point-min))
-       (when general-close-debug-p
+       (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
 	 (font-lock-fontify-buffer))
        ,@body)))
 
-(provide 'general-close-setup-ert-tests)
-;; general-close-setup-ert-tests.el ends here
+(provide 'syntactic-close-setup-ert-tests)
+;; syntactic-close-setup-ert-tests.el ends here

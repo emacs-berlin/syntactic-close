@@ -1,4 +1,4 @@
-;;; general-close-shell-script-tests.el --- Tests in shell-script-mode -*- lexical-binding: t; -*-
+;;; syntactic-close-coq-tests.el --- -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -24,18 +24,13 @@
 
 ;;; Code:
 
-(ert-deftest general-close-shell-script-paren-test-1 ()
-  (general-close-test-with-shell-script-buffer
-      "MULTIFORM=$(
-    curl -k -A http://foo.com |
-    grep -m1 multiform |
-    tr '=' '\\n' |
-    tail -1 |
-    cut -d \"'\" -f 2"
-    (general-close)
+;; Test succeeds at syntactic-close-interactive-tests.el but fails in batch-mode
+(ert-deftest syntactic-close-coq-comment-test ()
+  (syntactic-close-test "(* definition of nat"
+    'coq-mode
+    'syntactic-close-debug-p
+    (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-
-(provide 'general-close-shell-script-tests)
-
-;;; general-close-shell-script-tests.el ends here
+(provide 'syntactic-close-coq-tests)
+;;; syntactic-close-coq-tests.el ends here
