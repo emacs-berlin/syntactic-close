@@ -33,7 +33,7 @@
 (ert-deftest general-close-python-doublequoted-test ()
   (general-close-test-with-python-buffer
       general-close-python-test-string-1
-    (message "%s" "Starte general-close-python-doublequoted-test")
+    ;; (message "%s" "Starte general-close-python-doublequoted-test")
     (general-close)
     (should (eq (char-before) ?\"))))
 
@@ -48,7 +48,7 @@
   (general-close-test-with-python-buffer
       "\"\"\"Some Doku"
     (font-lock-fontify-buffer)
-    (message "%s" "Starte general-close-python-doublequoted-tqs-test")
+    ;; (message "%s" "Starte general-close-python-doublequoted-tqs-test")
     (general-close)
     (should (eq (char-before) ?\"))
     (should (eq -3 (skip-chars-backward "\"")))))
@@ -57,7 +57,7 @@
   (general-close-test-with-python-buffer
       "'''Some Doku"
     (font-lock-fontify-buffer)
-    (message "%s" "Starte general-close-python-singlequoted-tqs-test")
+    ;; (message "%s" "Starte general-close-python-singlequoted-tqs-test")
     (general-close)
     (should (eq (char-before) ?'))
     (should (eq -3 (skip-chars-backward "'")))))
@@ -65,7 +65,7 @@
 (ert-deftest general-close-python-brace-paren-bracket-test-1 ()
   (general-close-test-with-python-buffer
       general-close-python-test-string-2
-    (message "%s" "Starte general-close-python-brace-paren-bracket-test-1")
+    ;; (message "%s" "Starte general-close-python-brace-paren-bracket-test-1")
     (general-close)
     (should (eq (char-before) ?\)))))
 

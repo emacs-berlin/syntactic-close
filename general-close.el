@@ -391,56 +391,6 @@ Check if list opener inside a string. "
       (insert closer)
       closer))))
 
-(defun general-close--insert-separator-maybe (orig)
-  "Returns `t', if separator was inserted. "
-  (let (erg)
-    (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-      (delete-region (point) orig))
-    (when
-	(not (eq (char-before) general-close-command-separator-char))
-      (when (save-excursion
-	      (forward-char -1)
-	      (when (ignore-errors (setq erg (nth 1 (parse-partial-sexp (point-min) (point)))))
-		(goto-char erg))
-	      (back-to-indentation)
-	      ;; ert does no font-lock
-	      (or (and general-close-keywords (looking-at general-close-keywords))
-		  (face-at-point)))
-	(insert general-close-command-separator-char) t))))
-
-(defun general-close--handle-separator-modes (orig closer)
-  "Some languages close expressions with a special char, often `:'
-
-See `general-close-command-separator-char'"
-  (let (done)
-    (cond ((eq closer ?})
-	   (if
-	       (save-excursion
-		 (skip-chars-backward " \t\r\n\f")
-		 (or (eq (char-before) general-close-command-separator-char)
-		     (eq (char-before) closer)))
-	       (progn
-		 (unless (looking-back "^[ \t]+" nil)
-		   (newline-and-indent))
-		 (insert closer)
-		 (setq done t))
-	     (insert general-close-command-separator-char)
-	     (setq done t)))
-	  ((and (eq closer ?\)) (eq (char-before) ?\;))
-	   (newline-and-indent)
-	   (insert closer)
-	   closer)
-	  ;; Semicolon inserted where it probably shouldn't be? #12
-	  ((and (eq closer ?\)) (eq (char-before) ?\)))
-	   (insert general-close-command-separator-char)
-	   closer)
-	  (closer
-	   (skip-chars-backward " \t\r\n\f")
-	   (insert closer)
-	   closer)
-	  (t (general-close--insert-separator-maybe orig)))
-    done))
-
 (defun general-close-insert-with-padding-maybe (strg &optional nbefore nafter)
   "Takes a string. Insert a space before and after maybe.
 
@@ -471,22 +421,11 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	     (insert (nth 3 pps)))
 	    ((setq erg (general-close-in-string-interpolation-maybe pps))
 	     (general-close--return-complement-char-maybe erg))
-	    (t (general-close--return-complement-char-maybe (nth 8 pps))
-	))
+	    (t (general-close--return-complement-char-maybe (nth 8 pps))))
       (setq done t))
-     (closer (setq done (general-close--insert-delimiter-char-maybe orig closer)))
-     (t (setq done (general-close--insert-assignment-maybe (line-beginning-position) general-close-pre-assignment-re))))
+     (closer (setq done (general-close--insert-delimiter-char-maybe orig closer))))
     done))
 
-(defun general-close--insert-assignment-maybe (beg regexp)
-  (let (done)
-    (when (save-excursion
-	    (goto-char beg)
-	    (skip-chars-forward " \t\r\n\f")
-	    (looking-at regexp))
-      (general-close-insert-with-padding-maybe "=")
-      (setq done t))
-    done))
 
 (defun general-close--comments-intern (orig start end)
   (if (looking-at start)
