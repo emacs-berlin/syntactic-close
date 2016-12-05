@@ -57,12 +57,6 @@
 (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
   "Defined in haskell-interactive-mode.el, silence warnings. ")
 
-(defvar general-close--current-source-buffer nil
-  "Set by `general-close--set-current-source-buffer' maybe.
-
-Default is nil.
-Comint-modes might want to load stuff from " )
-
 (defcustom general-close-delete-whitespace-backward-p nil
   "If whitespace characters before point should be deleted.
 
@@ -221,14 +215,6 @@ conditionals closed by a colon for example. ")
   "general-close-empty-line-p-chars"
   :type 'regexp
   :group 'convenience)
-
-(defvar general-close--current-source-buffer (current-buffer)
-  "Used by modes loading source from comint-shell")
-
-(defun general-close--set-current-source-buffer ()
-  (interactive)
-  "Set value of `general-close--current-source-buffer' to current buffer. "
-  (setq general-close--current-source-buffer (current-buffer)))
 
 (defun general-close-toggle-verbosity ()
   "If `general-close-verbose-p' is nil, switch it on.
@@ -658,48 +644,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
   (ignore-errors (forward-sexp))
   (when (< pos (point))(point)))
 
-(defun general-close-inferior-sml-close ()
-  (let (done)
-    (cond ((looking-back comint-prompt-regexp (line-beginning-position))
-	   (if general-close--current-source-buffer
-	       (insert (concat "use \"" (buffer-name general-close--current-source-buffer) "\";"))
-	     (insert "use \"\";")
-	     (forward-char -2))
-	   (setq done t)))
-    done))
-
-(defun general-close-sml-close (&optional pps)
-  (let (done)
-    (cond
-     (;; type-colon
-      (and (eq 1 (nth 0 pps))
-	   (save-excursion
-	     (progn
-	       (back-to-indentation)
-	       (looking-at (concat general-close-sml-fun-after-arglist-re)))))
-      (general-close-insert-with-padding-maybe ":")
-      (setq done t))
-     (;; fun foo
-      (and (not (eq 1 (nth 0 pps)))
-	   (save-excursion
-	     (progn
-	       (back-to-indentation)
-	       (looking-at (concat general-close-sml-function-before-arglist-re)))))
-      (general-close-insert-with-padding-maybe "(" nil t)
-      (setq done t))
-     (;; function body assignment
-      (save-excursion
-	(and
-	 (progn
-	   (skip-chars-backward " \t\r\n\f")
-	   (eq (char-before) ?\)))
-	 (progn
-	   (back-to-indentation)
-	   (looking-at general-close-sml-fun-after-arglist-re))))
-      (general-close-insert-with-padding-maybe "=")
-      (setq done t)))
-    done))
-
 (defun general-close--php-check (pps &optional closer)
   (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
 	(orig (point))
@@ -731,14 +675,9 @@ When `general-close-insert-with-padding-p' is `t', the default "
     (unless done (goto-char orig))
     done))
 
-(defun general-close--modes (pps orig &optional closer force)
-  (let ((closer (or closer (general-close--fetch-delimiter-maybe pps)))
-	done)
+(defun general-close--modes (pps orig closer &optional force)
+  (let (done)
     (pcase major-mode
-      (`inferior-sml-mode
-       (setq done (general-close-inferior-sml-close)))
-      (`sml-mode
-       (setq done (general-close-sml-close pps)))
       (`python-mode
        (setq done (general-close-python-close closer pps force nil nil )))
       (`emacs-lisp-mode
@@ -748,7 +687,7 @@ When `general-close-insert-with-padding-p' is `t', the default "
       (_
        (cond
 	((member major-mode general-close--ml-modes)
-	 (setq done (general-close-ml)))
+	(setq done (general-close-ml)))
 	((member major-mode (list 'php-mode 'js-mode 'web-mode))
 	 (setq done (general-close--php-check pps closer))))
        done))))
@@ -757,7 +696,8 @@ When `general-close-insert-with-padding-p' is `t', the default "
   (let* ((orig (point))
 	 (pps (parse-partial-sexp beg (point)))
 	 (verbose general-close-verbose-p)
-	 done closer)
+	 (closer (general-close--fetch-delimiter-maybe pps))
+	 done)
     (cond
      ((setq done (general-close--modes pps orig closer force)))
      ((setq done (general-close--others orig closer pps)))
