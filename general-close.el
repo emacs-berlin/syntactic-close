@@ -198,13 +198,6 @@ Default is nil"
 (defvar general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
 (setq general-close-sml-assignment-re   "[ \t]*val[ \t]+[[:alpha:]][A-Za-z0-9_]*\\_>[ \t]*")
 
-(defcustom general-close-command-operator-chars
-  "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\|=\\)[ \t]*"
-  "Matches most of syntactical meaningful characters, inclusive whitespaces around. "
-  :type 'regexp
-  :tag "general-close-command-operator-chars"
-  :group 'general-close)
-
 (defvar general-close-verbose-p nil)
 
 (defvar general-close-keywords nil
@@ -247,23 +240,15 @@ Otherwise switch it off. "
 
 (defun general-close--return-complement-char-maybe (erg)
   "For example return \"}\" for \"{\" but keep \"\\\"\". "
-  (cond ((eq erg ?\")
-	 erg)
-	((eq erg ?')
-	 erg)
-	((eq erg ?\[)
-	 ?\])
-	((eq erg ?\])
-	 ?\[)
-	((eq erg ?{)
-	 ?\})
-	((eq erg ?})
-	 ?\{)
-	((eq erg ?\))
-	 ?\()
-	((eq erg ?\()
-	 ?\))
-	))
+  (pcase erg
+    (34 ?\")
+    (?' ?')
+    (?\( ?\))
+    (?\) ?\()
+    (?\] ?\[)
+    (?\[ ?\])
+    (?} ?{)
+    (?{ ?})))
 
 (defun general-close--return-complement-string-maybe (erg)
   (cond
@@ -291,11 +276,10 @@ Return delimiting chars "
 	  (setq pps (parse-partial-sexp (line-beginning-position) (point)))
 	  (when (nth 3 pps)
 	    (setq erg (general-close--in-string-p-intern pps)))))
+      (when (and general-close-verbose-p (called-interactively-p 'any)) (message "%s" erg))
+      erg)))
 
-    ;; (list (nth 8 pps) (char-before) (1+ (skip-chars-forward (char-to-string (char-before)))))
-    (when (and general-close-verbose-p (called-interactively-p 'any)) (message "%s" erg))
-    erg)))
-
+;; currently unused
 (defun general-close-stack-based ()
   "Command will insert closing delimiter whichever needed.
 
@@ -316,16 +300,6 @@ Does not require parenthesis syntax WRT \"{[(\" "
 		 (setq done t)))
 	      (t (skip-chars-backward "^\"{\(\[\]\)}")))))
     (insert closer)))
-
-(defun general-close--list-inside-string-maybe (strg)
-  (with-temp-buffer
-    (insert strg)
-    ;; (switch-to-buffer (current-buffer))
-    (let ((pps (parse-partial-sexp (point-min) (point))))
-      (when (nth 1 pps)
-	(save-excursion
-	  (goto-char (nth 1 pps))
-	  (general-close--return-complement-char-maybe (char-after)))))))
 
 (defun nth-1-pps-complement-char-maybe (pps)
   "Return complement character from (nth 1 pps). "
@@ -366,9 +340,6 @@ Check if list opener inside a string. "
 		 closer))))
      ((and (member major-mode general-close--singlequote-modes) (eq (char-before (1- (point))) ?'))
       "'")
-     ((and (nth 1 pps)
-	   (eq ?\] (setq erg (nth-1-pps-complement-char-maybe pps))))
-      erg)
      ((nth 1 pps)
       (save-excursion
 	(goto-char (nth 1 pps))
@@ -425,7 +396,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
       (setq done t))
      (closer (setq done (general-close--insert-delimiter-char-maybe orig closer))))
     done))
-
 
 (defun general-close--comments-intern (orig start end)
   (if (looking-at start)
@@ -716,10 +686,6 @@ When `general-close-insert-with-padding-p' is `t', the default "
 	       (back-to-indentation)
 	       (looking-at (concat general-close-sml-function-before-arglist-re)))))
       (general-close-insert-with-padding-maybe "(" nil t)
-      (setq done t))
-     (;; assignment
-      (looking-back general-close-sml-assignment-re (line-beginning-position))
-      (general-close-insert-with-padding-maybe "=")
       (setq done t))
      (;; function body assignment
       (save-excursion
