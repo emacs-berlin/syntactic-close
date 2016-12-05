@@ -75,34 +75,12 @@ Default is t"
   :tag "syntactic-close-insert-with-padding-p"
   :group 'syntactic-close)
 
-(defvar syntactic-close-list-separator-char 44)
-(defcustom syntactic-close-list-separator-char 44
-  "Char separating elements of a list.
-
-Default is `,'"
-
-  :type 'character
-  :tag "syntactic-close-list-separator-char"
-  :group 'syntactic-close)
-(make-variable-buffer-local 'syntactic-close-list-separator-char)
-
 (defcustom syntactic-close-guess-p nil
   "When non-nil, guess default arguments, list-separators etc. "
   :type 'boolean
   :tag "syntactic-close-guess-p"
   :group 'syntactic-close)
 (make-variable-buffer-local 'syntactic-close-guess-p)
-
-(defcustom syntactic-close-auto-p nil
-  "Enable auto-close. Experienced users only.
-
-If `t', lists will be auto-filled.
-Default is nil"
-
-  :type 'boolean
-  :tag "syntactic-close-auto-p"
-  :group 'syntactic-close)
-(make-variable-buffer-local 'syntactic-close-auto-p)
 
 (defcustom syntactic-close--semicolon-separator-modes
   (list
