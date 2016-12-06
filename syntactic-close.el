@@ -66,15 +66,6 @@ Default is nil"
   :tag "syntactic-close-delete-whitespace-backward-p"
   :group 'syntactic-close)
 
-(defcustom syntactic-close-insert-with-padding-p t
-  "Ensure a whitespace character before point.
-
-Default is t"
-
-  :type 'boolean
-  :tag "syntactic-close-insert-with-padding-p"
-  :group 'syntactic-close)
-
 (defcustom syntactic-close-guess-p nil
   "When non-nil, guess default arguments, list-separators etc. "
   :type 'boolean
@@ -260,11 +251,8 @@ Check if list opener inside a string. "
       closer))))
 
 (defun syntactic-close-insert-with-padding-maybe (strg &optional nbefore nafter)
-  "Takes a string. Insert a space before and after maybe.
-
-When `syntactic-close-insert-with-padding-p' is `t', the default "
+  "Takes a string. Insert a space before and after maybe. "
   (skip-chars-backward " \t\r\n\f")
-  (if syntactic-close-insert-with-padding-p
       (cond ((looking-back "([ \t]*" (line-beginning-position))
 	     (delete-region (match-beginning 0) (match-end 0))
 	     (insert strg)
@@ -279,7 +267,7 @@ When `syntactic-close-insert-with-padding-p' is `t', the default "
 		   (or
 		    (eq 5 (car (syntax-after (point))))
 		    ;; (eq (char-after) ?\))
-		    nafter) (insert " "))))))
+		    nafter) (insert " ")))))
 
 (defun syntactic-close--others (orig closer pps)
   (let (done erg)
