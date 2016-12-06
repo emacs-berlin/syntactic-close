@@ -593,9 +593,9 @@ When `syntactic-close-insert-with-padding-p' is `t', the default "
   "Command will insert closing delimiter whichever needed.
 
 With \\[universal-argument]: close everything at point. "
-  (interactive "P*")
+  (interactive "p*")
   (let ((beg (or beg (syntactic-close--point-min)))
-	(iact (called-interactively-p 'any)))
+	(iact arg))
     (pcase (prefix-numeric-value arg)
       (4 (syntactic-close-intern beg iact t))
       (_ (syntactic-close-intern beg iact force)))))
