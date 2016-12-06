@@ -135,14 +135,15 @@ Otherwise switch it off. "
 (defun syntactic-close--return-complement-char-maybe (erg)
   "For example return \"}\" for \"{\" but keep \"\\\"\". "
   (pcase erg
-    (34 ?\")
-    (?' ?')
+    (?< ?>)
+    (?> ?<)
     (?\( ?\))
     (?\) ?\()
     (?\] ?\[)
     (?\[ ?\])
     (?} ?{)
-    (?{ ?})))
+    (?{ ?})
+    (_ erg)))
 
 (defun syntactic-close--in-string-p-intern (pps)
   "Return the delimiting string. "
