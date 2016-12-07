@@ -211,6 +211,15 @@ Check if list opener inside a string. "
 	   (setq erg (syntactic-close-in-string-maybe pps))))
     erg))
 
+(defun syntactic-close--list-inside-string-maybe (strg)
+  (with-temp-buffer
+    (insert strg)
+    (let ((pps (parse-partial-sexp (point-min) (point))))
+      (when (nth 1 pps)
+	(save-excursion
+	  (goto-char (nth 1 pps))
+	  (guess-what--return-complement-char-maybe (char-after)))))))
+
 ;; See also syntactic-close--guess-symbol
 (defun syntactic-close--fetch-delimiter-maybe (pps)
   "Close the innermost list resp. string. "
@@ -549,7 +558,7 @@ Check if list opener inside a string. "
     (unless done (goto-char orig))
     done))
 
-(defun syntactic-close--modes (pps orig closer &optional force)
+(defun syntactic-close--modes (pps closer &optional force)
   (let (done)
     (pcase major-mode
       (`python-mode
@@ -574,9 +583,10 @@ Check if list opener inside a string. "
 	 done)
     (cond
      ((setq done (when closer (syntactic-close--common closer))))
-     ((setq done (syntactic-close--modes pps orig closer force)))
+     ((setq done (syntactic-close--modes pps closer force)))
      ((setq done (syntactic-close--others orig closer pps))))
-    (or (< orig (point)) (and iact verbose (message "%s" "nil")))))
+    (or (< orig (point)) (and iact verbose (message "%s" "nil")))
+    done))
 
 (defun syntactic-close (&optional arg beg force)
   "Command will insert closing delimiter whichever needed.
