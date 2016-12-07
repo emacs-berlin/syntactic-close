@@ -575,9 +575,9 @@ Check if list opener inside a string. "
 	 (setq done (syntactic-close--php-check pps closer))))
        done))))
 
-(defun syntactic-close-intern (beg iact &optional force)
+(defun syntactic-close-intern (beg iact &optional force pps)
   (let* ((orig (point))
-	 (pps (parse-partial-sexp beg (point)))
+	 (pps (or pps (parse-partial-sexp beg (point))))
 	 (verbose syntactic-close-verbose-p)
 	 (closer (syntactic-close--fetch-delimiter-maybe pps))
 	 done)
