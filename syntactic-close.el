@@ -449,8 +449,9 @@ Check if list opener inside a string. "
 	     (looking-at syntactic-close-beginning-of-block-re)))
       (insert ":")
       (setq done t))
-     ((and (nth 3 pps)(setq closer (syntactic-close-in-string-maybe))(setq done t))
-      (insert closer)))
+     ;; ((and (nth 3 pps)(setq closer (syntactic-close-in-string-maybe))(setq done t))
+     ;; (insert closer))
+     )
     done))
 
 ;; Ruby

@@ -42,7 +42,6 @@
 
     (let ((debug-on-error t)
           (tests (list
-		  "syntactic-close-ml-tests"
                   "syntactic-close-c-tests"
 		  "syntactic-close-c++-tests"
 		  "syntactic-close-sml-tests"
