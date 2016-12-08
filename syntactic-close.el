@@ -57,15 +57,6 @@
 (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
   "Defined in haskell-interactive-mode.el, silence warnings. ")
 
-(defcustom syntactic-close-delete-whitespace-backward-p nil
-  "If whitespace characters before point should be deleted.
-
-Default is nil"
-
-  :type 'boolean
-  :tag "syntactic-close-delete-whitespace-backward-p"
-  :group 'syntactic-close)
-
 (defcustom syntactic-close-guess-p nil
   "When non-nil, guess default arguments, list-separators etc. "
   :type 'boolean
@@ -223,7 +214,7 @@ Check if list opener inside a string. "
 ;; See also syntactic-close--guess-symbol
 (defun syntactic-close--fetch-delimiter-maybe (pps)
   "Close the innermost list resp. string. "
-  (let (erg closer strg)
+  (let (erg closer strg padding)
     (cond
      ((nth 3 pps)
       (cond ((setq closer (syntactic-close-in-string-interpolation-maybe pps)))
@@ -241,24 +232,33 @@ Check if list opener inside a string. "
      ((nth 1 pps)
       (save-excursion
 	(goto-char (nth 1 pps))
-	(syntactic-close--return-complement-char-maybe (char-after)))))))
+	(when (looking-at "[\[{(][ \t]+")
+	  (setq padding (substring (match-string-no-properties 0) 1)))
+	(setq closer (syntactic-close--return-complement-char-maybe (char-after))))))
+    (list closer padding)))
 
-(defun syntactic-close--insert-delimiter-char-maybe (orig closer)
-  (when closer
-    (save-excursion
-      (when (and (not (looking-back "^[ \t]+" nil))
-                 syntactic-close-delete-whitespace-backward-p
-		 (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-		 ;;  not in comment
-		 (not (nth 4 (parse-partial-sexp (point-min) (point)))))
-	(delete-region (point) orig)))
-    (cond
-     ((and (eq closer ?}) (not (eq major-mode 'php-mode)))
-      (insert closer)
-      closer)
-     ((not (eq closer ?}))
-      (insert closer)
-      closer))))
+(defun syntactic-close-fix-whitespace-maybe (orig &optional padding)
+  (save-excursion
+    (when (and (not (looking-back "^[ \t]+" nil))
+	       (< 0 (abs (skip-chars-backward " \t\r\n\f")))
+	       ;;  not in comment
+	       (not (nth 4 (parse-partial-sexp (point-min) (point)))))
+      (delete-region (point) orig)))
+  (when padding (insert padding)))
+
+(defun syntactic-close--insert-delimiter-char-maybe (orig closer padding)
+  (let (done)
+    (when closer
+      (cond
+       ((and (eq closer ?}) (not (eq major-mode 'php-mode)))
+	(syntactic-close-fix-whitespace-maybe orig padding)
+	(insert closer)
+	(setq done t))
+       ((not (eq closer ?}))
+	(syntactic-close-fix-whitespace-maybe orig padding)
+	(insert closer)
+	(setq done t))))
+    done))
 
 (defun syntactic-close-insert-with-padding-maybe (strg &optional nbefore nafter)
   "Takes a string. Insert a space before and after maybe. "
@@ -279,7 +279,7 @@ Check if list opener inside a string. "
 		    ;; (eq (char-after) ?\))
 		    nafter) (insert " ")))))
 
-(defun syntactic-close--others (orig closer pps)
+(defun syntactic-close--others (orig closer pps padding)
   (let (done erg)
     (cond
      ((nth 3 pps)
@@ -289,7 +289,7 @@ Check if list opener inside a string. "
 	     (syntactic-close--return-complement-char-maybe erg))
 	    (t (syntactic-close--return-complement-char-maybe (nth 8 pps))))
       (setq done t))
-     (closer (setq done (syntactic-close--insert-delimiter-char-maybe orig closer))))
+     (closer (setq done (syntactic-close--insert-delimiter-char-maybe orig closer padding))))
     done))
 
 (defun syntactic-close--comments-intern (orig start end)
@@ -319,18 +319,6 @@ Check if list opener inside a string. "
 	(setq done t) ))
     done))
 
-(defun syntactic-close--travel-comments-maybe (pps)
-  (let (done)
-    (or (and (nth 4 pps) (nth 8 pps)
-	     ;; (not (string= "" comment-end))
-	     (setq done (syntactic-close--insert-comment-end-maybe pps)))
-	(while (and (setq pps (parse-partial-sexp (line-beginning-position) (point))) (nth 4 pps) (nth 8 pps))
-	  (unless (eobp)
-	    (forward-line 1)
-	    (end-of-line)
-	    (skip-chars-backward " \t\r\n\f" (line-beginning-position)))))
-    done))
-
 (defun syntactic-close--point-min ()
   (cond ((and (member major-mode (list 'haskell-interactive-mode 'inferior-haskell-mode)))
 	 (ignore-errors haskell-interactive-mode-prompt-start))
@@ -343,9 +331,11 @@ Check if list opener inside a string. "
 	 (match-end 0))
 	(t (point-min))))
 
-(defun syntactic-close--common (closer)
+(defun syntactic-close--common (orig closer padding)
   (let (done)
     (unless (and (eq closer ?})(member major-mode syntactic-close--semicolon-separator-modes))
+      (syntactic-close-fix-whitespace-maybe orig)
+      (when padding (insert padding))
       (insert closer)
       (setq done t))
     done))
@@ -399,7 +389,7 @@ Check if list opener inside a string. "
 	     (setq done t)))
     done))
 
-(defun syntactic-close-python-listclose (closer force pps)
+(defun syntactic-close-python-listclose (orig closer force pps)
   "If inside list, assume another item first. "
   (let (done)
     (cond ((member (char-before) (list ?' ?\"))
@@ -414,12 +404,13 @@ Check if list opener inside a string. "
 		 (insert (char-before))
 	       (insert ","))
 	     (setq done t)))
-	  (t (insert closer)
+	  (t (syntactic-close-fix-whitespace-maybe orig)
+	     (insert closer)
 	     (setq done t)))
     done))
 
 ;; Emacs-lisp
-(defun syntactic-close-emacs-lisp-close (closer pps)
+(defun syntactic-close-emacs-lisp-close (closer pps padding)
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	done)
     (cond
@@ -441,38 +432,26 @@ Check if list opener inside a string. "
       (setq done t)))
     done))
 
-(defun syntactic-close-python-close (closer pps force b-of-st b-of-bl)
+(defun syntactic-close-python-close (orig pps force b-of-st b-of-bl padding)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
-  (let* ((closer (or closer
-		     (syntactic-close--fetch-delimiter-maybe (or pps (parse-partial-sexp (point-min) (point))))))
+  (let* ((syntactic-close-beginning-of-statement
+	  (or b-of-st
+	      (if (ignore-errors (functionp 'py-backward-statement))
+		  'py-backward-statement
+		(lambda ()(beginning-of-line)(back-to-indentation)))))
+	 (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
 	 done)
-    (if closer
-	(progn
-	  (insert closer)
-	  (setq done t))
-      (let* (
-	     (pps (or pps (parse-partial-sexp (point-min) (point))))
-	     (syntactic-close-beginning-of-statement
-	      (or b-of-st
-		  (if (ignore-errors (functionp 'py-backward-statement))
-		      'py-backward-statement
-		    (lambda ()(beginning-of-line)(back-to-indentation)))))
-	     (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
-	     done)
-	(cond
-	 (closer
-	  (setq done (syntactic-close-python-listclose closer force pps)))
-	 ((and (not (char-equal ?: (char-before)))
-	       (save-excursion
-		 (funcall syntactic-close-beginning-of-statement)
-		 (looking-at syntactic-close-beginning-of-block-re)))
-	  (insert ":")
-	  (setq done t))
-	 ((and (nth 3 pps)(setq closer (syntactic-close-in-string-maybe))(setq done t))
-	  (insert closer)))
-	done)
-      done)))
+    (cond
+     ((and (not (char-equal ?: (char-before)))
+	   (save-excursion
+	     (funcall syntactic-close-beginning-of-statement)
+	     (looking-at syntactic-close-beginning-of-block-re)))
+      (insert ":")
+      (setq done t))
+     ((and (nth 3 pps)(setq closer (syntactic-close-in-string-maybe))(setq done t))
+      (insert closer)))
+    done))
 
 ;; Ruby
 (defun syntactic-close--generic-fetch-delimiter-maybe ()
@@ -496,7 +475,7 @@ Check if list opener inside a string. "
 	  (indent-according-to-mode))))
     done))
 
-(defun syntactic-close-ruby-close (&optional closer pps)
+(defun syntactic-close-ruby-close (&optional closer pps padding)
   (let ((closer (or closer
 		    (and pps (syntactic-close--fetch-delimiter-maybe pps))
 		    (syntactic-close--generic-fetch-delimiter-maybe)))
@@ -527,7 +506,7 @@ Check if list opener inside a string. "
   (ignore-errors (forward-sexp))
   (when (< pos (point))(point)))
 
-(defun syntactic-close--php-check (pps &optional closer)
+(defun syntactic-close--php-check (pps &optional closer padding)
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	(orig (point))
 	done)
@@ -544,6 +523,7 @@ Check if list opener inside a string. "
 	     (insert ";"))
 	   (setq done t))
 	  ((eq closer ?\))
+	   (syntactic-close-fix-whitespace-maybe orig padding)
 	   (insert closer)
 	   (setq done t))
 	  ;; after asignement
@@ -558,33 +538,38 @@ Check if list opener inside a string. "
     (unless done (goto-char orig))
     done))
 
-(defun syntactic-close--modes (pps closer &optional force)
+(defun syntactic-close--modes (orig pps closer &optional force padding)
   (let (done)
     (pcase major-mode
       (`python-mode
-       (setq done (syntactic-close-python-close closer pps force nil nil )))
+       (setq done (syntactic-close-python-close orig pps force nil nil padding)))
       (`emacs-lisp-mode
-       (setq done (syntactic-close-emacs-lisp-close closer pps)))
+       (setq done (syntactic-close-emacs-lisp-close closer pps padding)))
       (`ruby-mode
-       (setq done (syntactic-close-ruby-close closer pps)))
+       (setq done (syntactic-close-ruby-close closer pps padding)))
       (_
        (cond
 	((member major-mode syntactic-close--ml-modes)
 	(setq done (syntactic-close-ml)))
 	((member major-mode (list 'php-mode 'js-mode 'web-mode))
-	 (setq done (syntactic-close--php-check pps closer))))
+	 (setq done (syntactic-close--php-check pps closer padding))))
        done))))
 
 (defun syntactic-close-intern (beg iact &optional force pps)
   (let* ((orig (point))
 	 (pps (or pps (parse-partial-sexp beg (point))))
 	 (verbose syntactic-close-verbose-p)
-	 (closer (syntactic-close--fetch-delimiter-maybe pps))
+	 (closer-raw (syntactic-close--fetch-delimiter-maybe pps))
+	 (closer (car-safe closer-raw))
+	 (padding (car-safe (cdr-safe closer-raw)))
 	 done)
     (cond
-     ((setq done (when closer (syntactic-close--common closer))))
-     ((setq done (syntactic-close--modes pps closer force)))
-     ((setq done (syntactic-close--others orig closer pps))))
+     ;; in comment
+     ((nth 4 pps)
+      (setq done (syntactic-close--insert-comment-end-maybe pps)))
+     ((and closer (setq done (when closer (syntactic-close--common orig closer padding)))))
+     ((setq done (syntactic-close--modes orig pps closer force padding)))
+     ((setq done (syntactic-close--others orig closer pps padding))))
     (or (< orig (point)) (and iact verbose (message "%s" "nil")))
     done))
 

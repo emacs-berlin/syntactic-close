@@ -154,17 +154,6 @@ if __name__ == \"__main__\""
     (syntactic-close)
     (should (eq (char-before) ?:))))
 
-(ert-deftest syntactic-close-python-colon-test-3 ()
-  (syntactic-close-test-with-python-buffer
-      "class TutorialApp(App):
-    def build(self):
-        return Button(text=\"Hello!\",
-                      background_color=(0, 0, 1, 1)
-                      font_size=150)
-if __name__ == \"__main__\":"
-    (syntactic-close)
-    (should (eq 4 (current-indentation)))))
-
 (ert-deftest syntactic-close-list-comprehension-test-1 ()
   ;; [(x,y)|x<-[1..3],y<-[4,5]]
   (syntactic-close-test-with-haskell-buffer "[(asdb,"
@@ -311,7 +300,7 @@ if __name__ == \"__main__\":"
       (skip-chars-backward " \t\r\n\f")
       (should (eq (char-before) ?\))))))
 
-(ert-deftest syntactic-close-type-test-1 ()
+(ert-deftest syntactic-close-haskell-type-test-1 ()
   (syntactic-close-test-with-haskell-buffer "type Radius = Float
 type Width  = Float
 type Height = Float

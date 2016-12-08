@@ -84,14 +84,34 @@ function €()
       "<td><?php echo \$person->getName(); ?></td"
       )
 
-(ert-deftest syntactic-close-close-php-paren-semicolon-test ()
+(setq syntactic-close-php-test-string-6 "<?php
+\$l = mysql_connect(\"localhost\", \"user\", \"passw
+?>
+")
+
+(ert-deftest syntactic-close-close-php-paren-semicolon-test-1 ()
   (syntactic-close-test-with-php-buffer-point-min
       syntactic-close-php-test-string-2
     (search-forward "passw")
     (syntactic-close)
-    (should (eq (char-before) ?\"))
+    (should (eq (char-before) ?\"))))
+
+
+(ert-deftest syntactic-close-close-php-paren-semicolon-test-2 ()
+  (syntactic-close-test-with-php-buffer-point-min
+      "<?php
+\$l = mysql_connect(\"localhost\", \"user\", \"passw\"
+?>
+"    (search-forward "passw\"")
     (syntactic-close)
-    (should (eq (char-before) ?\)))
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-close-close-php-paren-semicolon-test-3 ()
+  (syntactic-close-test-with-php-buffer-point-min
+      "<?php
+\$l = mysql_connect(\"localhost\", \"user\", \"passw\")
+?>"
+    (search-forward "passw\")")
     (syntactic-close)
     (should (eq (char-before) ?\;))))
 

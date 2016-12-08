@@ -158,12 +158,6 @@
     (syntactic-close)
     (should (eq (char-before) ?'))))
 
-(ert-deftest colon-after-arguments-list-test ()
-  (syntactic-close-test-with-python-buffer
-      "def datei(datei, verzeichnis)"
-    (syntactic-close)
-    (should (eq (char-before) ?:))))
-
 (ert-deftest syntactic-close-python-no-colon-test-1 ()
   (syntactic-close-test-with-python-buffer
       "print(1)"

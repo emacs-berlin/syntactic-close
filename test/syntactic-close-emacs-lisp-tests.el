@@ -49,23 +49,40 @@
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest syntactic-close--char-class-test-1 ()
+(ert-deftest syntactic-close--elisp-char-class-test-1 ()
   (syntactic-close-test-with-elisp-buffer
     "(string-match \"[[:alpha:]"
     (syntactic-close)
     (should (eq (char-before) ?\]))))
- 
-(ert-deftest syntactic-close--char-class-test-2 ()
+
+(ert-deftest syntactic-close--elisp-char-class-test-2 ()
   (syntactic-close-test-with-elisp-buffer
     "(string-match \"[[:alpha:]]"
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest syntactic-close--arglist-test ()
+(ert-deftest syntactic-close--elisp-arglist-test ()
   (syntactic-close-test-with-elisp-buffer
       "(defun asdf ("
       (syntactic-close)
     (should (looking-back "asdf ()"))))
 
-(provide 'syntactic-close-emacs-lisp-tests)
+(ert-deftest syntactic-close--elisp-arglist-test ()
+  (syntactic-close-test-with-elisp-buffer
+      "(defun asdf ("
+      (syntactic-close)
+    (should (looking-back "asdf ()"))))
+
+(ert-deftest syntactic-close--elisp-fixspace-test ()
+  (syntactic-close-test-with-elisp-buffer
+      "(setq foo 'bar "
+      (syntactic-close)
+    (should (eq (char-before (1- (point))) ?r))))
+
+(ert-deftest syntactic-close--elisp-padding-test ()
+  (syntactic-close-test-with-elisp-buffer
+      "(defun foo ( arg"
+      (syntactic-close)
+    (should (eq (char-before (1- (point))) ?\ ))))
+
 ;;; syntactic-close-emacs-lisp-tests.el ends here

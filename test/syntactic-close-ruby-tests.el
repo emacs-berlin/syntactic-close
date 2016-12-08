@@ -23,17 +23,6 @@
 ;;
 
 ;;; Code:
-
-(ert-deftest syntactic-close-close-ruby-class-test ()
-  (syntactic-close-test-with-ruby-buffer "class MyClass
-  private
-  def a_method; true; end
-  def another_method; false; end
-"
-    (syntactic-close)
-    (should (looking-back "end"))
-    (should (eq 0 (current-indentation)))))
-
 (ert-deftest syntactic-close-close-ruby-string-test ()
   (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail"
     (syntactic-close)
@@ -44,11 +33,6 @@
     (syntactic-close)
     ;; (sit-for 1 t)
     (should (eq (char-before) ?\)))))
-
-(ert-deftest syntactic-close-close-ruby-pipe-test ()
-  (syntactic-close-test-with-ruby-buffer "$DBH.SELECT_ALL(\"SELECT \* FROM FOO\") DO |ROW"
-    (syntactic-close)
-    (should (eq (char-before) ?|))))
 
 (ert-deftest syntactic-close-close-ruby-string-interpolation-test-2 ()
   (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
