@@ -91,6 +91,11 @@ if ( (a == b) || (c == d"
     (should (eq (char-before) ?\)))))
 
 
+(ert-deftest syntactic-close-padded-brace-test ()
+  (syntactic-close-test-with-js-buffer
+      "{ display: inline;"
+    (syntactic-close)
+    (should (eq (char-before) ?}))))
 
 (provide 'syntactic-close-js-tests)
 ;;; syntactic-close-js-tests.el ends here

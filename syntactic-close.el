@@ -211,7 +211,6 @@ Check if list opener inside a string. "
 	  (goto-char (nth 1 pps))
 	  (guess-what--return-complement-char-maybe (char-after)))))))
 
-;; See also syntactic-close--guess-symbol
 (defun syntactic-close--fetch-delimiter-maybe (pps)
   "Close the innermost list resp. string. "
   (let (erg closer strg padding)
@@ -504,7 +503,7 @@ Check if list opener inside a string. "
   (ignore-errors (forward-sexp))
   (when (< pos (point))(point)))
 
-(defun syntactic-close--php-check (pps &optional closer padding)
+(defun syntactic-close--semicolon-modes (pps &optional closer padding)
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	(orig (point))
 	done)
@@ -550,7 +549,7 @@ Check if list opener inside a string. "
 	((member major-mode syntactic-close--ml-modes)
 	(setq done (syntactic-close-ml)))
 	((member major-mode (list 'php-mode 'js-mode 'web-mode))
-	 (setq done (syntactic-close--php-check pps closer padding))))
+	 (setq done (syntactic-close--semicolon-modes pps closer padding))))
        done))))
 
 (defun syntactic-close-intern (beg iact &optional force pps)
