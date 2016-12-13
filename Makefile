@@ -34,7 +34,7 @@ clean-deps:
 
 .PHONY: test
 test: compile
-	$(EMACSBATCH) --script test/run.el '$(ERTSELECTOR)'
+	$(EMACSBATCH) --script test/syntac-close-run.el '$(ERTSELECTOR)'
 
 .PHONY: deps
 deps: $(PKGDIR)

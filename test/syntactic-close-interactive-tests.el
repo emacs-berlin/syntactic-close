@@ -438,12 +438,11 @@ area "
       (ar-backward-block)
       (should (eq (char-after) ?f)))))
 
-;; braucht beg-end
-;; (ert-deftest syntactic-close-close-ruby-string-interpolation-test-1 ()
-;;   (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
-;;   \"Sending from #{from} to #{to} via #{via"
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?}))))
+(ert-deftest syntactic-close-close-ruby-string-interpolation-test-1 ()
+  (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
+  \"Sending from #{from} to #{to} via #{via"
+    (syntactic-close)
+    (should (eq (char-before) ?}))))
 
 (provide 'syntactic-close-interactive-tests)
 ;;; syntactic-close-interactive-tests.el ends here

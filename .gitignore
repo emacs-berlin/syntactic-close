@@ -23,3 +23,4 @@ test/charclass.el
 test/lisp-bracket.el
 test/web-mode.el
 v
+/test/nxml1.xml
