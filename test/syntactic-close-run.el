@@ -1,4 +1,4 @@
-;;; run.el --- -*- lexical-binding: t; -*-
+;;; syntactic-close-run.el --- -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2016 Emacs User Group Berlin
 
@@ -66,5 +66,5 @@
 (when (and noninteractive (syntactic-close-runs-this-script-p))
   (syntactic-close-run-tests-main))
 
-(provide 'run)
-;;; run.el ends here
+(provide 'syntactic-close-run)
+;;; syntactic-close-run.el ends here

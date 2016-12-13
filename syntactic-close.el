@@ -410,7 +410,7 @@ Check if list opener inside a string. "
     done))
 
 ;; Emacs-lisp
-(defun syntactic-close-emacs-lisp-close (closer pps padding)
+(defun syntactic-close-emacs-lisp-close (closer pps)
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	done)
     (cond
@@ -432,7 +432,7 @@ Check if list opener inside a string. "
       (setq done t)))
     done))
 
-(defun syntactic-close-python-close (orig pps force b-of-st b-of-bl padding)
+(defun syntactic-close-python-close (b-of-st b-of-bl padding)
   "Might deliver equivalent to `py-dedent'"
   (interactive "*")
   (let* ((syntactic-close-beginning-of-statement
@@ -448,10 +448,7 @@ Check if list opener inside a string. "
 	     (funcall syntactic-close-beginning-of-statement)
 	     (looking-at syntactic-close-beginning-of-block-re)))
       (insert ":")
-      (setq done t))
-     ;; ((and (nth 3 pps)(setq closer (syntactic-close-in-string-maybe))(setq done t))
-     ;; (insert closer))
-     )
+      (setq done t)))
     done))
 
 ;; Ruby
@@ -543,9 +540,9 @@ Check if list opener inside a string. "
   (let (done)
     (pcase major-mode
       (`python-mode
-       (setq done (syntactic-close-python-close orig pps force nil nil padding)))
+       (setq done (syntactic-close-python-close nil nil padding)))
       (`emacs-lisp-mode
-       (setq done (syntactic-close-emacs-lisp-close closer pps padding)))
+       (setq done (syntactic-close-emacs-lisp-close closer pps)))
       (`ruby-mode
        (setq done (syntactic-close-ruby-close closer pps padding)))
       (_
