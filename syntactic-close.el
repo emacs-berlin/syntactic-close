@@ -571,6 +571,7 @@ Check if list opener inside a string. "
     (or (< orig (point)) (and iact verbose (message "%s" "nil")))
     done))
 
+;;;###autoload
 (defun syntactic-close (&optional arg beg force)
   "Command will insert closing delimiter whichever needed.
 
