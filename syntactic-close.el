@@ -4,7 +4,7 @@
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
 
 ;; Version: 0.1
-;; Keywords: languages, lisp
+;; Keywords: languages, convenience
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -42,6 +42,20 @@
   "syntactic-close-empty-line-p-chars"
   :type 'regexp
   :group 'convenience)
+
+(defun syntactic-close-count-lines (&optional beg end)
+  "Count lines in accessible part of buffer.
+
+See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
+  (interactive)
+  (let ((beg (or beg (point-min)))
+	(end (or end (point)))
+	erg)
+    (if (bolp)
+	(setq erg (1+ (count-lines beg end)))
+      (setq erg (count-lines beg end)))
+    (when (called-interactively-p) (message "%s" erg))
+    erg))
 
 (unless (functionp 'empty-line-p)
   (defalias 'empty-line-p 'syntactic-close-empty-line-p))
@@ -217,7 +231,6 @@ Check if list opener inside a string. "
     (cond
      ((nth 3 pps)
       (cond ((setq closer (syntactic-close-in-string-interpolation-maybe pps)))
-
 	    (t (save-excursion
 		 (setq strg (buffer-substring-no-properties (1+ (nth 8 pps)) (point)))
 		 (if (setq closer (syntactic-close--list-inside-string-maybe strg))
@@ -234,16 +247,17 @@ Check if list opener inside a string. "
 	(when (looking-at "[\[{(][ \t]+")
 	  (setq padding (substring (match-string-no-properties 0) 1)))
 	(setq closer (syntactic-close--return-complement-char-maybe (char-after))))))
-    (list closer padding)))
+    (and closer (list closer padding))))
 
 (defun syntactic-close-fix-whitespace-maybe (orig &optional padding)
   (save-excursion
+    (goto-char orig) 
     (when (and (not (looking-back "^[ \t]+" nil))
 	       (< 0 (abs (skip-chars-backward " \t\r\n\f")))
 	       ;;  not in comment
 	       (not (nth 4 (parse-partial-sexp (point-min) (point)))))
-      (delete-region (point) orig)))
-  (when padding (insert padding)))
+      (delete-region (point) orig))
+  (when padding (insert padding))))
 
 (defun syntactic-close--insert-delimiter-char-maybe (orig closer padding)
   (let (done)
@@ -508,16 +522,21 @@ Check if list opener inside a string. "
 	(orig (point))
 	done)
     (cond ((and (eq closer ?})(syntactic-close-empty-line-p))
+	   (syntactic-close-fix-whitespace-maybe orig padding)
 	   (insert closer)
 	   (setq done t)
 	   (indent-according-to-mode))
 	  ((eq closer ?})
-	   (if (or (eq (char-before) ?\;) (eq (char-before) closer))
-	       (progn
-		 (newline)
-		 (insert closer)
-		 (indent-according-to-mode))
-	     (insert ";"))
+	   (cond  ((member (char-before) (list ?\; ?}))
+		   (if (eq (syntactic-close-count-lines (point-min) (point)) (save-excursion (progn (goto-char (nth 1 pps)) (syntactic-close-count-lines (point-min) (point)))))
+		       ;; insert at newline, if opener is at a previous line
+		       (progn 
+			 (insert closer)
+			 (syntactic-close-fix-whitespace-maybe orig padding))
+		     (newline)
+		     (insert closer))
+		   (indent-according-to-mode))
+	     (t (insert ";")))
 	   (setq done t))
 	  ((eq closer ?\))
 	   (syntactic-close-fix-whitespace-maybe orig padding)

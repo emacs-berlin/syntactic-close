@@ -43,32 +43,98 @@
 (ert-deftest syntactic-close-close-js-test-1 ()
   (syntactic-close-test-with-js-buffer
       syntactic-close-js-test-string-1
-    (let (syntactic-close-electric-listify-p)
-      (skip-chars-backward " \t\r\n\f")
-      (syntactic-close)
-      (should (eq (char-before) ?'))
-      (syntactic-close)
-      (should (eq (char-before) ?\)))
-      (syntactic-close)
-      (should (eq (char-before) ?\;))
-      (syntactic-close)
-      (should (eq (char-before) ?\}))
-      (syntactic-close)
-      (should (eq (char-before) ?\}))
-      (syntactic-close)
-      (should (eq (char-before) ?\)))
-      (syntactic-close)
-      (should (eq (char-before) ?\;))
-      (syntactic-close)
-      (should (eq (char-before) ?\}))
-      (syntactic-close)
-      (should (eq (char-before) ?\))))))
+    (syntactic-close)
+    (should (eq (char-before) ?'))))
 
 (ert-deftest syntactic-close-close-js-test-2 ()
   (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+      (insert "'")
+      (syntactic-close)
+      (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-close-close-js-test-3 ()
+  (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+      (insert "')")
+      (syntactic-close)
+      (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-close-js-test-4 ()
+  (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+      (insert "');")
+      (syntactic-close)
+      (should (eq (char-before) ?}))))
+
+(ert-deftest syntactic-close-close-js-test-5 ()
+  (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+      (insert "');\n")
+      (insert (make-string 14 32))
+      (insert "}")
+      (syntactic-close)
+      (should (eq (char-before) ?}))))
+
+(ert-deftest syntactic-close-close-js-test-5 ()
+  (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+      (insert "');\n")
+      (insert (make-string 14 32))
+      (insert "}")
+      (syntactic-close)
+      (should (eq (char-before) ?}))))
+
+(ert-deftest syntactic-close-close-js-test-6 ()
+  (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+      (insert "');\n")
+      (insert (make-string 14 32))
+      (insert "}\n")
+      (insert (make-string 10 32))
+      (insert "}")
+      (syntactic-close)
+      (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-close-close-js-test-7 ()
+  (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+      (insert "');\n")
+      (insert (make-string 14 32))
+      (insert "}\n")
+      (insert (make-string 10 32))
+      (insert "})")
+      (syntactic-close)
+      (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-close-js-test-8 ()
+  (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+      (insert "');\n")
+      (insert (make-string 14 32))
+      (insert "}\n")
+      (insert (make-string 10 32))
+      (insert "});")
+      (syntactic-close)
+      (should (eq (char-before) ?}))))
+
+(ert-deftest syntactic-close-close-js-test-9 ()
+  (syntactic-close-test-with-js-buffer
+      syntactic-close-js-test-string-1
+      (insert "');\n")
+      (insert (make-string 14 32))
+      (insert "}\n")
+      (insert (make-string 10 32))
+      (insert "});\n")
+      (insert (make-string 2 32))
+      (insert "}")
+      (syntactic-close)
+      (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-close-close-js-function-test-1 ()
+  (syntactic-close-test-with-js-buffer
       "function foo(a,b,c,d) {
 if ( (a == b) || (c == d"
-
     (syntactic-close)
     (should (eq (char-before) ?\)))
     (syntactic-close)
