@@ -202,6 +202,31 @@
       (syntactic-close '(4))
       (should (eq (char-before) ?\))))))
 
+;; https://github.com/emacs-berlin/syntactic-close/issues/30
+;; { (a * [(b) - (c)]) }_
+(ert-deftest syntactic-python-space-separator-test-1 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c"
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-python-space-separator-test-2 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c)"
+    (syntactic-close)
+    (should (eq (char-before) ?\]))))
+
+(ert-deftest syntactic-python-space-separator-test-3 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c)]"
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-python-space-separator-test-4 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c)])"
+    (syntactic-close)
+    (should (looking-back " }"))))
 
 (provide 'syntactic-close-python-tests)
 
