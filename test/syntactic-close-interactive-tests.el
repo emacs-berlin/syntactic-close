@@ -444,5 +444,12 @@ area "
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
+(ert-deftest guess-what-haskell-pragma-test-1 ()
+  (guess-what-test-with-haskell-buffer
+      "{-# LANGUAGE ForeignFunctionInterface, CPP"
+    (guess-what)
+    (skip-chars-backward " \t\r\n\f")
+      (should (looking-back " #-}")))) 
+
 (provide 'syntactic-close-interactive-tests)
 ;;; syntactic-close-interactive-tests.el ends here

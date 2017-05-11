@@ -251,7 +251,7 @@ Check if list opener inside a string. "
 
 (defun syntactic-close-fix-whitespace-maybe (orig &optional padding)
   (save-excursion
-    (goto-char orig) 
+    (goto-char orig)
     (when (and (not (looking-back "^[ \t]+" nil))
 	       (< 0 (abs (skip-chars-backward " \t\r\n\f")))
 	       ;;  not in comment
@@ -308,6 +308,7 @@ Check if list opener inside a string. "
 (defun syntactic-close--comments-intern (orig start end)
   (if (looking-at start)
       (progn (goto-char orig)
+	     (fixup-whitespace) 
 	     (insert end))
     (goto-char orig)
     (newline-and-indent)))
@@ -318,7 +319,9 @@ Check if list opener inside a string. "
     (cond
      ((eq major-mode 'haskell-mode)
       (goto-char (nth 8 pps))
-      (syntactic-close--comments-intern orig "{-" "-}")
+      (if (looking-at "{-# ")
+	  (syntactic-close--comments-intern orig "{-#" "#-}")
+	(syntactic-close--comments-intern orig "{-" "-}"))
       (setq done t))
      ((or (eq major-mode 'c++-mode) (eq major-mode 'c-mode))
       (goto-char (nth 8 pps))
@@ -329,7 +332,7 @@ Check if list opener inside a string. "
 		(insert "\r\n")
 	      (insert "\n"))
 	  (insert comment-end))
-	(setq done t) ))
+	(setq done t)))
     done))
 
 (defun syntactic-close--point-min ()
@@ -530,7 +533,7 @@ Check if list opener inside a string. "
 	   (cond  ((member (char-before) (list ?\; ?}))
 		   (if (eq (syntactic-close-count-lines (point-min) (point)) (save-excursion (progn (goto-char (nth 1 pps)) (syntactic-close-count-lines (point-min) (point)))))
 		       ;; insert at newline, if opener is at a previous line
-		       (progn 
+		       (progn
 			 (insert closer)
 			 (syntactic-close-fix-whitespace-maybe orig padding))
 		     (newline)
