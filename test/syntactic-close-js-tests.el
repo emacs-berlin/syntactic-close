@@ -163,5 +163,11 @@ if ( (a == b) || (c == d"
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
+(ert-deftest syntactic-close-js-element-test ()
+  (syntactic-close-test-with-js-buffer
+      "<script"
+    (syntactic-close)
+    (should (eq (char-before) ?>))))
+
 (provide 'syntactic-close-js-tests)
 ;;; syntactic-close-js-tests.el ends here

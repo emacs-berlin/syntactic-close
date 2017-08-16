@@ -43,6 +43,46 @@
   :type 'regexp
   :group 'convenience)
 
+(defun syntactic-close-reverse-char (char)
+  "Return reciproke char as \">\" for \"<\". "
+  (let* ((cf char)
+	 cn)
+    (cond
+     ((eq cf ?∧) ;; ?\>
+      (setq cn "∨"))
+     ((eq cf ?∨) ;; ?\<
+      (setq cn "∧"))
+     ((eq cf 62) ;; ?\>
+      (setq cn "<"))
+     ((eq cf 60) ;; ?\<
+      (setq cn ">"))
+     ((eq cf 187) ;; ?\»
+      (setq cn "«"))
+     ((eq cf 171) ;; ?\«
+      (setq cn "»"))
+     ((eq cf 41) ;; ?\)
+      (setq cn "("))
+     ((eq cf 40) ;; ?\(
+      (setq cn ")"))
+     ((eq cf 123) ;; ?\{
+      (setq cn "}"))
+     ((eq cf 125) ;; ?\}
+      (setq cn "{"))
+     ((eq cf ?`)
+      (setq cn "´"))
+     ((eq cf ?´)
+      (setq cn "`"))
+     ((eq cf 93) ;; ?\]
+      (setq cn "["))
+     ((eq cf 91) ;; ?\[
+      (setq cn "]"))
+     ((eq cf 92) ;; ?\\
+      (setq cn "/"))
+     ((eq cf 47) ;; ?\/
+      (setq cn "\\")))
+    (or cn cf)))
+
+
 (defun syntactic-close-count-lines (&optional beg end)
   "Count lines in accessible part of buffer.
 
@@ -128,6 +168,8 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
   "syntactic-close-empty-line-p-chars"
   :type 'regexp
   :group 'convenience)
+
+(setq syntactic-close-known-delimiter-chars (list ?< ?` ?* ?\\ ?= ?_ ?$ ?% ?§ ?? ?! ?+ ?- ?# ?: ?\; ?,))
 
 (defun syntactic-close-toggle-verbosity ()
   "If `syntactic-close-verbose-p' is nil, switch it on.
@@ -246,7 +288,11 @@ Check if list opener inside a string. "
 	(goto-char (nth 1 pps))
 	(when (looking-at "[\[{(][ \t]+")
 	  (setq padding (substring (match-string-no-properties 0) 1)))
-	(setq closer (syntactic-close--return-complement-char-maybe (char-after))))))
+	(setq closer (syntactic-close--return-complement-char-maybe (char-after)))))
+     (t (unless (member (char-before) syntactic-close-known-delimiter-chars)
+	  (save-excursion
+	    (backward-word)
+	    (setq closer (syntactic-close-reverse-char (car-safe (member (char-before) syntactic-close-known-delimiter-chars))))))))
     (and closer (list closer padding))))
 
 (defun syntactic-close-fix-whitespace-maybe (orig &optional padding)
@@ -305,11 +351,11 @@ Check if list opener inside a string. "
      (closer (setq done (syntactic-close--insert-delimiter-char-maybe orig closer padding))))
     done))
 
-(defun syntactic-close--comments-intern (orig start end)
+(defun syntactic-close--comments-intern (orig start end &optional padding)
   (if (looking-at start)
       (progn (goto-char orig)
-	     (fixup-whitespace) 
-	     (insert end))
+	     (fixup-whitespace)
+	     (syntactic-close-insert-with-padding-maybe end nil t))
     (goto-char orig)
     (newline-and-indent)))
 
@@ -351,9 +397,10 @@ Check if list opener inside a string. "
   (let (done)
     (unless (and (eq closer ?})(member major-mode syntactic-close--semicolon-separator-modes))
       (syntactic-close-fix-whitespace-maybe orig)
-      (when padding (insert padding))
-      (insert closer)
-      (setq done t))
+      ;; closer might  set
+	(when padding (insert padding))
+	(insert closer)
+	(setq done t))
     done))
 
 (defun syntactic-close-fetch-delimiter (pps)
@@ -583,9 +630,9 @@ Check if list opener inside a string. "
 	 (padding (car-safe (cdr-safe closer-raw)))
 	 done)
     (cond
-     ;; in comment
-     ((nth 4 pps)
-      (setq done (syntactic-close--insert-comment-end-maybe pps)))
+     ;; comment bereits inguess-what-intern
+     ;; ((nth 4 pps)
+     ;;  (setq done (syntactic-close--insert-comment-end-maybe pps)))
      ((and closer (setq done (when closer (syntactic-close--common orig closer padding)))))
      ((setq done (syntactic-close--modes orig pps closer force padding)))
      ((setq done (syntactic-close--others orig closer pps padding))))

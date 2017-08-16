@@ -29,14 +29,14 @@
     (syntactic-close)
     (should (eq (char-before) ?d))))
 
-(ert-deftest syntactic-close-c-nesting-comment-test ()
+(ert-deftest syntactic-close-c-comment-test ()
   (syntactic-close-test "/* The open system call "
     'c-mode
     'syntactic-close-debug-p
     (syntactic-close)
     (should (eq (char-before) ?/))))
 
-(ert-deftest syntactic-close-c++-nesting-comment-test ()
+(ert-deftest syntactic-close-c++-star-comment-test ()
   (syntactic-close-test "/* The open system call "
     'c++-mode
     'syntactic-close-debug-p
@@ -444,12 +444,11 @@ area "
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest guess-what-haskell-pragma-test-1 ()
-  (guess-what-test-with-haskell-buffer
-      "{-# LANGUAGE ForeignFunctionInterface, CPP"
-    (guess-what)
-    (skip-chars-backward " \t\r\n\f")
-      (should (looking-back " #-}")))) 
+(ert-deftest syntactic-close-haskell-delimited-test-1 ()
+  (syntactic-close-test-with-haskell-buffer
+      "1 `max"
+    (syntactic-close)
+    (should (eq (char-before) ?`))))
 
 (provide 'syntactic-close-interactive-tests)
 ;;; syntactic-close-interactive-tests.el ends here

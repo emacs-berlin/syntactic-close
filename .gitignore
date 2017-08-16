@@ -22,6 +22,7 @@ test/*.txt
 test/charclass.el
 test/lisp-bracket.el
 test/web-mode.el
+test/cpp-comment.cpp
 v
 /test/nxml1.xml
 .cask/24.4/elpa/.elpa/
