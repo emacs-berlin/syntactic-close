@@ -427,7 +427,7 @@ area "
 ;;       (skip-chars-backward " \t\r\n\f")
 ;;       (should (eq (char-before) ?\()))))
 
-(ert-deftest syntactic-close-backward-block-1 ()
+(ert-deftest syntactic-close-sml-backward-block-1 ()
   (syntactic-close-test "fun silly1 (z : int) =
   let
       val"
@@ -435,7 +435,7 @@ area "
     'syntactic-close-debug-p
     (let ((syntactic-close-electric-listify-p t)
 	  (ar-smart-indentation t))
-      (ar-backward-block)
+      (sml-backward-top-level)
       (should (eq (char-after) ?f)))))
 
 (ert-deftest syntactic-close-close-ruby-string-interpolation-test-1 ()

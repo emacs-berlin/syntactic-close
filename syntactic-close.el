@@ -1,4 +1,4 @@
-;;; syntactic-close.el --- Insert closing delimiter -*- lexical-binding: t; -*-
+;; syntactic-close.el --- Insert closing delimiter -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
@@ -42,6 +42,16 @@
   "syntactic-close-empty-line-p-chars"
   :type 'regexp
   :group 'convenience)
+
+(defcustom syntactic-close-known-string-inpolation-opener  (list ?{ ?\( ?\[)
+  "syntactic-close-known-string-inpolation-opener"
+  :type 'list
+  :group 'convenience)
+
+(defcustom syntactic-close--paired-opening-delimiter "‘{<[("
+"Specify the delimiter char."
+:type 'string
+:group 'werkstatt)
 
 (defun syntactic-close-reverse-char (char)
   "Return reciproke char as \">\" for \"<\". "
@@ -155,6 +165,10 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
 
 (defvar syntactic-close-verbose-p nil)
 
+(defvar syntactic-close-assignment-re   "^[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]+[ \t]*=.*$\\|^[[:alpha:]][A-Za-z0-9_]*+[ \t]*=.*")
+
+(setq syntactic-close-assignment-re   "^[[:alpha:]][A-Za-z0-9_]+[ \t]+[[:alpha:]][A-Za-z0-9_]+[ \t]*=.*$\\|^[[:alpha:]][A-Za-z0-9_]*+[ \t]*=.*")
+
 (unless (boundp 'py-block-re)
   (defvar py-block-re "[ \t]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n\t]*"
   "Matches the beginning of a compound statement. "))
@@ -182,6 +196,8 @@ Otherwise switch it off. "
 (defun syntactic-close--return-complement-char-maybe (erg)
   "For example return \"}\" for \"{\" but keep \"\\\"\". "
   (pcase erg
+    (?‘ ?’)
+    (?` ?')
     (?< ?>)
     (?> ?<)
     (?\( ?\))
@@ -250,12 +266,19 @@ Check if list opener inside a string. "
   (interactive)
   (let ((pps (or pps (parse-partial-sexp (point-min) (point))))
 	erg last)
-    (cond ((and (nth 3 pps)
-		;; paren inside string maybe
-		(setq erg (nth 1 (setq last (parse-partial-sexp (1+ (nth 8 pps)) (point)))))(< (nth 8 pps) erg))
-	   (setq erg (nth-1-pps-complement-char-maybe last)))
-	  ((nth 3 pps)
-	   (setq erg (syntactic-close-in-string-maybe pps))))
+    (when (nth 3 pps)
+      ;; paren inside string maybe
+      (cond ((and
+	      (setq erg (nth 1 (setq last
+				     ;; opener inside string?
+				     (parse-partial-sexp (1+ (nth 8 pps)) (point)))))
+	      (< (nth 8 pps) erg))
+	     (setq erg (nth-1-pps-complement-char-maybe last)))
+	    ((save-excursion (and (skip-chars-backward (concat "^" syntactic-close--paired-opening-delimiter) (nth 8 pps)) (not (eq (char-after) (nth 3 pps)))   (member (char-before) syntactic-close-known-string-inpolation-opener) (< (nth 8 pps) (1- (point))) (setq last (char-before))
+	      (not (eq (char-before) (syntactic-close--return-complement-char-maybe last)))))
+	     (setq erg (syntactic-close--return-complement-char-maybe last)))
+	    (t
+	     (setq erg (syntactic-close-in-string-maybe pps)))))
     erg))
 
 (defun syntactic-close--list-inside-string-maybe (strg)
@@ -577,16 +600,16 @@ Check if list opener inside a string. "
 	   (setq done t)
 	   (indent-according-to-mode))
 	  ((eq closer ?})
-	   (cond  ((member (char-before) (list ?\; ?}))
-		   (if (eq (syntactic-close-count-lines (point-min) (point)) (save-excursion (progn (goto-char (nth 1 pps)) (syntactic-close-count-lines (point-min) (point)))))
-		       ;; insert at newline, if opener is at a previous line
-		       (progn
-			 (insert closer)
-			 (syntactic-close-fix-whitespace-maybe orig padding))
-		     (newline)
-		     (insert closer))
-		   (indent-according-to-mode))
-	     (t (insert ";")))
+	   (cond ((member (char-before) (list ?\; ?}))
+		  (if (eq (syntactic-close-count-lines (point-min) (point)) (save-excursion (progn (goto-char (nth 1 pps)) (syntactic-close-count-lines (point-min) (point)))))
+		      ;; insert at newline, if opener is at a previous line
+		      (progn
+			(insert closer)
+			(syntactic-close-fix-whitespace-maybe orig padding))
+		    (newline)
+		    (insert closer))
+		  (indent-according-to-mode))
+		 (t (insert ";")))
 	   (setq done t))
 	  ((eq closer ?\))
 	   (syntactic-close-fix-whitespace-maybe orig padding)
@@ -600,7 +623,10 @@ Check if list opener inside a string. "
 	   (when (eq (char-before) ?=)
 	     (goto-char orig)
 	     (insert ";")
-	     (setq done t))))
+	     (setq done t)))
+	  ((save-excursion (beginning-of-line) (looking-at syntactic-close-assignment-re))
+	   (insert ";")
+	   (setq done t)))
     (unless done (goto-char orig))
     done))
 
@@ -630,9 +656,8 @@ Check if list opener inside a string. "
 	 (padding (car-safe (cdr-safe closer-raw)))
 	 done)
     (cond
-     ;; comment bereits inguess-what-intern
-     ;; ((nth 4 pps)
-     ;;  (setq done (syntactic-close--insert-comment-end-maybe pps)))
+     ((nth 4 pps)
+      (setq done (syntactic-close--insert-comment-end-maybe pps)))
      ((and closer (setq done (when closer (syntactic-close--common orig closer padding)))))
      ((setq done (syntactic-close--modes orig pps closer force padding)))
      ((setq done (syntactic-close--others orig closer pps padding))))

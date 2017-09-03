@@ -169,5 +169,12 @@ if ( (a == b) || (c == d"
     (syntactic-close)
     (should (eq (char-before) ?>))))
 
+(ert-deftest syntactic-close-js-assignment-test ()
+  (syntactic-close-test-with-js-buffer
+      "var Counter = 1"
+    (syntactic-close)
+    (should (eq (char-before) ?\;))))
+
+
 (provide 'syntactic-close-js-tests)
 ;;; syntactic-close-js-tests.el ends here
