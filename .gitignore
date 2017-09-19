@@ -1,6 +1,4 @@
 #*
-.#*
-test/#*
 *.elc
 *.eml
 *.js
@@ -10,8 +8,12 @@ test/#*
 *.rb
 *.txt
 *~
+.#*
+.cask/24.4/elpa/.elpa/
+/test/nxml1.xml
 RCS
 run-travis-ci.sh
+test/#*
 test/*.hs
 test/*.js
 test/*.org
@@ -20,9 +22,10 @@ test/*.py
 test/*.rb
 test/*.txt
 test/charclass.el
-test/lisp-bracket.el
-test/web-mode.el
 test/cpp-comment.cpp
+test/lisp-bracket.el
+test/syntactic-close--elisp-char-class-test-1.el
+test/syntactic-close--elisp-char-class-test-2.el
+test/syntactic-close-c-comment-test.c
+test/web-mode.el
 v
-/test/nxml1.xml
-.cask/24.4/elpa/.elpa/
