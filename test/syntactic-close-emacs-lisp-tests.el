@@ -51,12 +51,6 @@
 
 (ert-deftest syntactic-close--elisp-char-class-test-1 ()
   (syntactic-close-test-with-elisp-buffer
-    "(string-match \"[[:alpha:]"
-    (syntactic-close)
-    (should (eq (char-before) ?\]))))
-
-(ert-deftest syntactic-close--elisp-char-class-test-2 ()
-  (syntactic-close-test-with-elisp-buffer
     "(string-match \"[[:alpha:]]"
     (syntactic-close)
     (should (eq (char-before) ?\"))))

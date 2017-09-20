@@ -32,116 +32,33 @@
 (ert-deftest syntactic-close-c-comment-test ()
   (syntactic-close-test "/* The open system call "
     'c-mode
-    'syntactic-close-debug-p
     (syntactic-close)
     (should (eq (char-before) ?/))))
 
 (ert-deftest syntactic-close-c++-star-comment-test ()
   (syntactic-close-test "/* The open system call "
     'c++-mode
-    'syntactic-close-debug-p
     (syntactic-close)
     (should (eq (char-before) ?/))))
 
 (ert-deftest syntactic-close-haskell-comment-test-1 ()
   (syntactic-close-test-with-haskell-buffer
       "{- To explore this file: "
-    'syntactic-close-debug-p
     (syntactic-close)
     (should (looking-back "-}"))))
 
-(ert-deftest syntactic-close-haskell-comment-test-2 ()
-  (syntactic-close-test-with-haskell-buffer
-      "{- To explore this file: -}"
-    'syntactic-close-debug-p
-    (syntactic-close)
-    (sit-for 0.1)
-    (should (ar-empty-line-p))))
+;; (ert-deftest syntactic-close-haskell-comment-test-2 ()
+;;   (syntactic-close-test-with-haskell-buffer
+;;       "{- To explore this file: -}"
+;;     (syntactic-close)
+;;     (sit-for 0.1)
+;;     (should (ar-empty-line-p))))
 
 (ert-deftest syntactic-close-haskell-close-paren-test-1 ()
   (syntactic-close-test-with-haskell-buffer
       "add :: (Int,Int"
-    (let (syntactic-close-electric-listify-p)
-      (syntactic-close)
-      (should (eq (char-before) ?\))))))
-
-(ert-deftest syntactic-close-haskell-right-arrow-test-1 ()
-  (syntactic-close-test-with-haskell-buffer "asdf :: Int"
-    (let (syntactic-close-electric-listify-p)
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?>)))))
-
-(ert-deftest syntactic-close-haskell-right-arrow-test-2 ()
-  (syntactic-close-test-with-haskell-buffer "add :: (Int,Int)"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?>)))))
-
-(ert-deftest syntactic-close-haskell-close-paren-test-2 ()
-  (syntactic-close-test-with-haskell-buffer "add :: (Int,"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (looking-back "Int,Int,")))))
-
-(ert-deftest syntactic-close-haskell-close-paren-test-2a ()
-  (syntactic-close-test-with-haskell-buffer "add :: (Int"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\))))))
-
-(ert-deftest syntactic-close-haskell-assign-test-1 ()
-  (syntactic-close-test-with-haskell-buffer "asdf "
-    (let (syntactic-close-electric-listify-p)
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?=)))))
-
-(ert-deftest syntactic-close-haskell-asign-test-2 ()
-  (syntactic-close-test-with-haskell-buffer "asdf :: Int -> Int
-asdf n"
-    (let (syntactic-close-electric-listify-p)
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?=)))))
-
-(ert-deftest syntactic-close-haskell-asign-test-3 ()
-  (syntactic-close-test-with-haskell-buffer "asdf :: Int -> [Int]
-asdf n = ["
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (looking-back syntactic-close-default-argument-1)))))
-
-(ert-deftest syntactic-close-haskell-asign-test-4 ()
-  (syntactic-close-test-with-haskell-buffer "asdf :: Int -> [Int]
-asdf "
-    (let (syntactic-close-electric-listify-p)
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?=)))))
-
-(ert-deftest syntactic-close-haskell-concat-test ()
-  ;; indent s = "    " ++ s
-  (syntactic-close-test-with-haskell-buffer "indent s = \"asdf\""
     (syntactic-close)
-    (skip-chars-backward " \t\r\n\f")
-    (should (eq (char-before) ?\+))))
-
-(ert-deftest syntactic-close-haskell-typedef-test ()
-  (syntactic-close-test-with-haskell-buffer "signum :: Int ->"
-    (syntactic-close)
-    (skip-chars-backward " \t\r\n\f")
-    (should (eq (char-before) ?t))))
-
-(ert-deftest syntactic-close-haskell-default-type-test ()
-  (syntactic-close-test-with-haskell-buffer "signum :: "
-    (syntactic-close)
-    (skip-chars-backward " \t\r\n\f")
-    (should (looking-back syntactic-close-default-type))))
+    (should (eq (char-before) ?\)))))
 
 (ert-deftest syntactic-close-python-colon-test-2 ()
   (syntactic-close-test-with-python-buffer
@@ -154,217 +71,21 @@ if __name__ == \"__main__\""
     (syntactic-close)
     (should (eq (char-before) ?:))))
 
-(ert-deftest syntactic-close-list-comprehension-test-1 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(asdb,"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (should (looking-back "asdb,asdb," (line-beginning-position))))))
-
-(ert-deftest syntactic-close-list-comprehension-test-2 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(asdb,cdfg"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (should (eq (char-before) ?\))))))
-
-(ert-deftest syntactic-close-list-comprehension-test-3 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(x"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (should (eq (char-before) ?,)))))
-
-(ert-deftest syntactic-close-list-comprehension-test-4 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(a)"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (should (eq (char-before) ?\])))))
-
-(ert-deftest syntactic-close-list-comprehension-test-5 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(a,"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (should (looking-back "a,b,")))))
-
-(ert-deftest syntactic-close-list-comprehension-test-6 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(a,b)] |"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?a)))))
-
-(ert-deftest syntactic-close-list-comprehension-test-7 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(x,y)] |"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?x)))))
-
-(ert-deftest syntactic-close-list-comprehension-test-8 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(abd,def)] |"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (looking-back "abd")))))
-
-(ert-deftest syntactic-close-list-comprehension-test-9 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(a,b)] | a"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (looking-back "<-")))))
-
-(ert-deftest syntactic-close-list-comprehension-test-10 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(x,y)] | x"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (looking-back "<-")))))
-
-(ert-deftest syntactic-close-list-comprehension-test-11 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(abd,def)] | abd"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (looking-back "<-")))))
-
-(ert-deftest syntactic-close-list-comprehension-test-12 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(asdb, asdb"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\))))))
-
-(ert-deftest syntactic-close-list-comprehension-test-13 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(abd,def)] | abd <- "
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\[)))))
-
-(ert-deftest syntactic-close-list-comprehension-test-14 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(abd,def)] | abd <- [1..3 "
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\])))))
-
-(ert-deftest syntactic-close-list-comprehension-test-15 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(x,y)] | x <-[1..3]"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?,)))))
-
-(ert-deftest syntactic-close-list-comprehension-test-16 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(x,y)] | x <-[1..3],"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?y)))))
-
-(ert-deftest syntactic-close-list-comprehension-test-17 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "[(x,y)] | x <-[1..3], y"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (looking-back "<-")))))
-
-(ert-deftest syntactic-close-list-comprehension-test-18 ()
-  ;; [(x,y)|x<-[1..3],y<-[4,5]]
-  (syntactic-close-test-with-haskell-buffer "potenz(x,y"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close '(4))
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\))))))
-
 (ert-deftest syntactic-close-list-single-var-test-1 ()
   (syntactic-close-test-with-haskell-buffer "potenz(x,y"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close '(4))
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\))))))
-
-(ert-deftest syntactic-close-haskell-type-test-1 ()
-  (syntactic-close-test-with-haskell-buffer "type Radius = Float
-type Width  = Float
-type Height = Float
-
-Date Shape = Circle Radius
-           | Rect Width Height
-
-area "
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?:)))))
-
-(ert-deftest syntactic-close-haskell-typelist-1 ()
-  (syntactic-close-test-with-haskell-buffer
-      "zip :: (["
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (looking-back syntactic-close-default-argument-1)))))
-
-(ert-deftest syntactic-close-haskell-typelist-2 ()
-  (syntactic-close-test-with-haskell-buffer
-      "zip :: ([x"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\])))))
-
-(ert-deftest syntactic-close-haskell-typelist-2 ()
-  (syntactic-close-test-with-haskell-buffer
-      "zip :: ([x"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\])))))
-
-(ert-deftest syntactic-close-haskell-typelist-3 ()
-  (syntactic-close-test-with-haskell-buffer
-      "zip :: ([x],"
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?\[)))))
-
-(ert-deftest syntactic-close-haskell-typelist-4 ()
-  (syntactic-close-test-with-haskell-buffer
-      "zip :: ([x],["
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?y)))))
+    (syntactic-close '(4))
+    (skip-chars-backward " \t\r\n\f")
+    (should (eq (char-before) ?\)))))
 
 (ert-deftest syntactic-close-sml-comment-test ()
   (syntactic-close-test "(* definition of nat"
     'sml-mode
-    'syntactic-close-debug-p
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
 (ert-deftest syntactic-close-sml-assignment-test-1 ()
   (syntactic-close-test "val z"
     'sml-mode
-    'syntactic-close-debug-p
     (syntactic-close)
     (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?=))))
@@ -372,7 +93,6 @@ area "
 (ert-deftest syntactic-close-sml-no-pad-after-test ()
   (syntactic-close-test "val z = (x + y) (a +)"
     'sml-mode
-    'syntactic-close-debug-p
     (forward-char -1)
     (syntactic-close)
     (should (eq (char-before) ?b))
@@ -381,14 +101,12 @@ area "
 (ert-deftest syntactic-close-sml-assignment-1 ()
   (syntactic-close-test "val z = (x + y) (a + b)"
     'sml-mode
-    'syntactic-close-debug-p
     (syntactic-close)
     (should (eq (char-before) ?\;))))
 
 (ert-deftest syntactic-close-sml-assignment-2 ()
   (syntactic-close-test "val z"
     'sml-mode
-    'syntactic-close-debug-p
     (syntactic-close)
     (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?=))))
@@ -396,7 +114,6 @@ area "
 (ert-deftest syntactic-close-sml-assignment-3 ()
   (syntactic-close-test "fun foo (z : int)"
     'sml-mode
-    'syntactic-close-debug-p
     (syntactic-close)
     (skip-chars-backward " \t\r\n\f")
     (should (eq (char-before) ?=))))
@@ -404,51 +121,182 @@ area "
 (ert-deftest syntactic-close-sml-tuple-separator-1 ()
   (syntactic-close-test "val x = (3"
     'sml-mode
-    'syntactic-close-debug-p
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (should (eq (char-before) ?,)))))
+    (syntactic-close)
+    (should (eq (char-before) ?,))))
 
 (ert-deftest syntactic-close-sml-function-1 ()
   (syntactic-close-test "fun foo (x : int)"
     'sml-mode
-    'syntactic-close-debug-p
-    (let ((syntactic-close-electric-listify-p t))
-      (syntactic-close)
-      (skip-chars-backward " \t\r\n\f")
-      (should (eq (char-before) ?=)))))
+    (syntactic-close)
+    (skip-chars-backward " \t\r\n\f")
+    (should (eq (char-before) ?=))))
 
 ;; (ert-deftest syntactic-close-sml-function-2 ()
 ;;   (syntactic-close-test "fun foo"
 ;;     'sml-mode
-;;     'syntactic-close-debug-p
-;;     (let ((syntactic-close-electric-listify-p t))
-;;       (syntactic-close)
+;; ;;       (syntactic-close)
 ;;       (skip-chars-backward " \t\r\n\f")
-;;       (should (eq (char-before) ?\()))))
+;;       (should (eq (char-before) ?\())))
 
 (ert-deftest syntactic-close-sml-backward-block-1 ()
   (syntactic-close-test "fun silly1 (z : int) =
   let
       val"
     'sml-mode
-    'syntactic-close-debug-p
-    (let ((syntactic-close-electric-listify-p t)
-	  (ar-smart-indentation t))
-      (sml-backward-top-level)
-      (should (eq (char-after) ?f)))))
+    (ar-smart-indentation t))
+  (sml-backward-top-level)
+  (should (eq (char-after) ?f)))
 
-(ert-deftest syntactic-close-close-ruby-string-interpolation-test-1 ()
-  (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
-  \"Sending from #{from} to #{to} via #{via"
+(ert-deftest syntactic-python-space-separator-test-1 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c"
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-python-space-separator-test-2 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c)"
+    (syntactic-close)
+    (should (eq (char-before) ?\]))))
+
+(ert-deftest syntactic-python-space-separator-test-3 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c)]"
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-python-space-separator-test-4 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c)])"
+    (syntactic-close)
+    (should (looking-back " }"))))
+
+(ert-deftest syntactic-close-python-brace-paren-bracket-test-1 ()
+  (syntactic-close-test-with-python-buffer
+      "{[(123"
+    (syntactic-close)
+    (sit-for 0.1)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-close-python-brace-paren-bracket-test-2 ()
+  (syntactic-close-test-with-python-buffer
+      "{[(123)"
+    (syntactic-close)
+    (should (eq (char-before) ?\]))))
+
+(ert-deftest syntactic-close-python-brace-paren-bracket-test-3 ()
+  (syntactic-close-test-with-python-buffer
+      "{[(123)]"
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest syntactic-close-haskell-delimited-test-1 ()
-  (syntactic-close-test-with-haskell-buffer
-      "1 `max"
+(ert-deftest syntactic-python-space-separator-test-1 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c"
     (syntactic-close)
-    (should (eq (char-before) ?`))))
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-python-space-separator-test-2 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c)"
+    (syntactic-close)
+    (should (eq (char-before) ?\]))))
+
+(ert-deftest syntactic-python-space-separator-test-3 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c)]"
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-python-space-separator-test-4 ()
+  (syntactic-close-test-with-python-buffer
+      "{ (a * [(b) - (c)])"
+    (syntactic-close)
+    (should (looking-back " }"))))
+
+(ert-deftest syntactic-close-python-singlequoted-tqs-test ()
+  (syntactic-close-test-with-python-buffer
+      "'''Some Doku"
+    (font-lock-fontify-buffer)
+    (syntactic-close)
+    (should (eq (char-before) ?'))
+    (should (eq -3 (skip-chars-backward "'")))))
+
+(ert-deftest syntactic-close-python-singlequoted-test ()
+  (syntactic-close-test-with-python-buffer
+      "'Some Doku"
+    (message "%s" "syntactic-close-python-singlequoted-test")
+    (syntactic-close)
+    (should (eq (char-before) ?'))))
+
+(ert-deftest syntactic-close-python-doublequoted-tqs-test ()
+  (syntactic-close-test-with-python-buffer
+      "\"\"\"Some Doku"
+    (font-lock-fontify-buffer)
+    ;; (message "%s" "Starte syntactic-close-python-doublequoted-tqs-test")
+    (syntactic-close)
+    (should (eq (char-before) ?\"))
+    (should (eq -3 (skip-chars-backward "\"")))))
+
+(ert-deftest syntactic-close-python-electric-test-1 ()
+  (syntactic-close-test-with-python-buffer
+      "['a"
+    (let ((syntactic-close-electric-listify-p t))
+      (syntactic-close)
+      (should (eq (char-before) ?')))))
+
+(ert-deftest syntactic-close-python-electric-test-2 ()
+  (syntactic-close-test-with-python-buffer
+      "['a','b'"
+    (let ((syntactic-close-electric-listify-p t))
+      ;; force final closing
+      (syntactic-close '(4))
+      (should (eq (char-before) ?\])))))
+
+(ert-deftest syntactic-close-python-electric-test-3 ()
+  (syntactic-close-test-with-python-buffer
+      "[\"a\""
+    (let ((syntactic-close-electric-listify-p t))
+      (syntactic-close '(4))
+      (should (eq (char-before) ?\])))))
+
+(ert-deftest syntactic-close-python-electric-test-4 ()
+  (syntactic-close-test-with-python-buffer
+      "def potenz(x"
+    (let ((syntactic-close-electric-listify-p t))
+      (syntactic-close)
+      (should (eq (char-before) ?\))))))
+
+(ert-deftest syntactic-close-python-electric-test-5 ()
+  (syntactic-close-test-with-python-buffer
+      "def potenz(x,y"
+    (let ((syntactic-close-electric-listify-p t))
+      (syntactic-close '(4))
+      (should (eq (char-before) ?\))))))
+
+(ert-deftest syntactic-close-python-doublequoted-test ()
+  (syntactic-close-test-with-python-buffer
+      "\"Some Doku"
+    (syntactic-close)
+    (should (eq (char-before) ?\"))))
+
+(ert-deftest syntactic-close-python-nested-paren-test-1 ()
+  (syntactic-close-test-with-python-buffer
+      "(list ([\n# {123\n# {123\n"
+    (syntactic-close)
+    (should (eq (char-before) ?\]))))
+
+(ert-deftest syntactic-close-python-nested-paren-test-2 ()
+  (syntactic-close-test-with-python-buffer
+      "(list ([\n# {123\n# {123\n]"
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-close-python-nested-paren-test-3 ()
+  (syntactic-close-test-with-python-buffer
+      "(list ([\n# {123\n# {123\n])"
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
 
 (provide 'syntactic-close-interactive-tests)
 ;;; syntactic-close-interactive-tests.el ends here

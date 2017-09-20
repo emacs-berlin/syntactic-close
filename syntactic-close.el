@@ -185,7 +185,7 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
   :type 'regexp
   :group 'convenience)
 
-(setq syntactic-close-known-delimiter-chars (list ?< ?` ?* ?\\ ?= ?_ ?$ ?% ?§ ?? ?! ?+ ?- ?# ?: ?\; ?,))
+(setq syntactic-close--unary-delimiter-chars (list ?< ?` ?* ?\\ ?= ?_ ?$ ?% ?§ ?? ?! ?+ ?- ?# ?: ?\; ?,))
 
 (defun syntactic-close-toggle-verbosity ()
   "If `syntactic-close-verbose-p' is nil, switch it on.
@@ -210,7 +210,7 @@ Otherwise switch it off. "
     (?{ ?})
     (_ erg)))
 
-(defun syntactic-close--in-string-p-intern (pps)
+(defun syntactic-close--string-delim-intern (pps)
   "Return the delimiting string. "
   (goto-char (nth 8 pps))
   (buffer-substring-no-properties (point) (progn  (skip-chars-forward (char-to-string (char-after))) (point))))
@@ -223,13 +223,13 @@ Return delimiting chars "
   (save-excursion
     (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
 	   (erg (when (nth 3 pps)
-		  (syntactic-close--in-string-p-intern pps))))
+		  (syntactic-close--string-delim-intern pps))))
       (unless erg
 	(when (looking-at "\"")
 	  (forward-char 1)
 	  (setq pps (parse-partial-sexp (line-beginning-position) (point)))
 	  (when (nth 3 pps)
-	    (setq erg (syntactic-close--in-string-p-intern pps)))))
+	    (setq erg (syntactic-close--string-delim-intern pps)))))
       (when (and syntactic-close-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
@@ -303,7 +303,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	    (cond
 	     ((nth 3 pps)
 	      ;; returns a list to construct TQS maybe
-	      (and (setq erg (syntactic-close--in-string-p-intern pps))
+	      (and (setq erg (syntactic-close--string-delim-intern pps))
 		   (or (and (stringp erg)
 			    erg)
 		       (make-string (nth 2 erg)(nth 1 erg)))))
@@ -312,16 +312,12 @@ Does not require parenthesis syntax WRT \"{[(\" "
 	      (when (looking-at "[\[{(][ \t]+")
 		(setq padding (substring (match-string-no-properties 0) 1)))
 	      (syntactic-close--return-complement-char-maybe (char-after)))
-	     ((nth 2 pps)
-	      (goto-char (nth 2 pps))
-	      (if (eq major-mode 'fundamental-mode)
-		  (syntactic-close--return-complement-char-maybe (char-before))
-		(char-before) ))
-
-	     ;; (t (unless (member (char-before) syntactic-close-known-delimiter-chars)
-	     ;; 	  (backward-word)
-	     ;; 	  (syntactic-close-reverse-char (car-safe (member (char-before) syntactic-close-known-delimiter-chars)))))
-	     )))
+	     ;; not in list
+	     (t (save-excursion
+		  (and (skip-chars-backward (concat "^" syntactic-close--paired-opening-delimiter) (nth 8 pps))
+		       (member (char-before) syntactic-close--unary-delimiter-chars)
+		       (setq erg (char-before))))
+		(syntactic-close--return-complement-char-maybe erg)))))
       (and closer (list closer padding)))))
 
 (defun syntactic-close-fix-whitespace-maybe (orig &optional padding)

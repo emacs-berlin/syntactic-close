@@ -39,7 +39,7 @@
 
     (message "Running tests on Emacs %s, built at %s"
              emacs-version (format-time-string "%F" emacs-build-time))
-
+    (load (expand-file-name "syntactic-close" source-directory) nil t)
     (let ((debug-on-error t)
           (tests (list
                   "syntactic-close-c-tests"
@@ -50,10 +50,7 @@
                   "syntactic-close-js-tests"
                   "syntactic-close-php-tests"
                   "syntactic-close-python-tests"
-                  "syntactic-close-ruby-tests"
-		  )))
-      (load (expand-file-name "syntactic-close" source-directory))
-
+                  "syntactic-close-ruby-tests")))
       (load (expand-file-name "syntactic-close-setup-ert-tests" current-dir))
 
       (dolist (test-file tests)
