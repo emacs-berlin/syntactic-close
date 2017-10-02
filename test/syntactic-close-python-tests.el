@@ -24,15 +24,6 @@
 
 ;;; Code:
 
-(ert-deftest syntactic-close-python-singlequoted-test ()
-  (syntactic-close-test-with-python-buffer
-      "'Some Doku"
-    (message "%s" "syntactic-close-python-singlequoted-test")
-    (syntactic-close)
-    (should (eq (char-before) ?'))))
-
-
-
 (ert-deftest syntactic-close-delete-whitespace-backward-test ()
   (syntactic-close-test-with-python-buffer
       "[1, 3] "
@@ -40,7 +31,6 @@
       (syntactic-close)
       (should (eq 8 (point)))
       (should (eq 0 (current-indentation))))))
-
 
 ;; (ert-deftest syntactic-close-python-string-interpolation-test-1 ()
 ;;   (syntactic-close-test-with-python-buffer "print('%(language"
@@ -98,7 +88,6 @@
       (syntactic-close)
       (should (eq (char-before) ?\)))
       (should (eq (point) orig)))))
-
 
 (provide 'syntactic-close-python-tests)
 

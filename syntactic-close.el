@@ -501,7 +501,15 @@ Does not require parenthesis syntax WRT \"{[(\" "
     done))
 
 ;; Emacs-lisp
-(defun syntactic-close-emacs-lisp-close (closer pps)
+(defun syntactic-close--org-mode-close ()
+  (unless (empty-line-p)
+    (end-of-line)
+    (newline)
+    ;; +BEGIN_QUOTE
+    (when (save-excursion (and (re-search-backward "^\+\\([A-Z]+\\)_\\([A-Z]+\\)" nil t 1)(string= "BEGIN" (match-string-no-properties 1))))
+      (insert (concat "+END_" (match-string-no-properties 2))))))  
+    
+(defun syntactic-close-emacs-lisp-close (closer pps &optional org)
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	done)
     (cond
@@ -520,7 +528,8 @@ Does not require parenthesis syntax WRT \"{[(\" "
      (closer
       (skip-chars-backward " \t\r\n\f" (line-beginning-position))
       (insert closer)
-      (setq done t)))
+      (setq done t))
+     (org (setq done (syntactic-close--org-mode-close))))
     done))
 
 (defun syntactic-close-python-close (b-of-st b-of-bl &optional padding)
@@ -642,6 +651,8 @@ Does not require parenthesis syntax WRT \"{[(\" "
        (setq done (syntactic-close-python-close nil nil padding)))
       (`emacs-lisp-mode
        (setq done (syntactic-close-emacs-lisp-close closer pps)))
+      (`org-mode
+       (setq done (syntactic-close-emacs-lisp-close closer pps t)))
       (`ruby-mode
        (setq done (syntactic-close-ruby-close closer pps padding)))
       (_

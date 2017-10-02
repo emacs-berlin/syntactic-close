@@ -79,4 +79,22 @@
       (syntactic-close)
     (should (eq (char-before (1- (point))) ?\ ))))
 
+;; +BEGIN_QUOTE", "+BEGIN_VERSE", "+BEGIN_EXAMPLE" and "+BEGIN_SRC" to syntactic close? (Akin to C-] in latex-mode, when closing environments) So that would add a corresponding "+END_SRC", "+END_QUOT
+
+(ert-deftest syntactic-close--elisp-org-quote-test ()
+  (syntactic-close-test-with-elisp-buffer
+      "+BEGIN_QUOTE
+asdf"
+      (org-mode)
+      (syntactic-close)
+    (should (looking-back "+END_QUOTE" (line-beginning-position)))))
+
+(ert-deftest syntactic-close--elisp-org-src-test ()
+  (syntactic-close-test-with-elisp-buffer
+      "+BEGIN_SRC
+asdf"
+      (org-mode)
+      (syntactic-close)
+    (should (looking-back "+END_SRC" (line-beginning-position))))) 
+
 ;;; syntactic-close-emacs-lisp-tests.el ends here
