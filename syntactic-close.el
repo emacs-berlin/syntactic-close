@@ -506,8 +506,8 @@ Does not require parenthesis syntax WRT \"{[(\" "
     (end-of-line)
     (newline)
     ;; +BEGIN_QUOTE
-    (when (save-excursion (and (re-search-backward "^\+\\([A-Z]+\\)_\\([A-Z]+\\)" nil t 1)(string= "BEGIN" (match-string-no-properties 1))))
-      (insert (concat "+END_" (match-string-no-properties 2))))))  
+    (when (save-excursion (and (re-search-backward "^#\\+\\([A-Z]+\\)_\\([A-Z]+\\)" nil t 1)(string= "BEGIN" (match-string-no-properties 1))))
+      (insert (concat "#+END_" (match-string-no-properties 2))))))  
     
 (defun syntactic-close-emacs-lisp-close (closer pps &optional org)
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))

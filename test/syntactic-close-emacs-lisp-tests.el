@@ -83,18 +83,18 @@
 
 (ert-deftest syntactic-close--elisp-org-quote-test ()
   (syntactic-close-test-with-elisp-buffer
-      "+BEGIN_QUOTE
+      "#+BEGIN_QUOTE
 asdf"
       (org-mode)
       (syntactic-close)
-    (should (looking-back "+END_QUOTE" (line-beginning-position)))))
+    (should (looking-back "#\\+END_QUOTE" (line-beginning-position)))))
 
 (ert-deftest syntactic-close--elisp-org-src-test ()
   (syntactic-close-test-with-elisp-buffer
-      "+BEGIN_SRC
+      "#+BEGIN_SRC
 asdf"
       (org-mode)
       (syntactic-close)
-    (should (looking-back "+END_SRC" (line-beginning-position))))) 
+    (should (looking-back "#\\+END_SRC" (line-beginning-position))))) 
 
 ;;; syntactic-close-emacs-lisp-tests.el ends here
