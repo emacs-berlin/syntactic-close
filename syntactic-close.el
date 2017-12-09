@@ -626,10 +626,6 @@ Optional argument PADDING to be done."
 	(insert " ++ ")))
     done))
 
-(defun syntactic-closer-forward-sexp-maybe (pos)
-  (ignore-errors (forward-sexp))
-  (when (< pos (point))(point)))
-
 (defun syntactic-close--semicolon-modes (pps &optional closer padding)
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	(orig (point))
