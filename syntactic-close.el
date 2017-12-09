@@ -2,7 +2,11 @@
 
 ;; Author: Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
 ;; Maintainer: Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
+
 ;; Version: 0.1
+
+;; URL: https://github.com/emacs-berlin/syntactic-close
+
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages, convenience
 
