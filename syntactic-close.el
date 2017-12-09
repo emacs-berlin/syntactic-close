@@ -297,7 +297,6 @@ Does not require parenthesis syntax WRT \"{[(\" "
   "Close the innermost list resp. string. "
   (save-excursion
     (let* (erg
-	   strg
 	   padding
 	   (closer
 	    (cond
@@ -364,7 +363,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
 		    nafter) (insert " ")))))
 
 (defun syntactic-close--others (orig closer pps padding)
-  (let (done erg)
+  (let (done)
     (cond
      ((nth 3 pps)
       (cond ((characterp (nth 3 pps))
@@ -377,7 +376,7 @@ Does not require parenthesis syntax WRT \"{[(\" "
      (closer (setq done (syntactic-close--insert-delimiter-char-maybe orig closer padding))))
     done))
 
-(defun syntactic-close--comments-intern (orig start end &optional padding)
+(defun syntactic-close--comments-intern (orig start end)
   (if (looking-at start)
       (progn (goto-char orig)
 	     (fixup-whitespace)
