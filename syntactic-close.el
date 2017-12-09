@@ -59,46 +59,6 @@
 :type 'string
 :group 'werkstatt)
 
-(defun syntactic-close-reverse-char (char)
-  "Return reciproke CHAR as \">\" for \"<\"."
-  (let* ((cf char)
-	 cn)
-    (cond
-     ((eq cf ?∧) ;; ?\>
-      (setq cn "∨"))
-     ((eq cf ?∨) ;; ?\<
-      (setq cn "∧"))
-     ((eq cf 62) ;; ?\>
-      (setq cn "<"))
-     ((eq cf 60) ;; ?\<
-      (setq cn ">"))
-     ((eq cf 187) ;; ?\»
-      (setq cn "«"))
-     ((eq cf 171) ;; ?\«
-      (setq cn "»"))
-     ((eq cf 41) ;; ?\)
-      (setq cn "("))
-     ((eq cf 40) ;; ?\(
-      (setq cn ")"))
-     ((eq cf 123) ;; ?\{
-      (setq cn "}"))
-     ((eq cf 125) ;; ?\}
-      (setq cn "{"))
-     ((eq cf ?`)
-      (setq cn "´"))
-     ((eq cf ?´)
-      (setq cn "`"))
-     ((eq cf 93) ;; ?\]
-      (setq cn "["))
-     ((eq cf 91) ;; ?\[
-      (setq cn "]"))
-     ((eq cf 92) ;; ?\\
-      (setq cn "/"))
-     ((eq cf 47) ;; ?\/
-      (setq cn "\\")))
-    (or cn cf)))
-
-
 (defun syntactic-close-count-lines (&optional beg end)
   "Count lines in accessible part of buffer.
 
