@@ -106,7 +106,7 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
     (if (bolp)
 	(setq erg (1+ (count-lines beg end)))
       (setq erg (count-lines beg end)))
-    (when (called-interactively-p) (message "%s" erg))
+    (when (interactive-p) (message "%s" erg))
     erg))
 
 (unless (functionp 'empty-line-p)
