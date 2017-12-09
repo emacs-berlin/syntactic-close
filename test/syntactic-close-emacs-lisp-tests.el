@@ -95,6 +95,12 @@ asdf"
 asdf"
       (org-mode)
       (syntactic-close)
-    (should (looking-back "#\\+END_SRC" (line-beginning-position))))) 
+    (should (looking-back "#\\+END_SRC" (line-beginning-position)))))
+
+(ert-deftest syntactic-close--ogham-feather-mark-close-test ()
+  (syntactic-close-test-with-elisp-buffer
+      "?\᚛"
+      (should (char-equal ?\᚜ (syntactic-close--return-complement-char-maybe (char-before)))))) 
+
 
 ;;; syntactic-close-emacs-lisp-tests.el ends here
