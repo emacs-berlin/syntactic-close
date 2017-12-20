@@ -24,6 +24,9 @@
 
 ;;; Code:
 
+(when (file-readable-p "../.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el")
+    (load "../.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
+
 (defvar syntactic-close-php-test-string-1 "<?php
 \$l = mysql_connect(\"localhost\", \"user\", \"passw\");
 if (!\$l) die(\"Keine Verbindung zu DB\\n\");

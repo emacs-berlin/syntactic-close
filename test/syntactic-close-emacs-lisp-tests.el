@@ -100,7 +100,6 @@ asdf"
 (ert-deftest syntactic-close--ogham-feather-mark-close-test ()
   (syntactic-close-test-with-elisp-buffer
       "?\᚛"
-      (should (char-equal ?\᚜ (syntactic-close--return-complement-char-maybe (char-before)))))) 
-
+      (should (char-equal ?\᚜ (syntactic-close--return-complement-char-maybe (char-before))))))
 
 ;;; syntactic-close-emacs-lisp-tests.el ends here

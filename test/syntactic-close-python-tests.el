@@ -24,13 +24,13 @@
 
 ;;; Code:
 
-(ert-deftest syntactic-close-delete-whitespace-backward-test ()
-  (syntactic-close-test-with-python-buffer
-      "[1, 3] "
-    (let ((syntactic-close-delete-whitespace-backward-p t))
-      (syntactic-close)
-      (should (eq 8 (point)))
-      (should (eq 0 (current-indentation))))))
+;; (ert-deftest syntactic-close-delete-whitespace-backward-test ()
+;;   (syntactic-close-test-with-python-buffer
+;;       "[1, 3] "
+;;     (let ((syntactic-close-delete-whitespace-backward-p t))
+;;       (syntactic-close)
+;;       (should (eq 8 (point)))
+;;       (should (eq 0 (current-indentation))))))
 
 ;; (ert-deftest syntactic-close-python-string-interpolation-test-1 ()
 ;;   (syntactic-close-test-with-python-buffer "print('%(language"
