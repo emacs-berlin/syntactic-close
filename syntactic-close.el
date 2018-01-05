@@ -469,7 +469,7 @@ Optional argument NAFTER read not after string."
 	;; closer might set
 	(when padding (insert padding)))
       (insert closer)
-      (indent-according-to-mode)
+      (save-excursion (indent-according-to-mode))
       (setq done t))
     done))
 
@@ -715,7 +715,7 @@ Optional argument PADDING to be done."
        done))))
 
 (defun syntactic-close-intern (beg iact &optional force pps)
-  (let* ((orig (point))
+  (let* ((orig (copy-marker (point)))
 	 (pps (or pps (parse-partial-sexp beg (point))))
 	 (verbose syntactic-close-verbose-p)
 	 (closer-raw (syntactic-close--fetch-delimiter-maybe pps))
