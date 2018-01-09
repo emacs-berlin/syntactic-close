@@ -8,5 +8,5 @@
 (development
  (depends-on "php-mode")
  (depends-on "sml-mode")
- (depends-on "markdown-mode")
+ ;; (depends-on "markdown-mode")
  (depends-on "python-mode"))
