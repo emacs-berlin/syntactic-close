@@ -347,13 +347,16 @@ Argument PPS should provide the result of ‘parse-partial-sexp’."
 	      (when (looking-at "[\[{(][ \t]+")
 		(setq padding (substring (match-string-no-properties 0) 1)))
 	      (syntactic-close--return-complement-char-maybe (char-after)))
-	     ;; not in list
+	     ;; not in list - Closing delimters set in
+	     ;; ‘syntactic-close--paired-opening-delimiter’ and
+	     ;; ‘syntactic-close--unary-delimiters’
+	     ;; is this reliable?
 	     (t (save-excursion
 		  (if (member major-mode (list 'php-mode 'js-mode))
 		      (setq backward-form
 			    (concat "^" syntactic-close--paired-opening-delimiter))
 		    (setq backward-form (concat "^" syntactic-close--paired-opening-delimiter syntactic-close--unary-delimiters)))
-		  (and (skip-chars-backward backward-form (nth 8 pps))
+		  (and (< 0 (abs (skip-chars-backward backward-form (or (nth 8 pps) (line-beginning-position)))))
 		       (member (char-before) syntactic-close--unary-delimiter-chars)
 		       (setq erg (char-before))))
 		(syntactic-close--return-complement-char-maybe erg)))))

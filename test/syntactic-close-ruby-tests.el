@@ -40,5 +40,13 @@
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
+
+(ert-deftest syntactic-close-ruby-block-close-1 ()
+  (syntactic-close-test-with-ruby-buffer
+      "values.each do |value|
+  break if value.even?"
+        (syntactic-close)
+	(should (looking-back "end" (line-beginning-position))))) 
+
 (provide 'syntactic-close-ruby-tests)
 ;;; syntactic-close-ruby-tests.el ends here
