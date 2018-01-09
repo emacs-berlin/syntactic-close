@@ -59,6 +59,19 @@
 :type 'string
 :group 'werkstatt)
 
+(defun syntactic-close--generic-delimiter-maybe ()
+  "Detect delimiter enclosing current word"
+  (let ((erg
+	 (save-excursion
+	   (and (< 0 (abs (skip-syntax-backward "\\sw")))
+		(or
+		 (eq 1 (car (syntax-after (1- (point)))))
+		 (eq 7 (car (syntax-after (1- (point))))))
+		(char-to-string (syntactic-close--return-complement-char-maybe (char-before))))))
+	done)
+    (when erg (insert erg)
+	  (setq done t))))
+
 (defun syntactic-close-count-lines (&optional beg end)
   "Count lines in accessible part of buffer.
 
@@ -159,7 +172,6 @@ Optional argument IACT signaling interactive use."
 (dolist (ele syntactic-close--unary-delimiter-chars)
   (setq syntactic-close--unary-delimiters
 	(concat syntactic-close--unary-delimiters (char-to-string ele))))
-
 
 (defun syntactic-close-toggle-verbosity ()
   "If `syntactic-close-verbose-p' is nil, switch it on.
@@ -293,30 +305,7 @@ Does not require parenthesis syntax WRT \"{[(\""
   "Return complement character from (nth 1 PPS)."
   (save-excursion
     (goto-char (nth 1 pps))
-    (syntactic-close--return-complement-char-maybe (char-after))))
-
-;; no syntax
-;; (defun syntactic-close-in-string-interpolation-maybe (&optional pps)
-;;   "Return nearest openener.
-
-;; Check if list opener inside a string. "
-;;   (interactive)
-;;   (let ((pps (or pps (parse-partial-sexp (point-min) (point))))
-;; 	erg last)
-;;     (when (nth 3 pps)
-;;       ;; paren inside string maybe
-;;       (cond ((and
-;; 	      (setq erg (nth 1 (setq last
-;; 				     ;; opener inside string?
-;; 				     (parse-partial-sexp (1+ (nth 8 pps)) (point)))))
-;; 	      (< (nth 8 pps) erg))
-;; 	     (setq erg (syntactic-close--nth-1-pps-complement-char-maybe last)))
-;; 	    ((save-excursion (and (skip-chars-backward (concat "^" syntactic-close--paired-opening-delimiter) (nth 8 pps)) (not (eq (char-after) (nth 3 pps)))   (member (char-before) syntactic-close-known-string-inpolation-opener) (< (nth 8 pps) (1- (point))) (setq last (char-before))
-;; 	      (not (eq (char-before) (syntactic-close--return-complement-char-maybe last)))))
-;; 	     (setq erg (syntactic-close--return-complement-char-maybe last)))
-;; 	    (t
-;; 	     (setq erg (syntactic-close-in-string-maybe pps)))))
-;;     erg))
+    (syntactic-close--return-complement-char-maybe (char-after))));
 
 (defun syntactic-close--list-inside-string-maybe (strg)
   (with-temp-buffer
@@ -326,6 +315,25 @@ Does not require parenthesis syntax WRT \"{[(\""
 	(save-excursion
 	  (goto-char (nth 1 pps))
 	  (syntactic-close--return-complement-char-maybe (char-after)))))))
+
+(defun syntactic-close--escaped-p (&optional pos)
+  "Return t if char at POS is preceded by an odd number of backslashes. "
+  (save-excursion
+    (when pos (goto-char pos))
+    (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
+
+(defun syntactic-close--in-non-syntax-delimted-p (char beg orig)
+  "Detect delimited forms which are not set by mode
+
+as a block in Ruby: values.each do |value|"
+  (let ((count 0)
+	(char (prin1-to-string char)))
+    (goto-char beg)
+    (while (and
+	    (search-forward char nil t 1)
+	    (not (syntactic-close--escaped-p)))
+      (setq count (1- count)))
+    (eq 1 (% count 2))))
 
 (defun syntactic-close--fetch-delimiter-maybe (pps)
   "Close the innermost list resp. string.
@@ -351,15 +359,18 @@ Argument PPS should provide the result of ‘parse-partial-sexp’."
 	     ;; ‘syntactic-close--paired-opening-delimiter’ and
 	     ;; ‘syntactic-close--unary-delimiters’
 	     ;; is this reliable?
-	     (t (save-excursion
-		  (if (member major-mode (list 'php-mode 'js-mode))
-		      (setq backward-form
-			    (concat "^" syntactic-close--paired-opening-delimiter))
-		    (setq backward-form (concat "^" syntactic-close--paired-opening-delimiter syntactic-close--unary-delimiters)))
-		  (and (< 0 (abs (skip-chars-backward backward-form (or (nth 8 pps) (line-beginning-position)))))
-		       (member (char-before) syntactic-close--unary-delimiter-chars)
-		       (setq erg (char-before))))
-		(syntactic-close--return-complement-char-maybe erg)))))
+	     ;; (t (save-excursion
+	     ;; 	  (if (member major-mode (list 'php-mode 'js-mode))
+	     ;; 	      (setq backward-form
+	     ;; 		    (concat "^" syntactic-close--paired-opening-delimiter))
+	     ;; 	    (setq backward-form (concat "^" syntactic-close--paired-opening-delimiter syntactic-close--unary-delimiters)))
+	     ;; 	  (and
+	     ;; 	   (< 0 (abs (skip-chars-backward backward-form (or (nth 8 pps) (line-beginning-position)))))
+	     ;; 	       (member (char-before) syntactic-close--unary-delimiter-chars)
+	     ;; 	       (syntactic-close--in-non-syntax-delimted-p (char-before) (or (nth 8 pps) (line-beginning-position)) (point))
+	     ;; 	       (setq erg (char-before))))
+	     ;; 	(syntactic-close--return-complement-char-maybe erg))
+	     )))
       (and closer (list closer padding)))))
 
 (defun syntactic-close-fix-whitespace-maybe (orig &optional padding)
@@ -609,15 +620,9 @@ Optional argument PADDING to be done."
       (setq done t)))
     done))
 
-;; Ruby
-(defun syntactic-close--generic-fetch-delimiter-maybe ()
-  (save-excursion
-    (and (< 0 (abs (skip-syntax-backward "\\sw")))
-	 (or
-	  (eq 1 (car (syntax-after (1- (point)))))
-	  (eq 7 (car (syntax-after (1- (point))))))
-	 (char-to-string (char-before)))))
 
+
+;; Ruby
 (defun syntactic-close--ruby-insert-end ()
   (let (done)
     (unless (or (looking-back ";[ \t]*" nil))
@@ -634,7 +639,8 @@ Optional argument PADDING to be done."
 (defun syntactic-close-ruby-close (&optional closer pps padding)
   (let ((closer (or closer
 		    (and pps (syntactic-close--fetch-delimiter-maybe pps))
-		    (syntactic-close--generic-fetch-delimiter-maybe)))
+		    ;; (syntactic-close--generic-fetch-delimiter-maybe)
+		    ))
 	done)
     (if closer
 	(progn
@@ -730,7 +736,8 @@ Optional argument PADDING to be done."
       (setq done (syntactic-close--insert-comment-end-maybe pps)))
      ((and closer (setq done (when closer (syntactic-close--common orig closer padding pps)))))
      ((setq done (syntactic-close--modes orig pps closer force padding)))
-     ((setq done (syntactic-close--others orig closer pps padding))))
+     ((setq done (syntactic-close--others orig closer pps padding)))
+     (t (setq done (syntactic-close--generic-delimiter-maybe))))
     (or (< orig (point)) (and iact verbose (message "%s" "nil")))
     done))
 
