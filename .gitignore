@@ -12,7 +12,6 @@
 .cask/24.4/elpa/.elpa/
 /test/nxml1.xml
 RCS
-run-travis-ci.sh
 test/#*
 test/*.hs
 test/*.js
