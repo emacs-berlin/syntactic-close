@@ -49,6 +49,7 @@ hier () {
 -load $TEST3 \
 -load $TEST4 \
 -load $TEST5 \
+-load $TEST6 \
 -load $TEST7 \
 -load $TEST8 \
 -load $TEST9 \

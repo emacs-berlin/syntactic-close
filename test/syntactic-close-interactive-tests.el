@@ -298,5 +298,20 @@ if __name__ == \"__main__\""
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
+
+(ert-deftest syntactic-close-python-tqs-test-1 ()
+  (syntactic-close-test-with-python-buffer
+      "\"\"\"asdf"
+    (let ((orig (point)))
+      (syntactic-close)
+      (should (looking-back "\"\"\"" (line-beginning-position))))))
+
+(ert-deftest syntactic-close-python-tqs-test-2 ()
+  (syntactic-close-test-with-python-buffer
+      "'''asdf"
+    (let ((orig (point)))
+      (syntactic-close)
+      (should (looking-back "'''" (line-beginning-position))))))  
+
 (provide 'syntactic-close-interactive-tests)
 ;;; syntactic-close-interactive-tests.el ends here

@@ -566,10 +566,10 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 (defun syntactic-close--org-mode-close ()
   (unless (empty-line-p)
     (end-of-line)
-    (newline)
-    ;; +BEGIN_QUOTE
-    (when (save-excursion (and (re-search-backward "^#\\+\\([A-Z]+\\)_\\([A-Z]+\\)" nil t 1)(string= "BEGIN" (match-string-no-properties 1))))
-      (insert (concat "#+END_" (match-string-no-properties 2))))))
+    (newline))
+  ;; +BEGIN_QUOTE
+  (when (save-excursion (and (re-search-backward "^#\\+\\([A-Z]+\\)_\\([A-Z]+\\)" nil t 1)(string= "BEGIN" (match-string-no-properties 1))))
+    (insert (concat "#+END_" (match-string-no-properties 2)))))
 
 (defun syntactic-close-emacs-lisp-close (closer pps &optional org)
   "Close in Emacs Lisp.
