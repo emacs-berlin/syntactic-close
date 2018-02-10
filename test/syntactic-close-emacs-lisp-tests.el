@@ -102,11 +102,11 @@ asdf"
       "?\᚛"
       (should (char-equal ?\᚜ (syntactic-close--return-complement-char-maybe (char-before))))))
 
-;; (ert-deftest syntactic-close--multidelim-test-1 ()
-;;   (syntactic-close-test-with-elisp-buffer
-;;       "{{{{asdf"
-;;       (syntactic-close)
-;;     (should (looking-back "}}}}" (line-beginning-position)))))  
+(ert-deftest syntactic-close--multidelim-test-1 ()
+  (syntactic-close-test-with-elisp-buffer
+      "{{{{asdf"
+      (syntactic-close)
+    (should (looking-back "}}}}" (line-beginning-position)))))  
 
 
 ;;; syntactic-close-emacs-lisp-tests.el ends here

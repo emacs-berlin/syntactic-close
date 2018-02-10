@@ -47,17 +47,22 @@
 (defcustom syntactic-close-empty-line-p-chars "^[ \t\r]*$"
   "Syntactic-close-empty-line-p-chars."
   :type 'regexp
-  :group 'convenience)
+  :group 'sytactic-close)
 
 (defcustom syntactic-close-known-string-inpolation-opener  (list ?{ ?\( ?\[)
   "Syntactic-close-known-string-inpolation-opener."
   :type 'list
-  :group 'convenience)
+  :group 'sytactic-close)
 
 (defcustom syntactic-close--paired-opening-delimiter "‘{<[("
-"Specify the delimiter char."
-:type 'string
-:group 'werkstatt)
+  "Specify the delimiter char."
+  :type 'string
+  :group 'sytactic-close)
+
+(defcustom syntactic-close--paired-closing-delimiter "’}>])"
+  "Specify the delimiter char."
+  :type 'string
+  :group 'sytactic-close)
 
 (defun syntactic-close--generic-delimiter-maybe ()
   "Detect delimiter enclosing current word"
@@ -163,9 +168,9 @@ Optional argument IACT signaling interactive use."
 (defcustom syntactic-close-empty-line-p-chars "^[ \t\r]*$"
   "Syntactic-close-empty-line-p-chars."
   :type 'regexp
-  :group 'convenience)
+  :group 'sytactic-close)
 
-(setq syntactic-close--unary-delimiter-chars (list ?' ?< ?` ?* ?\\ ?= ?$ ?% ?§ ?? ?! ?+ ?- ?# ?: ?\; ?,))
+(setq syntactic-close--unary-delimiter-chars (list ?' ?` ?* ?\\ ?= ?$ ?% ?§ ?? ?! ?+ ?- ?# ?: ?\; ?,))
 
 (defvar syntactic-close--unary-delimiters "")
 (setq syntactic-close--unary-delimiters "")
@@ -342,6 +347,7 @@ Argument PPS should provide the result of ‘parse-partial-sexp’."
     (let* (erg
 	   backward-form
 	   padding
+	   times
 	   (closer
 	    (cond
 	     ((nth 3 pps)
@@ -352,25 +358,21 @@ Argument PPS should provide the result of ‘parse-partial-sexp’."
 		       (make-string (nth 2 erg)(nth 1 erg)))))
 	     ((nth 1 pps)
 	      (goto-char (nth 1 pps))
+	      (setq times (1+ (abs (skip-chars-backward (char-to-string (char-after)) (line-beginning-position)))))
 	      (when (looking-at "[\[{(][ \t]+")
 		(setq padding (substring (match-string-no-properties 0) 1)))
-	      (syntactic-close--return-complement-char-maybe (char-after)))
-	     ;; not in list - Closing delimters set in
-	     ;; ‘syntactic-close--paired-opening-delimiter’ and
-	     ;; ‘syntactic-close--unary-delimiters’
-	     ;; is this reliable?
-	     ;; (t (save-excursion
-	     ;; 	  (if (member major-mode (list 'php-mode 'js-mode))
-	     ;; 	      (setq backward-form
-	     ;; 		    (concat "^" syntactic-close--paired-opening-delimiter))
-	     ;; 	    (setq backward-form (concat "^" syntactic-close--paired-opening-delimiter syntactic-close--unary-delimiters)))
-	     ;; 	  (and
-	     ;; 	   (< 0 (abs (skip-chars-backward backward-form (or (nth 8 pps) (line-beginning-position)))))
-	     ;; 	       (member (char-before) syntactic-close--unary-delimiter-chars)
-	     ;; 	       (syntactic-close--in-non-syntax-delimted-p (char-before) (or (nth 8 pps) (line-beginning-position)) (point))
-	     ;; 	       (setq erg (char-before))))
-	     ;; 	(syntactic-close--return-complement-char-maybe erg))
-	     )))
+	      (make-string times (syntactic-close--return-complement-char-maybe (char-after))))
+	     ;; not in list
+	     (t (save-excursion
+	     	  (setq backward-form (concat "^" syntactic-close--paired-opening-delimiter syntactic-close--paired-closing-delimiter syntactic-close--unary-delimiters))
+	     	  (and
+	     	   (< 0 (abs (skip-chars-backward backward-form (or (nth 8 pps) (line-beginning-position)))))
+		   ;; no usable opener found
+		   (not (bolp))
+		   (not (string-match (char-to-string (char-before)) syntactic-close--paired-closing-delimiter))
+	     	   (string-match (char-to-string (char-before)) (concat syntactic-close--paired-opening-delimiter syntactic-close--unary-delimiters))
+		   (setq times (abs (skip-chars-backward (char-to-string (char-before)) (line-beginning-position))))
+		   (make-string times (syntactic-close--return-complement-char-maybe (char-after)))))))))
       (and closer (list closer padding)))))
 
 (defun syntactic-close-fix-whitespace-maybe (orig &optional padding)
@@ -380,8 +382,8 @@ Argument PPS should provide the result of ‘parse-partial-sexp’."
 	       (< 0 (abs (skip-chars-backward " \t\r\n\f")))
 	       ;;  not in comment
 	       (not (nth 4 (parse-partial-sexp (point-min) (point)))))
-      (delete-region (point) orig))
-  (when padding (insert padding))))
+      (delete-region (point) orig)))
+  (when padding (insert padding)))
 
 (defun syntactic-close--insert-delimiter-char-maybe (orig closer padding)
   (let (done)
@@ -419,7 +421,7 @@ Optional argument NAFTER read not after string."
 		    ;; (eq (char-after) ?\))
 		    nafter) (insert " ")))))
 
-(defun syntactic-close--others (orig closer pps padding)
+(defun syntactic-close--others (orig closer pps padding<)
   (let (done)
     (cond
      ((nth 3 pps)
@@ -668,24 +670,25 @@ Optional argument PADDING to be done."
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	(orig (point))
 	done)
-    (cond ((and (eq closer ?})(syntactic-close-empty-line-p))
+    (cond ((and closer (or (eq closer ?}) (string-match "}" closer))(syntactic-close-empty-line-p))
 	   (syntactic-close-fix-whitespace-maybe orig padding)
 	   (insert closer)
 	   (setq done t)
 	   (indent-according-to-mode))
-	  ((eq closer ?})
+	  ((and closer (or (eq closer ?}) (string-match "}" closer)))
 	   (cond ((member (char-before) (list ?\; ?}))
 		  (if (eq (syntactic-close-count-lines (point-min) (point)) (save-excursion (progn (goto-char (nth 1 pps)) (syntactic-close-count-lines (point-min) (point)))))
 		      ;; insert at newline, if opener is at a previous line
 		      (progn
+			(syntactic-close-fix-whitespace-maybe orig padding)
 			(insert closer)
-			(syntactic-close-fix-whitespace-maybe orig padding))
+			)
 		    (newline)
 		    (insert closer))
 		  (indent-according-to-mode))
 		 (t (insert ";")))
 	   (setq done t))
-	  ((eq closer ?\))
+	  ((and closer (or (string= closer ")")(eq closer ?\))))
 	   (syntactic-close-fix-whitespace-maybe orig padding)
 	   (insert closer)
 	   (setq done t))
@@ -700,7 +703,10 @@ Optional argument PADDING to be done."
 	     (setq done t)))
 	  ((save-excursion (beginning-of-line) (looking-at syntactic-close-assignment-re))
 	   (insert ";")
-	   (setq done t)))
+	   (setq done t))
+	  (t  (when closer
+		(insert closer)
+		(setq done t))))
     (unless done (goto-char orig))
     done))
 
@@ -734,6 +740,8 @@ Optional argument PADDING to be done."
     (cond
      ((nth 4 pps)
       (setq done (syntactic-close--insert-comment-end-maybe pps)))
+     ((member major-mode (list 'php-mode 'js-mode 'web-mode))
+      (setq done (syntactic-close--semicolon-modes pps closer padding)))
      ((and closer (setq done (when closer (syntactic-close--common orig closer padding pps)))))
      ((setq done (syntactic-close--modes orig pps closer force padding)))
      ((setq done (syntactic-close--others orig closer pps padding)))

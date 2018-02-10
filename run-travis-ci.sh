@@ -29,6 +29,8 @@ fi
 echo "\$EMACS: $EMACS"
 
 FILE1=syntactic-close.el
+FILE2=.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el
+
 
 TEST1=test/syntactic-close-setup-ert-tests.el
 TEST2=test/syntactic-close-c-tests.el
@@ -43,7 +45,9 @@ TEST10=test/syntactic-close-ruby-tests.el
 
 hier () {
     $EMACS -Q --batch \
+--eval "(add-to-list 'load-path \"$PWD/.cask/24.4/elpa/php-mode-20160910.1801\")" \
 -load $FILE1 \
+-load $FILE2 \
 -load $TEST1 \
 -load $TEST2 \
 -load $TEST3 \
