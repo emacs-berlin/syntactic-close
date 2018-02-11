@@ -724,9 +724,7 @@ Optional argument PADDING to be done."
       (_
        (cond
 	((member major-mode syntactic-close--ml-modes)
-	(setq done (syntactic-close-ml)))
-	((member major-mode (list 'php-mode 'js-mode 'web-mode))
-	 (setq done (syntactic-close--semicolon-modes pps closer padding))))
+	 (setq done (syntactic-close-ml))))
        done))))
 
 (defun syntactic-close-intern (beg iact &optional force pps)
