@@ -1,7 +1,7 @@
 Syntactic Close [![Build Status](https://travis-ci.org/emacs-berlin/syntactic-close.svg?branch=master)](https://travis-ci.org/emacs-berlin/syntactic-close)
 ===
 
-Insert a closing delimiter char, i.e. a parenthesis, bracket, brace or
+Insert closing delimiter char(s), i.e. parenthesis, bracket(s), brace(s) or
 whatever is needed.
 
 That way closing may be done by just one convenient key.
