@@ -667,15 +667,18 @@ Optional argument PADDING to be done."
     done))
 
 (defun syntactic-close--semicolon-modes (pps &optional closer padding)
+  "PPS, the result of ‘parse-partial-sexp’. 
+
+CLOSER, a string"
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
 	(orig (point))
 	done)
-    (cond ((and closer (or (eq closer ?}) (string-match "}" closer))(syntactic-close-empty-line-p))
+    (cond ((and closer (string-match "}" closer)(syntactic-close-empty-line-p))
 	   (syntactic-close-fix-whitespace-maybe orig padding)
 	   (insert closer)
 	   (setq done t)
 	   (indent-according-to-mode))
-	  ((and closer (or (eq closer ?}) (string-match "}" closer)))
+	  ((and closer (string-match "}" closer))
 	   (cond ((member (char-before) (list ?\; ?}))
 		  (if (eq (syntactic-close-count-lines (point-min) (point)) (save-excursion (progn (goto-char (nth 1 pps)) (syntactic-close-count-lines (point-min) (point)))))
 		      ;; insert at newline, if opener is at a previous line
@@ -764,3 +767,4 @@ Optional argument FORCE TBD."
 
 (provide 'syntactic-close)
 ;;; syntactic-close.el ends here
+ 
