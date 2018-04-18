@@ -108,6 +108,9 @@ Optional argument IACT signaling interactive use."
 (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
   "Defined in haskell-interactive-mode.el, silence warnings.")
 
+(defvar syntactic-close-tag nil
+  "Functions closing mode-specific might go here.")
+
 (defcustom syntactic-close-guess-p nil
   "When non-nil, guess default arguments, list-separators etc."
   :type 'boolean
@@ -522,22 +525,23 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 (defun syntactic-close-ml ()
   "Close in Standard ML."
   (interactive "*")
-  (let ((oldmode major-mode) done)
-    (cond ((save-excursion
-	     (and (< 0 (abs (skip-syntax-backward "w")))
-		  (not (bobp))
-		  ;; (syntax-after (1- (point)))
-		  (or (eq ?< (char-before (point)))
-		      (and (eq ?< (char-before (1- (point))))
-			   (eq ?/ (char-before (point)))))))
-	   (insert ">")
+  (let (done)
+    ;; (when 
+    (cond ((derived-mode-p 'sgml-mode)
+	   (setq syntactic-close-tag 'sgml-close-tag)
+	   (funcall syntactic-close-tag)
+	   (font-lock-fontify-buffer)
 	   (setq done t))
-	  (t (when (eq ?> (char-before (point)))(newline))
-	     (sgml-mode)
-	     (sgml-close-tag)
-	     (funcall oldmode)
-	     (font-lock-fontify-buffer)
-	     (setq done t)))
+	  ;; (t (save-excursion
+	  ;;    (and (< 0 (abs (skip-syntax-backward "w")))
+	  ;; 	  (not (bobp))
+	  ;; 	  ;; (syntax-after (1- (point)))
+	  ;; 	  (or (eq ?< (char-before (point)))
+	  ;; 	      (and (eq ?< (char-before (1- (point))))
+	  ;; 		   (eq ?/ (char-before (point)))))))
+	  ;;  (insert ">")
+	  ;;  (setq done t))
+	  )
     done))
 
 (defun syntactic-close-python-listclose (orig closer force pps)
@@ -735,8 +739,8 @@ CLOSER, a string"
 	 (pps (or pps (parse-partial-sexp beg (point))))
 	 (verbose syntactic-close-verbose-p)
 	 (closer-raw (syntactic-close--fetch-delimiter-maybe pps))
-	 (closer (car-safe closer-raw))
-	 (padding (car-safe (cdr-safe closer-raw)))
+	 (closer (ignore-errors (car-safe closer-raw)))
+	 (padding (ignore-errors (car-safe (cdr-safe closer-raw))))
 	 done)
     (cond
      ((nth 4 pps)
