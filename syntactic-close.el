@@ -137,7 +137,7 @@ Optional argument IACT signaling interactive use."
 (defcustom syntactic-close--ml-modes
   (list
    'html-mode
-   'nxml-mode
+   'mhtml-mode
    'sgml-mode
    'xml-mode
    'xxml-mode
@@ -526,7 +526,7 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
   "Close in Standard ML."
   (interactive "*")
   (let (done)
-    ;; (when 
+    ;; (when
     (cond ((derived-mode-p 'sgml-mode)
 	   (setq syntactic-close-tag 'sgml-close-tag)
 	   (funcall syntactic-close-tag)
@@ -671,7 +671,7 @@ Optional argument PADDING to be done."
     done))
 
 (defun syntactic-close--semicolon-modes (pps &optional closer padding)
-  "PPS, the result of ‘parse-partial-sexp’. 
+  "PPS, the result of ‘parse-partial-sexp’.
 
 CLOSER, a string"
   (let ((closer (or closer (syntactic-close--fetch-delimiter-maybe pps)))
@@ -728,6 +728,8 @@ CLOSER, a string"
        (setq done (syntactic-close-emacs-lisp-close closer pps t)))
       (`ruby-mode
        (setq done (syntactic-close-ruby-close closer pps padding)))
+      (`nxml-mode
+       (setq done (nxml-finish-element)))
       (_
        (cond
 	((member major-mode syntactic-close--ml-modes)
@@ -771,4 +773,3 @@ Optional argument FORCE TBD."
 
 (provide 'syntactic-close)
 ;;; syntactic-close.el ends here
- 
