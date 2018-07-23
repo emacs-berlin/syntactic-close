@@ -67,12 +67,11 @@ BODY is code to be executed within the temp buffer "
   )
 
 (defmacro syntactic-close-test-point-min (contents mode verbose &rest body)
-  "Create temp buffer in `python-mode' inserting CONTENTS.
+  "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
   (declare (indent 1) (debug t))
   `(with-temp-buffer
-
      (let (hs-minor-mode)
        (funcall ,mode)
        (insert ,contents)
@@ -159,7 +158,7 @@ BODY is code to be executed within the temp buffer.  Point is
        ,@body)))
 
 (defmacro syntactic-close-test-with-ruby-buffer-point-min (contents &rest body)
-  "Create temp buffer in `php-mode' inserting CONTENTS.
+  "Create temp buffer in `ruby-mode' inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
   (declare (indent 1) (debug t))
@@ -179,7 +178,6 @@ BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
   (declare (indent 2) (debug t))
   `(with-temp-buffer
-     ;; (and (featurep 'python) (unload-feature 'python))
      (let (hs-minor-mode)
        (emacs-lisp-mode)
        (insert ,contents)
@@ -251,7 +249,6 @@ BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
   (declare (indent 1) (debug t))
   `(with-temp-buffer
-     ;; (and (featurep 'python) (unload-feature 'python))
      (let (hs-minor-mode)
        (nxml-mode)
        (insert ,contents)
@@ -261,12 +258,11 @@ BODY is code to be executed within the temp buffer.  Point is
        ,@body)))
 
 (defmacro syntactic-close-test-with-html-buffer (contents &rest body)
-  "Create temp buffer in `nxml-mode' inserting CONTENTS.
+  "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the end of buffer."
   (declare (indent 1) (debug t))
   `(with-temp-buffer
-     ;; (and (featurep 'python) (unload-feature 'python))
      (let (hs-minor-mode)
        (html-mode)
        (insert ,contents)
@@ -353,7 +349,7 @@ BODY is code to be executed within the temp buffer.  Point is
        ,@body)))
 
 (defmacro syntactic-close-test-with-xml-buffer-point-min (contents &rest body)
-  "Create temp buffer in `php-mode' inserting CONTENTS.
+  "Create temp buffer inserting CONTENTS.
 BODY is code to be executed within the temp buffer.  Point is
  at the beginning of buffer."
   (declare (indent 1) (debug t))
