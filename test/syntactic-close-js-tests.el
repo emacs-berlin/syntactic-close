@@ -42,34 +42,65 @@
 
 (ert-deftest syntactic-close-close-js-test-1 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      "$(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
+    (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?'))))
 
 (ert-deftest syntactic-close-close-js-test-2 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      " $(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
       (insert "'")
       (syntactic-close)
       (should (eq (char-before) ?\)))))
 
 (ert-deftest syntactic-close-close-js-test-3 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      " $(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
       (insert "')")
       (syntactic-close)
       (should (eq (char-before) ?\;))))
 
 (ert-deftest syntactic-close-close-js-test-4 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      " $(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
       (insert "');")
       (syntactic-close)
       (should (eq (char-before) ?}))))
 
 (ert-deftest syntactic-close-close-js-test-5 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      " $(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
       (insert "');\n")
       (insert (make-string 14 32))
       (insert "}")
@@ -78,7 +109,13 @@
 
 (ert-deftest syntactic-close-close-js-test-5 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      " $(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
       (insert "');\n")
       (insert (make-string 14 32))
       (insert "}")
@@ -87,7 +124,13 @@
 
 (ert-deftest syntactic-close-close-js-test-6 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      " $(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
       (insert "');\n")
       (insert (make-string 14 32))
       (insert "}\n")
@@ -98,7 +141,13 @@
 
 (ert-deftest syntactic-close-close-js-test-7 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      " $(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
       (insert "');\n")
       (insert (make-string 14 32))
       (insert "}\n")
@@ -109,7 +158,13 @@
 
 (ert-deftest syntactic-close-close-js-test-8 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      " $(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
       (insert "');\n")
       (insert (make-string 14 32))
       (insert "}\n")
@@ -120,7 +175,13 @@
 
 (ert-deftest syntactic-close-close-js-test-9 ()
   (syntactic-close-test-with-js-buffer
-      syntactic-close-js-test-string-1
+      " $(document).ready(function() {
+
+          $('.nav-tabs-custom-2').tabs();
+
+          $('.table').delegate('td','mouseover mouseleave',function(e) {
+              if (e.type == 'mouseover') {
+                  $(this).addClass('hover"
       (insert "');\n")
       (insert (make-string 14 32))
       (insert "}\n")
@@ -135,12 +196,31 @@
   (syntactic-close-test-with-js-buffer
       "function foo(a,b,c,d) {
 if ( (a == b) || (c == d"
+    (goto-char (point-max)) 
     (syntactic-close)
-    (should (eq (char-before) ?\)))
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-close-close-js-function-test-2 ()
+  (syntactic-close-test-with-js-buffer
+      "function foo(a,b,c,d) {
+if ( (a == b) || (c == d)"
+    (goto-char (point-max)) 
     (syntactic-close)
-    (should (eq (char-before) ?\)))
+    (should (looking-back " )" (line-beginning-position)))))
+
+(ert-deftest syntactic-close-close-js-function-test-3 ()
+  (syntactic-close-test-with-js-buffer
+      "function foo(a,b,c,d) {
+if ( (a == b) || (c == d) )"
+    (goto-char (point-max)) 
     (syntactic-close)
-    (should (eq (char-before) ?\;))
+    (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-close-js-function-test-4 ()
+  (syntactic-close-test-with-js-buffer
+      "function foo(a,b,c,d) {
+if ( (a == b) || (c == d) );"
+    (goto-char (point-max)) 
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
@@ -156,7 +236,6 @@ if ( (a == b) || (c == d"
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-
 (ert-deftest syntactic-close-padded-brace-test ()
   (syntactic-close-test-with-js-buffer
       "{ display: inline;"
@@ -166,15 +245,16 @@ if ( (a == b) || (c == d"
 (ert-deftest syntactic-close-js-element-test ()
   (syntactic-close-test-with-js-buffer
       "<script"
+    (goto-char (point-max)) 
     (syntactic-close)
     (should (eq (char-before) ?>))))
 
 (ert-deftest syntactic-close-js-assignment-test ()
   (syntactic-close-test-with-js-buffer
       "var Counter = 1"
+    (goto-char (point-max)) 
     (syntactic-close)
     (should (eq (char-before) ?\;))))
-
 
 (provide 'syntactic-close-js-tests)
 ;;; syntactic-close-js-tests.el ends here

@@ -67,12 +67,6 @@
       (syntactic-close)
     (should (looking-back "asdf ()"))))
 
-(ert-deftest syntactic-close--elisp-fixspace-test ()
-  (syntactic-close-test-with-elisp-buffer
-      "(setq foo 'bar "
-      (syntactic-close)
-    (should (eq (char-before (1- (point))) ?r))))
-
 (ert-deftest syntactic-close--elisp-padding-test ()
   (syntactic-close-test-with-elisp-buffer
       "(defun foo ( arg"
@@ -106,7 +100,39 @@ asdf"
   (syntactic-close-test-with-elisp-buffer
       "{{{{asdf"
       (syntactic-close)
-    (should (looking-back "}}}}" (line-beginning-position)))))  
+    (should (looking-back "}}}}" (line-beginning-position)))))
 
+(ert-deftest syntactic-close--escaped-test-1 ()
+  ;; comint-password-prompt-regexp
+  (syntactic-close-test-with-elisp-buffer
+      "\"\\(^ sadf"
+      (let ((syntactic-close-generic-p t))
+	(syntactic-close)
+	(should (looking-back "\\\\)" (line-beginning-position))))))
+
+(ert-deftest syntactic-close--escaped-test-2 ()
+  ;; comint-password-prompt-regexp
+  (syntactic-close-test-with-elisp-buffer
+      "\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th"
+      (let ((syntactic-close-generic-p t))
+	(syntactic-close 3)
+	(should (looking-back "\\\\)" (line-beginning-position))))))
+
+(ert-deftest syntactic-close--escaped-test-3 ()
+  ;; comint-password-prompt-regexp
+  (syntactic-close-test-with-elisp-buffer
+      "\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th"
+      (let ((syntactic-close-generic-p t))
+	(syntactic-close '(4))
+	(should (eq (char-before) ?\")))))
+
+(ert-deftest syntactic-close--escaped-test-4 ()
+  ;; comint-password-prompt-regexp
+  (syntactic-close-test-with-elisp-buffer
+      "\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th\\)\\)\\)\\)\\)\""
+      (let ((orig (point)) 
+	    (syntactic-close-generic-p t))
+	(syntactic-close)
+	(should (eq orig (point))))))
 
 ;;; syntactic-close-emacs-lisp-tests.el ends here

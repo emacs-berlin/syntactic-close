@@ -61,10 +61,10 @@ BODY is code to be executed within the temp buffer "
        (funcall ,mode)
        (when ,verbose
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min)(point-max))
        ,@body))
   ;; (sit-for 0.1)
-  )
+  ))
 
 (defmacro syntactic-close-test-point-min (contents mode verbose &rest body)
   "Create temp buffer inserting CONTENTS.
@@ -78,7 +78,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when ,verbose
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min)(point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-python-buffer (contents &rest body)
@@ -92,10 +92,8 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (python-mode)
        (when ,syntactic-close-debug-p (switch-to-buffer (current-buffer))
-	     (font-lock-fontify-buffer))
-       ,@body)
-     ;; (sit-for 0.1)
-     ))
+	     (font-lock-fontify-region (point-min)(point-max)))
+       ,@body)))
 
 (defmacro syntactic-close-test-with-python-buffer-point-min (contents &rest body)
   "Create temp buffer in `python-mode' inserting CONTENTS.
@@ -109,9 +107,8 @@ BODY is code to be executed within the temp buffer.  Point is
        (python-mode)
        (goto-char (point-min))
        (when syntactic-close-debug-p (switch-to-buffer (current-buffer))
-	     (font-lock-fontify-buffer))
+	     (font-lock-fontify-region (point-min) (point-max)))
        ,@body)
-     ;; (sit-for 0.1)
      ))
 
 (defmacro syntactic-close-test-with-php-buffer (contents &rest body)
@@ -125,7 +122,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-php-buffer-point-min (contents &rest body)
@@ -140,7 +137,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-ruby-buffer (contents &rest body)
@@ -154,7 +151,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-ruby-buffer-point-min (contents &rest body)
@@ -169,7 +166,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-elisp-buffer (contents &rest body)
@@ -183,7 +180,22 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
+       ,@body)))
+
+(defmacro syntactic-close-test-with-js-buffer (contents &rest body)
+  "Create temp buffer in `js-mode' inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the end of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (insert ,contents)
+       (js-mode)
+       (goto-char (point-max)) 
+       (when syntactic-close-debug-p
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-js-buffer-point-min (contents &rest body)
@@ -194,27 +206,14 @@ BODY is code to be executed within the temp buffer.  Point is
   `(with-temp-buffer
 ;;     (and (featurep 'js) (unload-feature 'js))
      (let (hs-minor-mode)
-       (js-mode)
        (insert ,contents)
+       (js-mode)
        (goto-char (point-min))
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
-(defmacro syntactic-close-test-with-js-buffer (contents &rest body)
-  "Create temp buffer in `js-mode' inserting CONTENTS.
-BODY is code to be executed within the temp buffer.  Point is
- at the end of buffer."
-  (declare (indent 1) (debug t))
-  `(with-temp-buffer
-     (let (hs-minor-mode)
-       (js-mode)
-       (insert ,contents)
-       (when syntactic-close-debug-p
-	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
-       ,@body)))
 
 (defmacro syntactic-close-test-with-temp-buffer (contents &rest body)
   "Create temp buffer inserting CONTENTS.
@@ -226,7 +225,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-temp-buffer-point-min (contents &rest body)
@@ -240,7 +239,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-nxml-buffer (contents &rest body)
@@ -254,7 +253,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-html-buffer (contents &rest body)
@@ -268,7 +267,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-haskell-buffer (contents &rest body)
@@ -281,7 +280,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (haskell-mode)
        (when syntactic-close-debug-p (switch-to-buffer (current-buffer))
-	     (font-lock-fontify-buffer))
+	     (font-lock-fontify-region (point-min) (point-max)))
        ,@body)
      ;; (sit-for 0.1)
      ))
@@ -298,7 +297,7 @@ BODY is code to be executed within the temp buffer.  Point is
        ;; (message "fill-paragraph-function: %s" fill-paragraph-function)
        (goto-char (point-min))
        (when syntactic-close-debug-p (switch-to-buffer (current-buffer))
-	     (font-lock-fontify-buffer))
+	     (font-lock-fontify-region (point-min) (point-max)))
        ,@body)
      ;; (sit-for 0.1)
      ))
@@ -315,7 +314,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (shell-script-mode)
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
 
        ,@body)))
 
@@ -331,7 +330,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-xml-buffer (contents &rest body)
@@ -345,7 +344,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (insert ,contents)
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (defmacro syntactic-close-test-with-xml-buffer-point-min (contents &rest body)
@@ -360,7 +359,7 @@ BODY is code to be executed within the temp buffer.  Point is
        (goto-char (point-min))
        (when syntactic-close-debug-p
 	 (switch-to-buffer (current-buffer))
-	 (font-lock-fontify-buffer))
+	 (font-lock-fontify-region (point-min) (point-max)))
        ,@body)))
 
 (provide 'syntactic-close-setup-ert-tests)

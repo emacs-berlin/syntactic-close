@@ -25,13 +25,13 @@
 ;;; Code:
 (ert-deftest syntactic-close-close-ruby-string-test ()
   (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail"
+    (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
 (ert-deftest syntactic-close-close-ruby-paren-test ()
   (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\""
     (syntactic-close)
-    ;; (sit-for 1 t)
     (should (eq (char-before) ?\)))))
 
 (ert-deftest syntactic-close-close-ruby-string-interpolation-test-2 ()
@@ -46,7 +46,7 @@
       "values.each do |value|
   break if value.even?"
         (syntactic-close)
-	(should (looking-back "end" (line-beginning-position))))) 
+	(should (looking-back "end" (line-beginning-position)))))
 
 (provide 'syntactic-close-ruby-tests)
 ;;; syntactic-close-ruby-tests.el ends here

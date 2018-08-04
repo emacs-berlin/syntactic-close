@@ -94,7 +94,9 @@ function €()
 
 (ert-deftest syntactic-close-close-php-paren-semicolon-test-1 ()
   (syntactic-close-test-with-php-buffer-point-min
-      syntactic-close-php-test-string-2
+      "<?php
+$l = mysql_connect(\"localhost\", \"user\", \"passw
+?>"
     (search-forward "passw")
     (syntactic-close)
     (should (eq (char-before) ?\"))))
