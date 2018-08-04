@@ -103,6 +103,9 @@ Concatenates ‘syntactic-close-paired-openers’, ‘syntactic-close-paired-clo
   :group 'sytactic-close)
 
 (defun syntactic-close--escapes-maybe (limit)
+  "Handle escaped parens, consider strings like
+
+\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th"
   (save-excursion
     (when (eq (char-before) syntactic-close--escape-char)
       (buffer-substring-no-properties (point) (progn (skip-chars-backward (char-to-string syntactic-close--escape-char) limit)(1- (point)))))))
@@ -779,10 +782,16 @@ CLOSER, a string"
 (defun syntactic-close (&optional arg beg pps)
   "Command will insert closing delimiter whichever needed.
 
-With \\[universal-argument]: close everything at point.
-Optional argument ARG TBD.
-Optional argument BEG the starting point.
-Optional argument FORCE TBD."
+With \\[universal-argument]: close everything at point. 
+
+For example
+\"\\(^ *\\|^Some: *\\|\\( FOO\\|'s\\|Bar\\|BAZ\\|Outer\\(?: \\(?:\\(?:sim\\|zh
+
+should end up as
+\"\\(^ *\\|^Some: *\\|\\( FOO\\|'s\\|Bar\\|BAZ\\|Outer\\(?: \\(?:\\(?:sim\\|zh\\)\\)\\)\"
+
+Optional argument ARG signals interactive use.
+Optional argument BEG sets the lesser border."
   (interactive "p*")
   (let ((beg (or beg (syntactic-close--point-min)))
 	(iact arg)

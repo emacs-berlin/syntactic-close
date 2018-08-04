@@ -7,6 +7,14 @@ whatever is needed - think of syntactic consequence.
 Honor multi-char pairs like triplequoted string, padding and
 escape-sequences.
 
+For example when called from behind an open string like
+
+"\(^ *\|^Some: *\|\( FOO\|'s\|Bar\|BAZ\|Outer\(?: \(?:\(?:sim\|zh
+
+\\[universal-argument] M-x syntactic-close RET should result in
+
+"\(^ *\|^Some: *\|\( FOO\|'s\|Bar\|BAZ\|Outer\(?: \(?:\(?:sim\|zh\)\)\)"
+
 That way continuation may be inserted by just one convenient key.
 
 A first draft was proposed at emacs-devel mailing-list: 
