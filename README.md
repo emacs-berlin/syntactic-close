@@ -7,7 +7,7 @@ whatever is needed - think of syntactic consequence.
 Honor multi-char pairs like triplequoted string, padding and
 escape-sequences.
 
-For example when called from behind an open string like
+For example when called at the end of an open string like
 
 "\\(^ *\\|^Foo: *\\|\\( BAR\\|'s\\|Bad\\|BAZ\\|Bnter\\(?: \\(?:\\(?:sam\\|th
 
