@@ -54,8 +54,10 @@
 
 ;; (setq syntactic-close-unary-delimiter-chars (list ?' ?` ?* ?\\ ?= ?$ ?% ?§ ?? ?! ?+ ?- ?# ?: ?\; ?,))
 (setq syntactic-close-unary-delimiter-chars (list ?` ?\" ?'))
+(make-variable-buffer-local 'syntactic-close-unary-delimiter-chars)
 
 (setq syntactic-close-unary-delimiters-strg (cl-map 'string 'identity syntactic-close-unary-delimiter-chars))
+(make-variable-buffer-local 'syntactic-close-unary-delimiters-strg)
 
 (defcustom syntactic-close-empty-line-p-chars "^[ \t\r]*$"
   "Syntactic-close-empty-line-p-chars."
@@ -95,7 +97,7 @@
 Concatenates ‘syntactic-close-paired-openers’, ‘syntactic-close-paired-closers’ and  ‘syntactic-close-unary-delimiters-strg’")
 
 ;; make sure changes are reloaded
-(setq syntactic-close-delimiters (concat syntactic-close-paired-openers syntactic-close-paired-closers syntactic-close-unary-delimiters-strg))
+;; (setq syntactic-close-delimiters (concat syntactic-close-paired-openers syntactic-close-paired-closers syntactic-close-unary-delimiters-strg))
 
 (defcustom syntactic-close--escape-char 92
   "Customize the escape char if needed."
@@ -149,15 +151,27 @@ Argument PPS is result of ‘parse-partial-sexp’"
 Argument PPS is result of a call to function ‘parse-partial-sexp’"
   (insert (syntactic-close-pure-syntax-intern pps)))
 
+(defun syntactic-close-travel-comment-maybe (pps limit)
+  "Leave commented section backward."
+  (let ((pps pps))
+    (while (nth 4 pps)
+      (goto-char (nth 8 pps))
+      (skip-chars-backward " \t\r\n\f")
+      (setq pps (parse-partial-sexp limit (point))))
+    pps))
+
 (defun syntactic-close--generic (pps)
 
-"Argument PPS is result of a call to function ‘parse-partial-sexp’."
+  "Argument PPS is result of a call to function ‘parse-partial-sexp’."
   (let ((limit (or (nth 8 pps)(point-min)))
 	(pps pps)
 	closer stack done escapes padding)
     (save-restriction
       (save-excursion
-	(while (and (not (bobp)) (not done))
+	(while (and (not (bobp)) (not done) (<= limit (1- (point))))
+	  (when
+	      (nth 4 pps)
+	    (setq pps (syntactic-close-travel-comment-maybe pps limit)))
 	  (cond ((member (char-before)
 			 ;; (list ?\) ?\] ?})
 			 syntactic-close-paired-closers)
@@ -186,14 +200,17 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
 		 (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
 		 (setq done t)
 		 (setq escapes (syntactic-close--escapes-maybe limit)))
-		(t (unless (< 0 (abs (skip-chars-backward (concat "^" syntactic-close-delimiters) limit)))
+		(t (unless
+		       (prog1
+			   (< 0 (abs (skip-chars-backward (concat "^" syntactic-close-delimiters) limit)))
+			 (setq pps (parse-partial-sexp limit (point))))
 		     (setq done t)
 		     (setq closer nil escapes nil padding nil))))))
       (cond (closer
 	     (when (characterp closer) (setq closer (char-to-string closer)))
 	     (concat padding escapes closer))
 	    ;; the fence character closes
-	    (t (ignore-errors (nth 3 pps)))))))
+	    (t (ignore-errors (nth 3 (parse-partial-sexp limit (point)))))))))
 
 (defun syntactic-close-count-lines (&optional beg end)
   "Count lines in accessible part of buffer.
@@ -560,34 +577,33 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 Argument CLOSER the char to close.
 Argument PPS should provide result of ‘parse-partial-sexp’.
 Optional argument ORG read ‘org-mode’."
-  (cond ((and (nth 1 pps) (not (nth 3 pps)))
-	 (syntactic-close-pure-syntax pps)
-	 t)
-	(t (let ((closer (syntactic-close--generic pps))
-		 done)
-	     (if closer
-		 (progn
-		   (insert closer)
-		   (setq done t))
-	       (cond
-		((and (nth 1 pps) (nth 3 pps)
-		      ;; (if (< (nth 1 pps) (nth 8 pps))
-		      (looking-back "\\[\\[:[a-z]+" (line-beginning-position)))
-		 (insert ":")
-		 (setq done t))
-		((and (eq 2 (nth 1 pps)) (looking-back "\\[\\[:[a-z]+" (1- (nth 1 pps))))
-		 (insert ":")
-		 (setq done t))
-		((save-excursion
-		   (skip-chars-backward " \t\r\n\f")
-		   (looking-back syntactic-close-emacs-lisp-block-re (line-beginning-position)))
-		 (syntactic-close-insert-with-padding-maybe (char-to-string 40) t t))
-		(closer
-		 (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-		 (insert closer)
-		 (setq done t))
-		(org (setq done (syntactic-close--org-mode-close)))))
-	     done))))
+  (let* ((syntactic-close-unary-delimiter-chars (list ?\"))
+	 (syntactic-close-unary-delimiters-strg (cl-map 'string 'identity syntactic-close-unary-delimiter-chars))
+	 (syntactic-close-delimiters (concat syntactic-close-paired-openers syntactic-close-paired-closers syntactic-close-unary-delimiters-strg))
+	 (closer (syntactic-close--generic pps))
+	 done)
+    (if closer
+	(progn
+	  (insert closer)
+	  (setq done t))
+      (cond
+       ((and (nth 1 pps) (nth 3 pps)
+	     (looking-back "\\[\\[:[a-z]+" (line-beginning-position)))
+	(insert ":")
+	(setq done t))
+       ((and (eq 2 (nth 1 pps)) (looking-back "\\[\\[:[a-z]+" (1- (nth 1 pps))))
+	(insert ":")
+	(setq done t))
+       ((save-excursion
+	  (skip-chars-backward " \t\r\n\f")
+	  (looking-back syntactic-close-emacs-lisp-block-re (line-beginning-position)))
+	(syntactic-close-insert-with-padding-maybe (char-to-string 40) t t))
+       (closer
+	(skip-chars-backward " \t\r\n\f" (line-beginning-position))
+	(insert closer)
+	(setq done t))
+       (org (setq done (syntactic-close--org-mode-close)))))
+    done))
 
 (defun syntactic-close-python-close (b-of-st b-of-bl &optional pps)
   "Might deliver equivalent to `py-dedent'.
@@ -752,7 +768,7 @@ Argument IACT signals an interactive call."
     (or (< orig (point)) (and iact (message "%s" "nil") nil))))
 
 ;;;###autoload
-(defun syntactic-close (&optional arg beg pps)
+(defun syntactic-close (&optional arg beg pps iact)
   "Insert closing delimiter.
 
 With \\[universal-argument]: close everything at point.
@@ -767,11 +783,11 @@ Optional argument BEG sets the lesser border.
 Argument PPS, the result of ‘parse-partial-sexp’."
   (interactive "p*")
   (let ((beg (or beg (syntactic-close--point-min)))
-	(iact arg)
+	(iact (or iact arg))
 	(arg (or arg 1))
 	erg)
     (pcase (prefix-numeric-value arg)
-      (4 (while (syntactic-close-intern beg iact pps)))
+      (4 (while (syntactic-close-intern beg iact (parse-partial-sexp beg (point)))))
       (_
        (dotimes (_ arg)
 	 (setq erg (syntactic-close-intern beg iact pps))

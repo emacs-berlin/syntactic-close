@@ -24,13 +24,21 @@
 
 ;;; Code:
 
-(ert-deftest syntactic-close--elisp-nested-bracket-paren-test ()
+(ert-deftest syntactic-close--elisp-nested-bracket-paren-test-1 ()
   (syntactic-close-test-with-elisp-buffer
     "(list ([\n;;{123\n;;{123\n"
     (syntactic-close)
-    (should (eq (char-before) ?\]))
+    (should (eq (char-before) ?\]))))
+
+(ert-deftest syntactic-close--elisp-nested-bracket-paren-test-2 ()
+  (syntactic-close-test-with-elisp-buffer
+    "(list ([\n;;{123\n;;{123\n]"
     (syntactic-close)
-    (should (eq (char-before) ?\)))
+    (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-close--elisp-nested-bracket-paren-test-3 ()
+  (syntactic-close-test-with-elisp-buffer
+    "(list ([\n;;{123\n;;{123\n])"
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
