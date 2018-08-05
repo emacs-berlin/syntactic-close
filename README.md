@@ -11,11 +11,11 @@ For example when called from behind an open string like
 
 "\\(^ *\\|^Foo: *\\|\\( BAR\\|'s\\|Bad\\|BAZ\\|Bnter\\(?: \\(?:\\(?:sam\\|th
 
-C-u M-x syntactic-close RET should result in
+<kbd>C-u M-x</kbd> `syntactic-close` <kbd>RET</kbd> should result in
 
 "\\(^ *\\|^Foo: *\\|\\( BAR\\|'s\\|Bad\\|BAZ\\|Bnter\\(?: \\(?:\\(?:sam\\|th\\)\\)\\)\\)\\)"
 
-That way continuation may be inserted by just one convenient key.
+That way continuation may be inserted by just one key.
 
 A first draft was proposed at emacs-devel mailing-list: 
 http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html 
