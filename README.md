@@ -9,11 +9,11 @@ escape-sequences.
 
 For example when called from behind an open string like
 
-"\(^ *\|^Some: *\|\( FOO\|'s\|Bar\|BAZ\|Outer\(?: \(?:\(?:sim\|zh
+"\"\\(^ *\\|^Foo: *\\|\\( BAR\\|'s\\|Bad\\|BAZ\\|Inter\\(?: \\(?:\\(?:sam\\|th"
 
-\\[universal-argument] M-x syntactic-close RET should result in
+C-u M-x syntactic-close RET should result in
 
-"\(^ *\|^Some: *\|\( FOO\|'s\|Bar\|BAZ\|Outer\(?: \(?:\(?:sim\|zh\)\)\)"
+"\"\\(^ *\\|^Foo: *\\|\\( BAR\\|'s\\|Bad\\|BAZ\\|Inter\\(?: \\(?:\\(?:sam\\|th\\)\\)\\)\\)\\)\""
 
 That way continuation may be inserted by just one convenient key.
 
