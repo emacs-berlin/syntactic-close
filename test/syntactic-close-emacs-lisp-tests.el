@@ -63,6 +63,24 @@
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
+(ert-deftest syntactic-close--elisp-char-class-test-2 ()
+  (syntactic-close-test-with-elisp-buffer
+    "(string-match \"[[:alpha"
+    (syntactic-close)
+    (should (eq (char-before) ?:))))
+
+(ert-deftest syntactic-close--elisp-char-class-test-3 ()
+  (syntactic-close-test-with-elisp-buffer
+    "(string-match \"[[:alpha:"
+    (syntactic-close)
+    (should (eq (char-before) ?\]))))
+
+(ert-deftest syntactic-close--elisp-char-class-test-4 ()
+  (syntactic-close-test-with-elisp-buffer
+    "(string-match \"[[:alpha:]"
+    (syntactic-close)
+    (should (eq (char-before) ?\]))))
+
 (ert-deftest syntactic-close--elisp-arglist-test ()
   (syntactic-close-test-with-elisp-buffer
       "(defun asdf ("
