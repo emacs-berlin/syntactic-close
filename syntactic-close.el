@@ -568,14 +568,14 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
   (when (save-excursion (and (re-search-backward "^#\\+\\([A-Z]+\\)_\\([A-Z]+\\)" nil t 1)(string= "BEGIN" (match-string-no-properties 1))))
     (insert (concat "#+END_" (match-string-no-properties 2)))))
 
-(defun syntactic-close-emacs-lisp-close (pps orig beg iact &optional org)
+(defun syntactic-close-emacs-lisp-close (pps &optional org)
   "Close in Emacs Lisp.
 Argument CLOSER the char to close.
 Argument PPS should provide result of ‘parse-partial-sexp’.
 Optional argument ORG read ‘org-mode’."
   (let* ((unary-delimiter-chars (list ?\"))
-	 (unary-delimiters-strg (cl-map 'string 'identity unary-delimiter-chars))
-	 (delimiters (concat syntactic-close-paired-openers-strg syntactic-close-paired-closers-strg unary-delimiters-strg))
+	 ;; (unary-delimiters-strg (cl-map 'string 'identity unary-delimiter-chars))
+	 ;; (delimiters (concat syntactic-close-paired-openers-strg syntactic-close-paired-closers-strg unary-delimiters-strg))
 	 closer)
     (cond
      ((and (nth 1 pps) (nth 3 pps)
@@ -585,7 +585,7 @@ Optional argument ORG read ‘org-mode’."
      ((and (eq 2 (nth 1 pps)) (looking-back "\\[\\[:[a-z]+" (1- (nth 1 pps))))
       (insert ":")
       t)
-     (org (setq done (syntactic-close--org-mode-close)))
+     (org (syntactic-close--org-mode-close))
      ((and (not (nth 8 pps))(nth 1 pps))
       (syntactic-close-pure-syntax pps)
       t)
@@ -688,7 +688,7 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 	       t))
 	(goto-char orig))))
 
-(defun syntactic-close--modes (pps orig beg iact)
+(defun syntactic-close--modes (pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
   (pcase major-mode
     (`php-mode (syntactic-close--semicolon-modes pps))
@@ -697,9 +697,9 @@ Argument PPS, the result of ‘parse-partial-sexp’."
     (`python-mode
      (syntactic-close-python-close nil nil pps))
     (`emacs-lisp-mode
-     (syntactic-close-emacs-lisp-close pps orig beg iact))
+     (syntactic-close-emacs-lisp-close pps))
     (`org-mode
-     (syntactic-close-emacs-lisp-close pps orig beg iact t))
+     (syntactic-close-emacs-lisp-close pps t))
     (`ruby-mode
      (syntactic-close-ruby-close pps))
     (`nxml-mode
@@ -733,7 +733,7 @@ Argument IACT signals an interactive call."
 	 (pps (or pps (parse-partial-sexp beg (point)))))
     (cond
      ((member major-mode syntactic-close-modes)
-      (syntactic-close--modes pps orig beg iact))
+      (syntactic-close--modes pps))
      ((nth 8 pps)
       (syntactic-close-generic-forms pps))
      ((nth 1 pps)
