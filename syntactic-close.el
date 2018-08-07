@@ -474,26 +474,25 @@ END the comment end"
   "Insert comment end.
 
 Argument PPS should provide result of ‘parse-partial-sexp’."
-  (let ((orig (point))
-	done)
+  (let ((orig (point)))
     (cond
      ((eq major-mode 'haskell-mode)
       (goto-char (nth 8 pps))
       (if (looking-at "{-# ")
 	  (syntactic-close--comments-intern orig "{-#" "#-}")
 	(syntactic-close--comments-intern orig "{-" "-}"))
-      (setq done t))
+      t)
      ((or (eq major-mode 'c++-mode) (eq major-mode 'c-mode))
       (goto-char (nth 8 pps))
       (syntactic-close--comments-intern orig "/*" "*/")
-      (setq done t))
+      t)
      (t (if (string= "" comment-end)
 	    (if (eq system-type 'windows-nt)
 		(insert "\r\n")
 	      (insert "\n"))
 	  (insert comment-end))
-	(setq done t)))
-    done))
+	t))
+    ))
 
 (defun syntactic-close--point-min ()
   "Determine the lower position in buffer to narrow."
@@ -531,14 +530,11 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 (defun syntactic-close-ml ()
   "Close in Standard ML."
   (interactive "*")
-  (let (done)
-    ;; (when
-    (cond ((derived-mode-p 'sgml-mode)
-	   (setq syntactic-close-tag 'sgml-close-tag)
-	   (funcall syntactic-close-tag)
-	   (font-lock-fontify-region (point-min)(point-max))
-	   (setq done t)))
-    done))
+  (cond ((derived-mode-p 'sgml-mode)
+	 (setq syntactic-close-tag 'sgml-close-tag)
+	 (funcall syntactic-close-tag)
+	 (font-lock-fontify-region (point-min)(point-max))
+	 t)))
 
 (defun syntactic-close-python-listclose (orig closer force pps)
   "If inside list, assume another item first.
@@ -546,23 +542,21 @@ Argument ORIG the start position.
 Argument CLOSER the char which closes the list.
 Argument FORCE to be done.
 Argument PPS should provide result of ‘parse-partial-sexp’."
-  (let (done)
-    (cond ((member (char-before) (list ?' ?\"))
-	   (if force
-	       (progn
-		 (insert closer)
-		 ;; only closing `"' or `'' was inserted here
-		 (when (setq closer (syntactic-close--generic (parse-partial-sexp (point-min) (point))))
-		   (insert closer))
-		 (setq done t))
-	     (if (nth 3 pps)
-		 (insert (char-before))
-	       (insert ","))
-	     (setq done t)))
-	  (t (syntactic-close-fix-whitespace-maybe orig)
-	     (insert closer)
-	     (setq done t)))
-    done))
+  (cond ((member (char-before) (list ?' ?\"))
+	 (if force
+	     (progn
+	       (insert closer)
+	       ;; only closing `"' or `'' was inserted here
+	       (when (setq closer (syntactic-close--generic (parse-partial-sexp (point-min) (point))))
+		 (insert closer))
+	       t)
+	   (if (nth 3 pps)
+	       (insert (char-before))
+	     (insert ","))
+	   t))
+	(t (syntactic-close-fix-whitespace-maybe orig)
+	   (insert closer)
+	   t)))
 
 ;; Emacs-lisp
 (defun syntactic-close--org-mode-close ()
@@ -582,30 +576,23 @@ Optional argument ORG read ‘org-mode’."
   (let* ((unary-delimiter-chars (list ?\"))
 	 (unary-delimiters-strg (cl-map 'string 'identity unary-delimiter-chars))
 	 (delimiters (concat syntactic-close-paired-openers-strg syntactic-close-paired-closers-strg unary-delimiters-strg))
-	 done)
+	 closer)
     (cond
      ((and (nth 1 pps) (nth 3 pps)
 	   (looking-back "\\[\\[:[a-z]+" (line-beginning-position)))
       (insert ":")
-      (setq done t))
+      t)
      ((and (eq 2 (nth 1 pps)) (looking-back "\\[\\[:[a-z]+" (1- (nth 1 pps))))
       (insert ":")
-      (setq done t))
-     ((save-excursion
-	(skip-chars-backward " \t\r\n\f")
-	(looking-back syntactic-close-emacs-lisp-block-re (line-beginning-position)))
-      (syntactic-close-insert-with-padding-maybe (char-to-string 40) t t))
-
+      t)
      (org (setq done (syntactic-close--org-mode-close)))
-     ((nth 8 pps)
-      (insert (syntactic-close--generic pps unary-delimiter-chars delimiters)))
      ((and (not (nth 8 pps))(nth 1 pps))
-      (syntactic-close-pure-syntax pps))
+      (syntactic-close-pure-syntax pps)
+      t)
      (t (setq closer (syntactic-close--generic pps unary-delimiter-chars))
 	(when closer
 	  (insert closer)
-	  (setq done t))))
-    done))
+	  t)))))
 
 (defun syntactic-close-python-close (b-of-st b-of-bl &optional pps)
   "Might deliver equivalent to `py-dedent'.
@@ -637,30 +624,26 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
 ;; Ruby
 (defun syntactic-close--ruby-insert-end ()
   "Ruby specific close workhorse."
-  (let (done)
-    (unless (or (looking-back ";[ \t]*" nil))
-      (unless (and (bolp)(eolp))
-	(newline))
-      (unless (looking-back "^[^ \t]*\\_<end" nil)
-	(insert "end")
-	(setq done t)
-	(save-excursion
-	  (back-to-indentation)
-	  (indent-according-to-mode))))
-    done))
+  (unless (or (looking-back ";[ \t]*" nil))
+    (unless (and (bolp)(eolp))
+      (newline))
+    (unless (looking-back "^[^ \t]*\\_<end" nil)
+      (insert "end")
+      t
+      (save-excursion
+	(back-to-indentation)
+	(indent-according-to-mode)))))
 
 (defun syntactic-close-ruby-close (pps)
-    "Ruby specific close.
+  "Ruby specific close.
 
 Argument PPS is result of a call to function ‘parse-partial-sexp’"
-  (let ((closer (syntactic-close--guess-delimiter pps))
-	done)
+  (let ((closer (syntactic-close--guess-delimiter pps)))
     (if closer
 	(progn
 	  (insert closer)
-	  (setq done t))
-      (setq done (syntactic-close--ruby-insert-end))
-      done)))
+	  t)
+      (syntactic-close--ruby-insert-end))))
 
 (defun syntactic-close--guess-delimiter (pps)
   "Argument PPS is result of a call to function ‘parse-partial-sexp’."
@@ -674,47 +657,36 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
 Argument PPS, the result of ‘parse-partial-sexp’."
   (let ((closer
 	 (syntactic-close--guess-delimiter pps))
-	(orig (point))
-	done)
-    (cond ((nth 3 pps)
-	   (insert closer) (setq done t))
-	  ((and closer (string-match "}" closer)(syntactic-close-empty-line-p))
-	   (syntactic-close-fix-whitespace-maybe orig)
-	   (insert closer)
-	   (setq done t)
-	   (indent-according-to-mode))
-	  ((and closer (string-match "}" closer))
-	   (cond ((member (char-before) (list ?\; ?}))
-		  (if (eq (syntactic-close-count-lines (point-min) (point)) (save-excursion (progn (goto-char (nth 1 pps)) (syntactic-close-count-lines (point-min) (point)))))
-		      ;; insert at newline, if opener is at a previous line
-		      (progn
-			(syntactic-close-fix-whitespace-maybe orig)
-			(insert closer))
-		    (newline)
-		    (insert closer))
-		  (indent-according-to-mode))
-		 (t (insert ";")))
-	   (setq done t))
-	  ((and closer (string-match ")" closer))
-	   (insert closer)
-	   (setq done t))
-	  ;; closing asignement
-	  ;; ((eq (char-before) ?\))
-	  ;;  (backward-list)
-	  ;;  (skip-chars-backward "^ \t\r\n\f")
-	  ;;  (skip-chars-backward " \t")
-	  ;;  (when (eq (char-before) ?=)
-	  ;;    (goto-char orig)
-	  ;;    (insert ";")
-	  ;;    (setq done t)))
-	  ((save-excursion (beginning-of-line) (looking-at syntactic-close-assignment-re))
-	   (insert ";")
-	   (setq done t))
-	  (t (when closer
+	(orig (point)))
+    (or (cond ((nth 3 pps)
+	       (insert closer) t)
+	      ((and closer (string-match "}" closer)(syntactic-close-empty-line-p))
+	       (syntactic-close-fix-whitespace-maybe orig)
 	       (insert closer)
-	       (setq done t))))
-    (unless done (goto-char orig))
-    done))
+	       t
+	       (indent-according-to-mode))
+	      ((and closer (string-match "}" closer))
+	       (cond ((member (char-before) (list ?\; ?}))
+		      (if (eq (syntactic-close-count-lines (point-min) (point)) (save-excursion (progn (goto-char (nth 1 pps)) (syntactic-close-count-lines (point-min) (point)))))
+			  ;; insert at newline, if opener is at a previous line
+			  (progn
+			    (syntactic-close-fix-whitespace-maybe orig)
+			    (insert closer))
+			(newline)
+			(insert closer))
+		      (indent-according-to-mode))
+		     (t (insert ";")))
+	       t)
+	      ((and closer (string-match ")" closer))
+	       (insert closer)
+	       t)
+	      ((save-excursion (beginning-of-line) (looking-at syntactic-close-assignment-re))
+	       (insert ";")
+	       t)
+	      (closer
+	       (insert closer)
+	       t))
+	(goto-char orig))))
 
 (defun syntactic-close--modes (pps orig beg iact)
   "Argument PPS, the result of ‘parse-partial-sexp’."
