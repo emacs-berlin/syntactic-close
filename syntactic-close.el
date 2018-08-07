@@ -151,7 +151,10 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
   (insert (syntactic-close-pure-syntax-intern pps)))
 
 (defun syntactic-close-travel-comment-maybe (pps limit)
-  "Leave commented section backward."
+  "Leave commented section backward.
+
+Argument PPS is result of a call to function ‘parse-partial-sexp’.
+Argument LIMIT the lower bound."
   (let ((pps pps))
     (while (nth 4 pps)
       (goto-char (nth 8 pps))
@@ -160,8 +163,11 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
     pps))
 
 (defun syntactic-close--generic (pps &optional unary-delimiter-chars delimiters)
+  "Detect delimiters inside string or comment maybe.
 
-  "Argument PPS is result of a call to function ‘parse-partial-sexp’."
+Argument PPS is result of a call to function ‘parse-partial-sexp’.
+Optional argument UNARY-DELIMITER-CHARS like quoting chara1cter.
+Optional argument DELIMITERS composed of unary and paired delimiters."
   (let ((limit (or (nth 8 pps)(point-min)))
 	(pps pps)
 	(unary-delimiter-chars (or unary-delimiter-chars syntactic-close-unary-delimiter-chars))
@@ -200,6 +206,7 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
 		 (setq closer (char-before))
 		 (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
 		 (setq done t)
+
 		 (setq escapes (syntactic-close--escapes-maybe limit)))
 		(t
 		 (unless
@@ -515,6 +522,7 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 
 (defun syntactic-close--guess-from-string-interpolation-maybe (pps)
   "Return the character of innermost sexp in inside.
+
 Argument PPS should provide result of ‘parse-partial-sexp’."
   (when (and (nth 1 pps) (nth 3 pps))
     (let* ((listchar (save-excursion (goto-char (nth 1 pps))
@@ -538,6 +546,7 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 
 (defun syntactic-close-python-listclose (orig closer force pps)
   "If inside list, assume another item first.
+
 Argument ORIG the start position.
 Argument CLOSER the char which closes the list.
 Argument FORCE to be done.
@@ -570,6 +579,7 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 
 (defun syntactic-close-emacs-lisp-close (pps &optional org)
   "Close in Emacs Lisp.
+
 Argument CLOSER the char to close.
 Argument PPS should provide result of ‘parse-partial-sexp’.
 Optional argument ORG read ‘org-mode’."
