@@ -255,6 +255,14 @@ Optional argument IACT signaling interactive use."
 (defvar syntactic-close-tag nil
   "Functions closing mode-specific might go here.")
 
+(defcustom syntactic-close-electric-delete-whitespace-p nil
+  "When ‘t’ delete whitespace before point when closing.
+
+Default is nil"
+
+  :type 'boolean
+  :group 'syntactic-close)
+
 (defcustom syntactic-close-honor-padding-p t
   "Insert whitespace following opener before closer.
 
@@ -739,8 +747,10 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 Argument PPS, the result of ‘parse-partial-sexp’.
 Argument BEG the lesser border.
 Argument IACT signals an interactive call."
-  (let* ((orig (point))
+  (let* ((orig (copy-marker (point)))
 	 (pps (or pps (parse-partial-sexp beg (point)))))
+    (when syntactic-close-electric-delete-whitespace-p
+      (delete-region orig (progn (skip-chars-backward " \t" (line-beginning-position))(point))))
     (cond
      ((member major-mode syntactic-close-modes)
       (syntactic-close--modes pps))

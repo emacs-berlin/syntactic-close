@@ -93,6 +93,20 @@
       (syntactic-close)
     (should (looking-back "asdf ()"))))
 
+(ert-deftest syntactic-close-electric-delete-whitespace-test-1 ()
+  (syntactic-close-test-with-elisp-buffer
+      "(defun asdf ( "
+      (let ((syntactic-close-electric-delete-whitespace-p t))
+	(syntactic-close)
+	(should (looking-back "asdf ()")))))
+
+(ert-deftest syntactic-close-electric-delete-whitespace-test-2 ()
+  (syntactic-close-test-with-elisp-buffer
+      "(defun asdf ( "
+      (let ((syntactic-close-electric-delete-whitespace-p nil))
+	(syntactic-close)
+	(should (looking-back "asdf (  )")))))
+
 (ert-deftest syntactic-close--elisp-padding-test ()
   (syntactic-close-test-with-elisp-buffer
       "(defun foo ( arg"
@@ -156,7 +170,7 @@ asdf"
   ;; comint-password-prompt-regexp
   (syntactic-close-test-with-elisp-buffer
       "\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th\\)\\)\\)\\)\\)\""
-      (let ((orig (point)) 
+      (let ((orig (point))
 	    (syntactic-close-generic-p t))
 	(syntactic-close)
 	(should (eq orig (point))))))
