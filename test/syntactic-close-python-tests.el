@@ -89,12 +89,6 @@
       (should (eq (char-before) ?\)))
       (should (eq (point) orig)))))
 
-(ert-deftest syntactic-close--multidelim-python-test-1 ()
-  (syntactic-close-test-with-python-buffer
-      "{{{{asdf"
-      (syntactic-close)
-    (should (looking-back "}}}}" (line-beginning-position)))))  
-
 (provide 'syntactic-close-python-tests)
 
 ;;; syntactic-close-python-tests.el ends here

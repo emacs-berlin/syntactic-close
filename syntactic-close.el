@@ -141,8 +141,8 @@ Argument PPS is result of ‘parse-partial-sexp’"
     (save-excursion
       (goto-char (nth 1 pps))
       (when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point)))))
-      (setq closer (syntactic-close--multichar-closer (char-after) (line-beginning-position) 1)))
-    (concat  padding closer)))
+      (setq closer (char-to-string (syntactic-close--return-complement-char-maybe (char-after)))))
+    (concat padding closer)))
 
 (defun syntactic-close-pure-syntax (pps)
   "Insert closer found from beginning of list.
