@@ -81,13 +81,43 @@
 ;;     (syntactic-close)
 ;;     (should (eq (char-before) ?'))))
 
-(ert-deftest syntactic-close-python-no-colon-test-1 ()
+(ert-deftest syntactic-close-python-no-colon-test-blHQQc1 ()
   (syntactic-close-test-with-python-buffer
       "print(1)"
     (let ((orig (point)))
       (syntactic-close)
       (should (eq (char-before) ?\)))
       (should (eq (point) orig)))))
+
+(ert-deftest syntactic-close-python-tqs-sq-test-tmeKth ()
+  (syntactic-close-test-with-python-buffer
+      "'''asdf"
+    (goto-char (point-max)) 
+    (syntactic-close)
+    (should (looking-back "'''asdf'''" 1))))
+
+(ert-deftest syntactic-close-python-tqs-dq-test-10mjq3 ()
+  (syntactic-close-test-with-python-buffer
+      "\"\"\"asdf"
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (looking-back "\"\"\"asdf\"\"\"" 1))))
+
+(ert-deftest syntactic-close-python-sq-test-UM9ZGb ()
+  (syntactic-close-test-with-python-buffer
+      "'asdf"
+    (goto-char (point-max)) 
+    (syntactic-close)
+    (should (looking-back "'asdf'" (line-beginning-position)))))
+
+(ert-deftest syntactic-close-python-dq-test-Zu6qkI ()
+  (syntactic-close-test-with-python-buffer
+      "\"asdf"
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (looking-back "\"asdf\"" (line-beginning-position)))))
+
+
 
 (provide 'syntactic-close-python-tests)
 

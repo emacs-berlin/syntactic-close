@@ -203,7 +203,9 @@ Optional argument DELIMITERS composed of unary and paired delimiters."
 			      unary-delimiter-chars)
 		      ;; $asdf$
 		      (not (eq 2 (count-matches (char-to-string (char-before)) limit (point)))))
-		 (setq closer (char-before))
+		 (if (nth 3 pps)
+		     (setq closer (buffer-substring-no-properties limit (point)))
+		   (setq closer (char-before)))
 		 (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
 		 (setq done t)
 
@@ -628,7 +630,7 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
 		(lambda ()(beginning-of-line)(back-to-indentation)))))
 	 (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*")))
     (cond
-     ((and (not (bolp)) (not (char-equal ?: (char-before)))
+     ((and (not (bolp)) (not (nth 3 pps)) (not (char-equal ?: (char-before)))
 	   (save-excursion
 	     (funcall syntactic-close-beginning-of-statement)
 	     (looking-at syntactic-close-beginning-of-block-re)))
@@ -735,11 +737,14 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 
 (defun syntactic-close-generic-forms (pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
-  (cond
-   ((syntactic-close--generic pps))
-   ((nth 4 pps)
-    ;; in comment
-    (syntactic-close--insert-comment-end-maybe pps))))
+  (let (erg)
+    (cond
+     ((setq erg (syntactic-close--generic pps))
+      (insert erg)
+      t)
+     ((nth 4 pps)
+      ;; in comment
+      (syntactic-close--insert-comment-end-maybe pps)))))
 
 (defun syntactic-close-intern (beg iact &optional pps)
   "A first dispatch.
