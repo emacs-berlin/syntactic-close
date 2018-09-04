@@ -124,6 +124,7 @@ $l = mysql_connect(\"localhost\", \"user\", \"passw
   (syntactic-close-test-with-php-buffer
       "public function Foobar(){
   echo \"Foobar"
+    (goto-char (point-max)) 
     (syntactic-close)
     (should (eq (char-before) ?\"))
     (syntactic-close)
@@ -141,18 +142,27 @@ $l = mysql_connect(\"localhost\", \"user\", \"passw
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest syntactic-close-close-php-check-indent-test ()
+(ert-deftest syntactic-close-close-php-check-indent-test-8EXbHY ()
   (let ((syntactic-close-electric-indent-p t))
     (syntactic-close-test-with-php-buffer
 	"if ($foobar){
     foreach ($foobar as $key =>  $val) {
-         echo $key;
-	 "
+        echo $key\;"
+      (goto-char (point-max))
       (syntactic-close) 
-      (should (eq (current-indentation) 4))
-      (newline-and-indent)
-      (syntactic-close)
-      (should (eq (current-indentation) 0)))))
+      (should (eq (current-indentation) 8)))))
+
+;; (ert-deftest syntactic-close-close-php-check-indent-test-qwB2rb ()
+;;   (let ((syntactic-close-electric-indent-p t))
+;;     (syntactic-close-test-with-php-buffer
+;; 	"if ($foobar){
+;;     foreach ($foobar as $key =>  $val) {
+;;         echo $key\;"
+;;       (goto-char (point-max))
+;;       (syntactic-close) 
+;;       (newline-and-indent)
+;;       (syntactic-close)
+;;       (should (eq (current-indentation) 0)))))
 
 (provide 'syntactic-close-php-tests)
 ;;; syntactic-close-php-tests.el ends here

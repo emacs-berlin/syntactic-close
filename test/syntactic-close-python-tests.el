@@ -24,63 +24,6 @@
 
 ;;; Code:
 
-;; (ert-deftest syntactic-close-delete-whitespace-backward-test ()
-;;   (syntactic-close-test-with-python-buffer
-;;       "[1, 3] "
-;;     (let ((syntactic-close-delete-whitespace-backward-p t))
-;;       (syntactic-close)
-;;       (should (eq 8 (point)))
-;;       (should (eq 0 (current-indentation))))))
-
-;; (ert-deftest syntactic-close-python-string-interpolation-test-1 ()
-;;   (syntactic-close-test-with-python-buffer "print('%(language"
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?\)))))
-
-;; ;; https://www.python.org/dev/peps/pep-0498/
-;; (ert-deftest syntactic-close-python-string-interpolation-test-2 ()
-;;   (syntactic-close-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
-;;       {'language"
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?'))))
-
-;; (ert-deftest syntactic-close-python-string-interpolation-test-3 ()
-;;   (syntactic-close-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
-;;       {'language': \"Python"
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?\"))))
-
-;; (ert-deftest syntactic-close-python-string-interpolation-test-4 ()
-;;   (syntactic-close-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
-;;       {'language': \"Python\", \"number\": 2"
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?}))))
-
-;; (ert-deftest syntactic-close-python-string-interpolation-test-5 ()
-;;   (syntactic-close-test-with-python-buffer "print('%(language)s has %(number)03d quote types.' %
-;;       {'language': \"Python\", \"number\": 2}"
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?\)))))
-
-;; (ert-deftest syntactic-close-python-string-interpolation-test-6 ()
-;;   ;; "return 'Point({self.x}, {self.y})'.format(self=self)"
-;;   (syntactic-close-test-with-python-buffer "return 'Point({self.x"
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?}))))
-
-;; (ert-deftest syntactic-close-python-string-interpolation-test-7 ()
-;;   ;; "return 'Point({self.x}, {self.y})'.format(self=self)"
-;;   (syntactic-close-test-with-python-buffer "return 'Point({self.x}"
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?\)))))
-
-;; (ert-deftest syntactic-close-python-string-interpolation-test-8 ()
-;;   ;; "return 'Point({self.x}, {self.y})'.format(self=self)"
-;;   (syntactic-close-test-with-python-buffer
-;;       "return 'Point({self.x})"
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?'))))
-
 (ert-deftest syntactic-close-python-no-colon-test-blHQQc1 ()
   (syntactic-close-test-with-python-buffer
       "print(1)"
@@ -92,21 +35,35 @@
 (ert-deftest syntactic-close-python-tqs-sq-test-tmeKth ()
   (syntactic-close-test-with-python-buffer
       "'''asdf"
-    (goto-char (point-max)) 
+    (goto-char (point-max))
     (syntactic-close)
-    (should (looking-back "'''asdf'''" 1))))
+    (should (char-equal (char-before) ?'))))
+
+(ert-deftest syntactic-close-python-tqs-sq-test-uGICyI ()
+  (syntactic-close-test-with-python-buffer
+      "'''asdf"
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (char-equal (char-before (- (point) 1)) ?'))))
+
+(ert-deftest syntactic-close-python-tqs-sq-test-eS7oPB ()
+  (syntactic-close-test-with-python-buffer
+      "'''asdf"
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (char-equal (char-before (- (point) 2)) ?'))))
 
 (ert-deftest syntactic-close-python-tqs-dq-test-10mjq3 ()
   (syntactic-close-test-with-python-buffer
       "\"\"\"asdf"
     (goto-char (point-max))
     (syntactic-close)
-    (should (looking-back "\"\"\"asdf\"\"\"" 1))))
+    (should (char-equal (char-before) ?\"))))
 
 (ert-deftest syntactic-close-python-sq-test-UM9ZGb ()
   (syntactic-close-test-with-python-buffer
       "'asdf"
-    (goto-char (point-max)) 
+    (goto-char (point-max))
     (syntactic-close)
     (should (looking-back "'asdf'" (line-beginning-position)))))
 
@@ -116,8 +73,6 @@
     (goto-char (point-max))
     (syntactic-close)
     (should (looking-back "\"asdf\"" (line-beginning-position)))))
-
-
 
 (provide 'syntactic-close-python-tests)
 

@@ -239,6 +239,7 @@ if ( (a == b) || (c == d) );"
 (ert-deftest syntactic-close-padded-brace-test ()
   (syntactic-close-test-with-js-buffer
       "{ display: inline;"
+    (goto-char (point-max)) 
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
