@@ -54,7 +54,7 @@
   :group 'sytactic-close)
 
 (defcustom syntactic-close-unary-delimiter-chars (list ?` ?\" ?' ?+ ?: ?$ ?#)
-  ""
+  "Permitted unary delimiters."
   :type '(repeat character)
   :group 'sytactic-close)
 (make-variable-buffer-local 'syntactic-close-unary-delimiter-chars)
@@ -161,25 +161,6 @@ Argument LIMIT the lower bound."
       (setq pps (parse-partial-sexp limit (point))))
     pps))
 
-
-(defun syntactic-close-count-lines (&optional beg end)
-  "Count lines in accessible part of buffer.
-
-See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115
-Optional argument BEG counts start.
-Optional argument END counts end."
-  (interactive)
-  (let ((beg (or beg (point-min)))
-	(end (or end (point)))
-	erg)
-    (if (bolp)
-	(setq erg (1+ (count-lines beg end)))
-      (setq erg (count-lines beg end)))
-    (when (interactive-p) (message "%s" erg))
-    erg))
-
-(unless (functionp 'empty-line-p)
-  (defalias 'empty-line-p 'syntactic-close-empty-line-p))
 (defun syntactic-close-empty-line-p (&optional iact)
   "Return t if cursor is at an empty line, nil otherwise.
 Optional argument IACT signaling interactive use."
@@ -190,6 +171,9 @@ Optional argument IACT signaling interactive use."
       (message "%s" (looking-at syntactic-close-empty-line-p-chars)))
     (looking-at syntactic-close-empty-line-p-chars)))
 
+(unless (functionp 'empty-line-p)
+  (defalias 'empty-line-p 'syntactic-close-empty-line-p))
+
 (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
   "Defined in haskell-interactive-mode.el, silence warnings.")
 
@@ -197,7 +181,7 @@ Optional argument IACT signaling interactive use."
   "Functions closing mode-specific might go here.")
 
 (defcustom syntactic-close-electric-delete-whitespace-p nil
-  "When ‘t’ delete whitespace before point when closing.
+  "When t delete whitespace before point when closing.
 
 Default is nil"
 
@@ -540,7 +524,6 @@ Optional argument ORG read ‘org-mode’."
     (syntactic-close-pure-syntax pps))
    ((syntactic-close--generic))))
 
-
 (defun syntactic-close-python-close (b-of-st b-of-bl &optional pps)
   "Might deliver equivalent to `py-dedent'.
 
@@ -590,8 +573,7 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
   "Close specific modes.
 
 Argument PPS, the result of ‘parse-partial-sexp’."
-  (let ((orig (point))
-	(closer
+  (let ((closer
 	 (cond ((nth 3 pps)
 		(save-excursion (goto-char (nth 8 pps))
 				(char-to-string (char-after))))
@@ -632,6 +614,8 @@ Argument PPS, the result of ‘parse-partial-sexp’."
     (< orig (point))))
 
 (defun syntactic-close--common-modes (pps)
+  "No special treatment required.
+Argument PPS result of ‘parse-partial-sexp’."
   (pcase major-mode
     (`python-mode
      (syntactic-close-python-close nil nil pps))
@@ -656,26 +640,29 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 
 (defun syntactic-close-generic-forms (pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
-  (let (erg)
-    (cond
-     ((syntactic-close--generic))
-     ((nth 4 pps)
-      ;; in comment
-      (syntactic-close--insert-comment-end-maybe pps)))))
+  (cond
+   ((syntactic-close--generic))
+   ((nth 4 pps)
+    ;; in comment
+    (syntactic-close--insert-comment-end-maybe pps))))
 
 (defun syntactic-close--generic (&optional orig stack limit)
   "Detect delimiters inside string or comment maybe.
 
-Optional argument UNARY-DELIMITER-CHARS like quoting chara1cter, a list.
-Optional argument DELIMITERS-STRG composed of unary and paired delimiters, a list."
+Optional argument UNARY-DELIMITER-CHARS like quoting chara1cter,
+a list.
+Optional argument DELIMITERS-STRG composed of unary and paired delimiters,
+a list.
+Optional argument ORIG position.
+Optional argument STACK used by recursive call maybe.
+Optional argument LIMIT bound."
   (let* ((orig (or orig (point)))
 	 (limit (or limit (point-min)))
 	 (unary-delimiter-chars syntactic-close-unary-delimiter-chars)
 	 (paired-delimiters-strg (concat (cl-map 'string 'identity syntactic-close-paired-openers)(cl-map 'string 'identity syntactic-close-paired-closers)))
 	 (stack stack)
-	 closer done escapes padding erg)
+	 closer done escapes padding)
     (while (and (not (bobp)) (not done) (<= limit (1- (point))))
-      (setq erg nil)
       (cond ((member (char-before)
 		     ;; (list ?\) ?\] ?})
 		     syntactic-close-paired-closers)
@@ -702,7 +689,7 @@ Optional argument DELIMITERS-STRG composed of unary and paired delimiters, a lis
 		  (eq 0 (mod (count-matches (char-to-string (char-before)) limit
 					    ;; (point)
 					    orig) 2))
-		  (setq erg (char-before))
+		  ;; (setq erg (char-before))
 		  (skip-chars-backward (concat "^" (cl-map 'string 'identity (remove (char-before) unary-delimiter-chars)) paired-delimiters-strg) limit)))
 	    ((and (member (char-before)
 			  ;; (list ?` ?\" ?')
@@ -726,7 +713,8 @@ Optional argument DELIMITERS-STRG composed of unary and paired delimiters, a lis
 (defun syntactic-close--string-before-list-maybe (pps)
   "String inside a list needs to be closed first maybe.
 
-Expects start of string behind start of list"
+Expects start of string behind start of list
+Argument PPS result of ‘parse-partial-sexp’."
   ;; maybe close generic first
   (cond ((syntactic-close--generic (point) nil (nth 8 pps)))
 	((syntactic-close-pure-syntax-intern pps))))
@@ -779,7 +767,6 @@ Argument PPS, the result of ‘parse-partial-sexp’."
        (dotimes (_ arg)
 	 (syntactic-close-intern beg iact pps))
        (< orig (point))))))
-
 
 (provide 'syntactic-close)
 ;;; syntactic-close.el ends here
