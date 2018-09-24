@@ -718,14 +718,13 @@ Argument PPS result of ‘parse-partial-sexp’."
   (cond ((syntactic-close--generic (point) nil (nth 8 pps)))
 	((syntactic-close-pure-syntax-intern pps))))
 
-(defun syntactic-close-intern (beg iact &optional pps)
+(defun syntactic-close-intern (orig beg iact &optional pps)
   "A first dispatch.
 
 Argument PPS, the result of ‘parse-partial-sexp’.
 Argument BEG the lesser border.
 Argument IACT signals an interactive call."
-  (let* ((orig (copy-marker (point)))
-	 (pps (or pps (parse-partial-sexp beg (point))))
+  (let* ((pps (or pps (parse-partial-sexp beg (point))))
 	 closer)
     (when syntactic-close-electric-delete-whitespace-p
       (delete-region orig (progn (skip-chars-backward " \t" (line-beginning-position))(point))))
@@ -755,16 +754,16 @@ Optional argument ARG signals interactive use.
 Optional argument BEG sets the lesser border.
 Argument PPS, the result of ‘parse-partial-sexp’."
   (interactive "p*")
-  (let ((orig (point))
+  (let (orig
 	(beg (or beg (syntactic-close--point-min)))
 	(iact (or iact arg))
 	(arg (or arg 1)))
     (pcase (prefix-numeric-value arg)
-      (4 (while (syntactic-close-intern beg iact (parse-partial-sexp beg (point))))
+      (4 (while (syntactic-close-intern (setq orig (point)) beg iact (parse-partial-sexp beg (point))))
 	 (< orig (point)))
       (_
        (dotimes (_ arg)
-	 (syntactic-close-intern beg iact pps))
+	 (syntactic-close-intern (setq orig (point)) beg iact pps))
        (< orig (point))))))
 
 (provide 'syntactic-close)
