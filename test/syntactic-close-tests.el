@@ -34,5 +34,6 @@
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
+
 (provide 'syntactic-close-tests)
 ;;; syntactic-close-tests.el ends here

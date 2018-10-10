@@ -69,13 +69,13 @@
   :type '(repeat character)
   :group 'sytactic-close)
 
-(defcustom syntactic-close-paired-openers (list ?‘ ?` ?< ?\( ?\[ ?{ ?\〈 ?\⦑ ?\⦓ ?\【 ?\⦗ ?\⸤ ?\「 ?\《 ?\⦕ ?\⸨ ?\⧚ ?\｛ ?\（ ?\［ ?\｟ ?\｢ ?\❰ ?\❮ ?\“ ?\‘ ?\❲ ?\⟨ ?\⟪ ?\⟮ ?\⟦ ?\⟬ ?\❴ ?\❪ ?\❨ ?\❬ ?\᚛ ?\〈 ?\⧼ ?\⟅ ?\⸦ ?\﹛ ?\﹙ ?\﹝ ?\⁅ ?\⦏ ?\⦍ ?\⦋ ?\₍ ?\⁽ ?\༼ ?\༺ ?\⸢ ?\〔 ?\『 ?\⦃ ?\〖 ?\⦅ ?\〚 ?\〘 ?\⧘ ?\⦉ ?\⦇)
+(defcustom syntactic-close-paired-openers (list ?‘ ?< ?\( ?\[ ?{ ?\〈 ?\⦑ ?\⦓ ?\【 ?\⦗ ?\⸤ ?\「 ?\《 ?\⦕ ?\⸨ ?\⧚ ?\｛ ?\（ ?\［ ?\｟ ?\｢ ?\❰ ?\❮ ?\“ ?\‘ ?\❲ ?\⟨ ?\⟪ ?\⟮ ?\⟦ ?\⟬ ?\❴ ?\❪ ?\❨ ?\❬ ?\᚛ ?\〈 ?\⧼ ?\⟅ ?\⸦ ?\﹛ ?\﹙ ?\﹝ ?\⁅ ?\⦏ ?\⦍ ?\⦋ ?\₍ ?\⁽ ?\༼ ?\༺ ?\⸢ ?\〔 ?\『 ?\⦃ ?\〖 ?\⦅ ?\〚 ?\〘 ?\⧘ ?\⦉ ?\⦇)
   "Specify the delimiter char."
   :type '(repeat character)
   :group 'sytactic-close)
 
 ;; (setq syntactic-close-paired-openers
-;;   (list ?‘ ?` ?< ?\( ?\[ ?{ ?\〈 ?\⦑ ?\⦓ ?\【 ?\⦗ ?\⸤ ?\「 ?\《 ?\⦕ ?\⸨ ?\⧚ ?\｛ ?\（ ?\［ ?\｟ ?\｢ ?\❰ ?\❮ ?\“ ?\‘ ?\❲ ?\⟨ ?\⟪ ?\⟮ ?\⟦ ?\⟬ ?\❴ ?\❪ ?\❨ ?\❬ ?\᚛ ?\〈 ?\⧼ ?\⟅ ?\⸦ ?\﹛ ?\﹙ ?\﹝ ?\⁅ ?\⦏ ?\⦍ ?\⦋ ?\₍ ?\⁽ ?\༼ ?\༺ ?\⸢ ?\〔 ?\『 ?\⦃ ?\〖 ?\⦅ ?\〚 ?\〘 ?\⧘ ?\⦉ ?\⦇))
+;;    (list ?‘ ?< ?\( ?\[ ?{ ?\〈 ?\⦑ ?\⦓ ?\【 ?\⦗ ?\⸤ ?\「 ?\《 ?\⦕ ?\⸨ ?\⧚ ?\｛ ?\（ ?\［ ?\｟ ?\｢ ?\❰ ?\❮ ?\“ ?\‘ ?\❲ ?\⟨ ?\⟪ ?\⟮ ?\⟦ ?\⟬ ?\❴ ?\❪ ?\❨ ?\❬ ?\᚛ ?\〈 ?\⧼ ?\⟅ ?\⸦ ?\﹛ ?\﹙ ?\﹝ ?\⁅ ?\⦏ ?\⦍ ?\⦋ ?\₍ ?\⁽ ?\༼ ?\༺ ?\⸢ ?\〔 ?\『 ?\⦃ ?\〖 ?\⦅ ?\〚 ?\〘 ?\⧘ ?\⦉ ?\⦇))
 
 (defcustom syntactic-close-paired-closers (list ?’ ?> ?\) ?\] ?} ?\〉 ?\⦒ ?\⦔ ?\】 ?\⦘ ?\⸥ ?\」 ?\》 ?\⦖ ?\⸩ ?\⧛ ?\｝ ?\） ?\］ ?\｠ ?\｣ ?\❱ ?\❯ ?\” ?\’ ?\❳ ?\⟩ ?\⟫ ?\⟯ ?\⟧ ?\⟭ ?\❵ ?\❫ ?\❩ ?\❭ ?\᚜ ?\〉 ?\⧽ ?\⟆ ?\⸧ ?\﹜ ?\﹚ ?\﹞ ?\⁆ ?\⦎ ?\⦐ ?\⦌ ?\₎ ?\⁾ ?\༽ ?\༻ ?\⸣ ?\〕 ?\』 ?\⦄ ?\〗 ?\⦆ ?\〛 ?\〙 ?\⧙ ?\⦊ ?\⦈)
   "Specify the delimiter char."
@@ -109,6 +109,9 @@ Optional argument POS position to start from."
     (when (member (char-after) (list 32 9))
       (buffer-substring-no-properties (point) (progn (skip-chars-forward " \t")(point))))))
 
+(defun syntactic-close--multichar-intern (char limit)
+    (abs (skip-chars-backward (char-to-string char) limit)))
+
 (defun syntactic-close--multichar-closer (char limit &optional offset)
   "Opener and closer might be composed by more than one character.
 
@@ -117,8 +120,8 @@ Argument CHAR the character to contruct the string.
 Argument LIMIT the lower border.
 Optional argument OFFSET already know offset."
   (if offset
-      (make-string (+ offset (abs (skip-chars-backward (char-to-string char) limit))) (syntactic-close--return-complement-char-maybe char))
-    (make-string (abs (skip-chars-backward (char-to-string char) limit)) (syntactic-close--return-complement-char-maybe char))))
+      (make-string (+ offset (syntactic-close--multichar-intern char limit)) (syntactic-close--return-complement-char-maybe char))
+    (make-string (syntactic-close--multichar-intern char limit) (syntactic-close--return-complement-char-maybe char))))
 
 (defun syntactic-close-pure-syntax-intern (pps)
   "Fetch from start of list to close.
@@ -356,13 +359,13 @@ Optional argument PPS should deliver the result of ‘parse-partial-sexp’."
       (when (and syntactic-close-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
-(defun syntactic-close--nth-1-pps-complement-char-maybe (pps)
-  "Return complement character from (nth 1 PPS).
+;; (defun syntactic-close--nth-1-pps-complement-char-maybe (pps)
+;;   "Return complement character from (nth 1 PPS).
 
-Argument PPS is result of a call to function ‘parse-partial-sexp’"
-  (save-excursion
-    (goto-char (nth 1 pps))
-    (syntactic-close--return-complement-char-maybe (char-after))))
+;; Argument PPS is result of a call to function ‘parse-partial-sexp’"
+;;   (save-excursion
+;;     (goto-char (nth 1 pps))
+;;     (syntactic-close--return-complement-char-maybe (char-after))))
 
 (defun syntactic-close-fix-whitespace-maybe (orig)
   "Remove whitespace before point if called.
@@ -453,20 +456,20 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
     (goto-char (nth 8 pps))
     (char-after)))
 
-(defun syntactic-close--guess-from-string-interpolation-maybe (pps)
-  "Return the character of innermost sexp in inside.
+;; (defun syntactic-close--guess-from-string-interpolation-maybe (pps)
+;;   "Return the character of innermost sexp in inside.
 
-Argument PPS should provide result of ‘parse-partial-sexp’."
-  (when (and (nth 1 pps) (nth 3 pps))
-    (let* ((listchar (save-excursion (goto-char (nth 1 pps))
-				     (char-after)))
-	   (inner-listpos (progn
-			    (skip-chars-backward (concat "^" (char-to-string listchar)))
-			    (1- (point)))))
-      (if
-	  (< (nth 8 pps) inner-listpos)
-	  (syntactic-close--return-complement-char-maybe listchar)
-	(save-excursion (goto-char (nth 8 pps))(char-after))))))
+;; Argument PPS should provide result of ‘parse-partial-sexp’."
+;;   (when (and (nth 1 pps) (nth 3 pps))
+;;     (let* ((listchar (save-excursion (goto-char (nth 1 pps))
+;; 				     (char-after)))
+;; 	   (inner-listpos (progn
+;; 			    (skip-chars-backward (concat "^" (char-to-string listchar)))
+;; 			    (1- (point)))))
+;;       (if
+;; 	  (< (nth 8 pps) inner-listpos)
+;; 	  (syntactic-close--return-complement-char-maybe listchar)
+;; 	(save-excursion (goto-char (nth 8 pps))(char-after))))))
 
 (defun syntactic-close-ml ()
   "Close in Standard ML."
@@ -658,7 +661,7 @@ Optional argument LIMIT bound."
   (let* ((orig (or orig (point)))
 	 (limit (or limit (point-min)))
 	 (unary-delimiter-chars syntactic-close-unary-delimiter-chars)
-	 (paired-delimiters-strg (concat (cl-map 'string 'identity syntactic-close-paired-openers)(cl-map 'string 'identity syntactic-close-paired-closers)))
+	 (paired-delimiters-strg (concat (cl-map 'string 'identity syntactic-close-paired-openers) (cl-map 'string 'identity syntactic-close-paired-closers)))
 	 (stack stack)
 	 closer done escapes padding)
     (while (and (not (bobp)) (not done) (<= limit (1- (point))))
