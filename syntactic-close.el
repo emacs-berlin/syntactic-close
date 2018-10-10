@@ -359,14 +359,6 @@ Optional argument PPS should deliver the result of ‘parse-partial-sexp’."
       (when (and syntactic-close-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
-;; (defun syntactic-close--nth-1-pps-complement-char-maybe (pps)
-;;   "Return complement character from (nth 1 PPS).
-
-;; Argument PPS is result of a call to function ‘parse-partial-sexp’"
-;;   (save-excursion
-;;     (goto-char (nth 1 pps))
-;;     (syntactic-close--return-complement-char-maybe (char-after))))
-
 (defun syntactic-close-fix-whitespace-maybe (orig)
   "Remove whitespace before point if called.
 
@@ -455,21 +447,6 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
   (save-excursion
     (goto-char (nth 8 pps))
     (char-after)))
-
-;; (defun syntactic-close--guess-from-string-interpolation-maybe (pps)
-;;   "Return the character of innermost sexp in inside.
-
-;; Argument PPS should provide result of ‘parse-partial-sexp’."
-;;   (when (and (nth 1 pps) (nth 3 pps))
-;;     (let* ((listchar (save-excursion (goto-char (nth 1 pps))
-;; 				     (char-after)))
-;; 	   (inner-listpos (progn
-;; 			    (skip-chars-backward (concat "^" (char-to-string listchar)))
-;; 			    (1- (point)))))
-;;       (if
-;; 	  (< (nth 8 pps) inner-listpos)
-;; 	  (syntactic-close--return-complement-char-maybe listchar)
-;; 	(save-excursion (goto-char (nth 8 pps))(char-after))))))
 
 (defun syntactic-close-ml ()
   "Close in Standard ML."

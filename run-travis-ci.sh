@@ -43,6 +43,7 @@ TEST8=test/syntactic-close-php-tests.el
 TEST9=test/syntactic-close-python-tests.el
 TEST10=test/syntactic-close-ruby-tests.el
 TEST11=test/syntactic-close-xml-tests.el
+TEST12=test/syntactic-close-fundamental-tests.el
 
 hier () {
     $EMACS -Q --batch \
@@ -60,6 +61,7 @@ hier () {
 -load $TEST9 \
 -load $TEST10 \
 -load $TEST11 \
+-load $TEST12 \
 -f ert-run-tests-batch-and-exit
 }
 
@@ -77,6 +79,7 @@ entfernt () {
 -load $TEST9 \
 -load $TEST10 \
 -load $TEST11 \
+-load $TEST12 \
 -f ert-run-tests-batch-and-exit
 }
 
