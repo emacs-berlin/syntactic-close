@@ -574,6 +574,7 @@ Argument PPS, the result of ‘parse-partial-sexp’."
       (setq closer ";"))
      (t closer))))
 
+;; used in guess-what
 (defun syntactic-close--return-closer (pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
   (pcase major-mode
@@ -739,11 +740,11 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 	(iact (or iact arg))
 	(arg (or arg 1)))
     (pcase (prefix-numeric-value arg)
-      (4 (while (syntactic-close-intern (setq orig (point)) beg iact (parse-partial-sexp beg (point))))
+      (4 (while (syntactic-close-intern (setq orig (copy-marker (point))) beg iact (parse-partial-sexp beg (point))))
 	 (< orig (point)))
       (_
        (dotimes (_ arg)
-	 (syntactic-close-intern (setq orig (point)) beg iact pps))
+	 (syntactic-close-intern (setq orig (copy-marker (point))) beg iact pps))
        (< orig (point))))))
 
 (provide 'syntactic-close)
