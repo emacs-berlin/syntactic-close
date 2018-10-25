@@ -24,29 +24,52 @@
 
 ;;; Code:
 (ert-deftest syntactic-close-close-ruby-string-test ()
-  (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail"
-    (goto-char (point-max))
+  (syntactic-close-test
+      "def deliver(from: \"A\", to: nil, via: \"mail"
+    'ruby-mode
+    syntactic-close-debug-p
+    (goto-char (point-max)) 
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
 (ert-deftest syntactic-close-close-ruby-paren-test ()
-  (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\""
+  (syntactic-close-test
+      "def deliver(from: \"A\", to: nil, via: \"mail\""
+    'ruby-mode
+    syntactic-close-debug-p
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
 (ert-deftest syntactic-close-close-ruby-string-interpolation-test-2 ()
-  (syntactic-close-test-with-ruby-buffer "def deliver(from: \"A\", to: nil, via: \"mail\")
+  (syntactic-close-test
+      "def deliver(from: \"A\", to: nil, via: \"mail\")
   \"Sending from #{from} to #{to} via #{via}"
+    'ruby-mode
+    syntactic-close-debug-p
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
 
-(ert-deftest syntactic-close-ruby-block-close-1 ()
-  (syntactic-close-test-with-ruby-buffer
+(ert-deftest syntactic-close-ruby-block-close-GZBbFA ()
+  (syntactic-close-test
       "values.each do |value|
   break if value.even?"
-        (syntactic-close)
-	(should (looking-back "end" (line-beginning-position)))))
+    'ruby-mode
+    syntactic-close-debug-p
+    (syntactic-close)
+    (should (looking-back "end" (line-beginning-position)))))
+
+(ert-deftest syntactic-close-ruby-block-close-oP7aaw ()
+  (syntactic-close-test
+      "more_nested_array.each do |element|
+  element.each do |inner_element|
+    inner_element << \"test\"
+"
+    'ruby-mode
+    syntactic-close-debug-p
+    (syntactic-close)
+    (should (looking-back "end" (line-beginning-position)))
+    (should (eq (current-column) 8))))
 
 (provide 'syntactic-close-ruby-tests)
 ;;; syntactic-close-ruby-tests.el ends here
