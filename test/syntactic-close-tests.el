@@ -24,9 +24,47 @@
 
 ;;; Code:
 
+
+(defvar syntactic-close-debug-p nil
+  "Avoid error")
+
+
+(defmacro syntactic-close-test (contents mode verbose &rest body)
+  "Create temp buffer inserting CONTENTS.
+
+BODY is code to be executed within the temp buffer "
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (insert ,contents)
+       (funcall ,mode)
+       (when ,verbose
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-region (point-min)(point-max))
+       ,@body))
+  ;; (sit-for 0.1)
+  ))
+
+(defmacro syntactic-close-test-point-min (contents mode verbose &rest body)
+  "Create temp buffer inserting CONTENTS.
+BODY is code to be executed within the temp buffer.  Point is
+ at the beginning of buffer."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (let (hs-minor-mode)
+       (funcall ,mode)
+       (insert ,contents)
+       (goto-char (point-min))
+       (when ,verbose
+	 (switch-to-buffer (current-buffer))
+	 (font-lock-fontify-region (point-min)(point-max)))
+       ,@body)))
+
 (ert-deftest syntactic-close-close-elisp-nested-bracket-paren-test ()
-  (syntactic-close-test-with-elisp-buffer
+  (syntactic-close-test
     "(list ([\n;;{123\n;;{123\n"
+    'emacs-lisp-mode
+    syntactic-close-debug-p    
     (syntactic-close)
     (should (eq (char-before) ?\]))
     (syntactic-close)

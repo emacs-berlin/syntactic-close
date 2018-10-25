@@ -67,9 +67,22 @@
 "
     'ruby-mode
     syntactic-close-debug-p
+    (goto-char (point-max)) 
     (syntactic-close)
     (should (looking-back "end" (line-beginning-position)))
-    (should (eq (current-column) 8))))
+    (should (eq (current-indentation) 2))))
+
+(ert-deftest syntactic-close-ruby-block-close-XhSYAJ ()
+  (syntactic-close-test
+      "more_nested_array.each do |element|
+  element.each do |inner_element|
+    inner_element << \"test\"
+  end"
+    'ruby-mode
+    syntactic-close-debug-p
+    (syntactic-close)
+    (should (looking-back "end" (line-beginning-position)))
+    (should (eq (current-indentation) 0))))
 
 (provide 'syntactic-close-ruby-tests)
 ;;; syntactic-close-ruby-tests.el ends here
