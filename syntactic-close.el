@@ -507,7 +507,7 @@ Optional argument ORG read ‘org-mode’."
 (defun syntactic-close-python-close (b-of-st b-of-bl &optional pps)
   "Might deliver equivalent to `py-dedent'.
 
-Argument B-OF-ST reaqd beginning-of-statement.
+Argument B-OF-ST read beginning-of-statement.
 Argument B-OF-BL read beginning-of-block.
 Optional argument PADDING to be done.
 Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
@@ -579,7 +579,7 @@ Argument PPS, the result of ‘parse-partial-sexp’."
      (t closer))))
 
 ;; used in guess-what
-(defun syntactic-close--return-closer (pps)
+(defun syntactic-close--modes (pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
   (pcase major-mode
     (`php-mode (syntactic-close--semicolon-modes pps))
@@ -714,10 +714,10 @@ Argument IACT signals an interactive call."
     (when syntactic-close-electric-delete-whitespace-p
       (delete-region orig (progn (skip-chars-backward " \t" (line-beginning-position))(point))))
     ;; (save-excursion
-    (cond
-     ((member major-mode syntactic-close-modes)
-      (setq closer (syntactic-close--return-closer pps)))
-     ((setq closer (syntactic-close--generic))))
+    (if
+	(member major-mode syntactic-close-modes)
+	(syntactic-close--modes pps)
+      (setq closer (syntactic-close--generic)))
     ;; insert might be hardcoded like in ‘nxml-finish-element-1’
     (when (and closer (stringp closer))
       (goto-char orig)
