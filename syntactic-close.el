@@ -527,26 +527,20 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
      (t (syntactic-close--generic)))))
 
 ;; Ruby
-(defun syntactic-close--ruby-insert-end ()
-  (let (done)
-    (unless (or (looking-back ";[ \t]*" nil))
-      (unless (and (bolp)(eolp))
-	(newline))
-      (unless (looking-back "^[^ \t]*\\_<end" nil)
-	(insert "end")
-	(setq done t)
-	(save-excursion
-	  (back-to-indentation)
-	  (indent-according-to-mode))))
-    done))
+(defun syntactic-close--ruby ()
+  (unless (or (looking-back ";[ \t]*" nil))
+    (unless (and (bolp) (eolp))
+      (newline))
+    (unless (looking-back "^[^ \t]*\\_<end" nil)
+      "end")))
 
 (defun syntactic-close-ruby-close (pps)
   "Ruby specific close.
 
 Argument PPS is result of a call to function ‘parse-partial-sexp’"
-  (or ;; (syntactic-close--string-before-list-maybe pps)
-      (and (or (nth 1 pps) (nth 3 pps)) (syntactic-close-pure-syntax-intern pps))
-      (syntactic-close--ruby-insert-end)))
+  (cond ((ignore-errors (and (< (nth 1 pps) (nth 8 pps))(syntactic-close--string-before-list-maybe pps))))
+	((and (or (nth 1 pps) (nth 3 pps)) (syntactic-close-pure-syntax-intern pps)))
+	(t (syntactic-close--ruby))))
 
 (defun syntactic-close--semicolon-modes (pps)
   "Close specific modes.

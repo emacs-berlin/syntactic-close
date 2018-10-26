@@ -49,7 +49,6 @@
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-
 (ert-deftest syntactic-close-ruby-block-close-GZBbFA ()
   (syntactic-close-test
       "values.each do |value|
@@ -84,6 +83,24 @@
     (syntactic-close)
     (should (looking-back "end" (line-beginning-position)))
     (should (eq (current-indentation) 0))))
+
+(ert-deftest operator-mode-ruby-test-gszMLh ()
+  (syntactic-close-test
+      ;; "puts \"Hello #{name}!\""
+      "puts \"Hello #{name"
+    'ruby-mode
+    syntactic-close-debug-p
+    (syntactic-close)
+    (should (char-equal (char-before) ?}))))
+
+(ert-deftest operator-mode-ruby-test-gszMLh ()
+  (syntactic-close-test
+      ;; "puts \"Hello #{name}!\""
+      "puts \"Hello #{name}!"
+    'ruby-mode
+    syntactic-close-debug-p
+    (syntactic-close)
+    (should (char-equal (char-before) ?\"))))
 
 (provide 'syntactic-close-ruby-tests)
 ;;; syntactic-close-ruby-tests.el ends here
