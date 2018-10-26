@@ -12,5 +12,7 @@
  (depends-on "php-mode")
  (depends-on "ruby-mode")
  (depends-on "sml-mode")
+ (depends-on "js2-mode")
+ (depends-on "web-mode")
  ;; (depends-on "markdown-mode")
  (depends-on "python-mode"))

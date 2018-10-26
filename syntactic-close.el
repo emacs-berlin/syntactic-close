@@ -560,10 +560,6 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 		  (and (nth 1 pps) (syntactic-close-pure-syntax-intern pps))))
 	       (t (syntactic-close--generic)))))
     (cond
-     ;; ((and closer (string-match "]" closer))
-     ;;  (if (save-excursion (skip-chars-backward " \t\r\n\f") (member (char-before) (list ?, ?})))
-     ;; 	  closer
-     ;; 	","))
      ((and closer (string-match "}" closer))
       (if (save-excursion (skip-chars-backward " \t\r\n\f") (member (char-before) (list ?\; ?})))
 	  closer
@@ -714,10 +710,11 @@ Argument IACT signals an interactive call."
     (when syntactic-close-electric-delete-whitespace-p
       (delete-region orig (progn (skip-chars-backward " \t" (line-beginning-position))(point))))
     ;; (save-excursion
-    (if
-	(member major-mode syntactic-close-modes)
-	(syntactic-close--modes pps)
-      (setq closer (syntactic-close--generic)))
+    (setq closer
+	  (if
+	      (member major-mode syntactic-close-modes)
+	      (syntactic-close--modes pps)
+	    (syntactic-close--generic)))
     ;; insert might be hardcoded like in ‘nxml-finish-element-1’
     (when (and closer (stringp closer))
       (goto-char orig)
