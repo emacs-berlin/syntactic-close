@@ -18,9 +18,13 @@
 
 # Code:
 
+ORT=${ORT:-$1}
 
+echo "\$ORT: $ORT"
 
-if [ -s emacs24 ]; then
+if [ $ORT -eq 0 ]; then
+    EMACS=$HOME/arbeit/emacs/emacs-UA/src/emacs-27.0.50.1
+elif [ -s emacs24 ]; then
     EMACS=emacs24
 else
     EMACS=emacs
@@ -44,6 +48,7 @@ TEST9=test/syntactic-close-python-tests.el
 TEST10=test/syntactic-close-ruby-tests.el
 TEST11=test/syntactic-close-xml-tests.el
 TEST12=test/syntactic-close-fundamental-tests.el
+TEST13=test/syntactic-close-tests.el
 
 hier () {
     $EMACS -Q --batch \
@@ -62,6 +67,7 @@ hier () {
 -load $TEST10 \
 -load $TEST11 \
 -load $TEST12 \
+-load $TEST13 \
 -f ert-run-tests-batch-and-exit
 }
 
@@ -80,12 +86,10 @@ entfernt () {
 -load $TEST10 \
 -load $TEST11 \
 -load $TEST12 \
+-load $TEST13 \
 -f ert-run-tests-batch-and-exit
 }
 
-ORT=${ORT:-$1}
-
-echo "\$ORT: $ORT"
 
 if [ $ORT -eq 0 ]; then
     hier

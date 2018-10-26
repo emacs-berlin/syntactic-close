@@ -528,12 +528,17 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
 
 ;; Ruby
 (defun syntactic-close--ruby-insert-end ()
-  "Ruby specific close workhorse."
-  (unless (or (looking-back ";[ \t]*" nil))
-    (unless (and (bolp)(eolp))
-      (newline))
-    (unless (looking-back "^[^ \t]*\\_<end" nil)
-       "end")))
+  (let (done)
+    (unless (or (looking-back ";[ \t]*" nil))
+      (unless (and (bolp)(eolp))
+	(newline))
+      (unless (looking-back "^[^ \t]*\\_<end" nil)
+	(insert "end")
+	(setq done t)
+	(save-excursion
+	  (back-to-indentation)
+	  (indent-according-to-mode))))
+    done))
 
 (defun syntactic-close-ruby-close (pps)
   "Ruby specific close.
@@ -541,7 +546,6 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
 Argument PPS is result of a call to function ‘parse-partial-sexp’"
   (or ;; (syntactic-close--string-before-list-maybe pps)
       (and (or (nth 1 pps) (nth 3 pps)) (syntactic-close-pure-syntax-intern pps))
-      (syntactic-close--generic)
       (syntactic-close--ruby-insert-end)))
 
 (defun syntactic-close--semicolon-modes (pps)

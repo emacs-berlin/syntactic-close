@@ -80,6 +80,7 @@
   end"
     'ruby-mode
     syntactic-close-debug-p
+    (goto-char (point-max)) 
     (syntactic-close)
     (should (looking-back "end" (line-beginning-position)))
     (should (eq (current-indentation) 0))))
