@@ -23,7 +23,8 @@ ORT=${ORT:-$1}
 echo "\$ORT: $ORT"
 
 if [ $ORT -eq 0 ]; then
-    EMACS=$HOME/arbeit/emacs/emacs-UA/src/emacs-27.0.50.1
+    #  EMACS=$HOME/arbeit/emacs/emacs-UA/src/emacs-27.0.50.1
+    EMACS=emacs
 elif [ -s emacs24 ]; then
     EMACS=emacs24
 else

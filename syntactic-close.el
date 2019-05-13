@@ -127,24 +127,24 @@ Optional argument OFFSET already know offset."
   "Fetch from start of list to close.
 
 Argument PPS is result of ‘parse-partial-sexp’"
-  (let (closer padding)
-    (cond
-     ((and (nth 3 pps) (nth 1 pps) (< (nth 1 pps) (nth 3 pps)))
-      (save-excursion
+  (save-excursion
+    (let (closer padding)
+      (cond
+       ((and (nth 3 pps) (nth 1 pps) (< (nth 1 pps) (nth 3 pps)))
 	(goto-char (nth 1 pps))
 	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point)))))
 	(setq closer (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
+	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point))))))
+       ((nth 3 pps)
+	(goto-char (nth 8 pps))
+	(backward-prefix-chars)
+	(setq closer (buffer-substring-no-properties (point) (progn (skip-chars-forward (char-to-string (nth 3 pps)))(point))))
+	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point))))))
+       ((nth 1 pps)
+	(goto-char (nth 1 pps))
+	(setq closer (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
 	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point)))))))
-     ((nth 3 pps)
-      (goto-char (nth 8 pps))
-      (backward-prefix-chars)
-      (setq closer (buffer-substring-no-properties (point) (progn (skip-chars-forward (char-to-string (nth 3 pps) ))(point))))
-      (when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point))))))
-     ((nth 1 pps)
-      (goto-char (nth 1 pps))
-      (setq closer (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
-      (when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point)))))))
-    (concat padding closer)))
+      (concat padding closer))))
 
 (defun syntactic-close-pure-syntax (pps)
   "Insert closer found from beginning of list.

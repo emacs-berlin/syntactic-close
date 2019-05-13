@@ -84,7 +84,7 @@
     (should (looking-back "end" (line-beginning-position)))
     (should (eq (current-indentation) 0))))
 
-(ert-deftest operator-mode-ruby-test-gszMLh ()
+(ert-deftest syntactic-close-ruby-test-gszMLh ()
   (syntactic-close-test
       ;; "puts \"Hello #{name}!\""
       "puts \"Hello #{name"
@@ -93,7 +93,7 @@
     (syntactic-close)
     (should (char-equal (char-before) ?}))))
 
-(ert-deftest operator-mode-ruby-test-gszMLh ()
+(ert-deftest syntactic-close-ruby-test-gszMLh ()
   (syntactic-close-test
       ;; "puts \"Hello #{name}!\""
       "puts \"Hello #{name}!"
@@ -101,6 +101,25 @@
     syntactic-close-debug-p
     (syntactic-close)
     (should (char-equal (char-before) ?\"))))
+
+(ert-deftest syntactic-close-mode-ruby-test-VvXkWj ()
+  (syntactic-close-test
+      ;; "hi(\"Matz\")"
+      "hi(\"Matz"
+    'ruby-mode
+    syntactic-close-debug-p
+    (syntactic-close)
+    (should (char-equal (char-before) ?\"))))
+
+(ert-deftest syntactic-close-mode-ruby-mode-test-3Sumx6 ()
+  (syntactic-close-test
+      ;; "hi(\"Matz\")"
+      "hi(\"Matz\""
+    'ruby-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (char-equal (char-before) ?\)))))
 
 (provide 'syntactic-close-ruby-tests)
 ;;; syntactic-close-ruby-tests.el ends here
