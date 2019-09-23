@@ -715,7 +715,7 @@ Argument IACT signals an interactive call."
       (insert closer))
     (or (< orig (point)) (and iact (message "%s" "nil") nil))))
 
-;;;###$autoload
+;;;###autoload
 (defun syntactic-close (&optional arg beg pps iact)
   "Insert closing delimiter.
 
