@@ -177,10 +177,10 @@ Optional argument IACT signaling interactive use."
 (unless (functionp 'empty-line-p)
   (defalias 'empty-line-p 'syntactic-close-empty-line-p))
 
-(defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
-  "Defined in haskell-interactive-mode.el, silence warnings.")
+;; (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
+;;   "Defined in haskell-interactive-mode.el, silence warnings.")
 
-(defvar syntactic-close-tag nil
+ (defvar syntactic-close-tag nil
   "Functions closing mode-specific might go here.")
 
 (defcustom syntactic-close-electric-delete-whitespace-p nil
