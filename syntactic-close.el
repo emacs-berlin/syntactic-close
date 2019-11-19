@@ -229,8 +229,39 @@ Default is t"
   :tag "syntactic-close--semicolon-separator-modes"
   :group 'syntactic-close)
 
-(defvar syntactic-close-modes (list 'php-mode 'js-mode 'web-mode 'python-mode 'emacs-lisp-mode 'org-mode 'ruby-mode 'nxml-mode 'html-mode 'mhtml-mode 'sgml-mode 'xml-mode 'xxml-mode)
+(defvar syntactic-close-modes (list
+			       'agda2-mode
+			       'emacs-lisp-mode 
+			       'html-mode 
+			       'js-mode 
+			       'mhtml-mode 
+			       'nxml-mode 
+			       'org-mode 
+			       'php-mode 
+			       'python-mode 
+			       'ruby-mode 
+			       'sgml-mode 
+			       'web-mode 
+			       'xml-mode 
+			       'xxml-mode)
   "Programming modes dealt with non-generic maybe.")
+
+;; (setq  syntactic-close-modes (list
+;; 			       'agda2-mode
+;; 			       'emacs-lisp-mode 
+;; 			       'html-mode 
+;; 			       'js-mode 
+;; 			       'mhtml-mode 
+;; 			       'nxml-mode 
+;; 			       'org-mode 
+;; 			       'php-mode 
+;; 			       'python-mode 
+;; 			       'ruby-mode 
+;; 			       'sgml-mode 
+;; 			       'web-mode 
+;; 			       'xml-mode 
+;; 			       'xxml-mode))
+
 
 (defvar syntactic-close-emacs-lisp-block-re
   (concat
@@ -526,6 +557,29 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
       (syntactic-close-pure-syntax pps))
      (t (syntactic-close--generic)))))
 
+;; Haskell
+(defun syntactic-close-haskell-close (b-of-st b-of-bl &optional pps)
+  "Might deliver equivalent to `py-dedent'.
+
+Argument B-OF-ST read beginning-of-statement.
+Argument B-OF-BL read beginning-of-block.
+Optional argument PADDING to be done.
+Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
+  (interactive "*")
+  (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
+	 (syntactic-close-beginning-of-statement
+	  (or b-of-st
+	      (if (ignore-errors (functionp 'py-backward-statement))
+		  'py-backward-statement
+		(lambda ()(beginning-of-line)(back-to-indentation)))))
+	 (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*")))
+    (cond
+     ((nth 8 pps)
+      (syntactic-close-generic-forms pps))
+     ((nth 1 pps)
+      (syntactic-close-pure-syntax pps))
+     (t (syntactic-close--generic)))))
+
 ;; Ruby
 (defun syntactic-close--ruby ()
   (unless (or (looking-back ";[ \t]*" nil))
@@ -593,6 +647,8 @@ Argument PPS result of ‘parse-partial-sexp’."
   (pcase major-mode
     (`python-mode
      (syntactic-close-python-close nil nil pps))
+    (`agda2-mode
+     (syntactic-close-haskell-close nil nil pps))
     (`emacs-lisp-mode
      (syntactic-close-emacs-lisp-close pps))
     (`org-mode

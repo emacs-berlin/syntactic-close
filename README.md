@@ -17,5 +17,27 @@ For example when called at the end of an open string like
 
 That way continuation may be inserted by just one key.
 
+Sometimes language-specific treatment is needed. 
+
+Currently supports the following modes: 
+
+agda2-mode
+emacs-lisp-mode 
+html-mode 
+js-mode 
+mhtml-mode 
+nxml-mode 
+org-mode 
+php-mode 
+python-mode 
+ruby-mode 
+sgml-mode 
+web-mode 
+xml-mode 
+xxml-mode
+
+Feel free to file a feature request should your favourite mode not
+being mentioned.
+
 A first draft was proposed at emacs-devel mailing-list: 
 http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html 
