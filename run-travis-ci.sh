@@ -50,6 +50,7 @@ TEST10=test/syntactic-close-ruby-tests.el
 TEST11=test/syntactic-close-xml-tests.el
 TEST12=test/syntactic-close-fundamental-tests.el
 TEST13=test/syntactic-close-tests.el
+TEST14=test/syntactic-close-java-tests.el
 
 hier () {
     $EMACS -Q --batch \
@@ -69,6 +70,7 @@ hier () {
 -load $TEST11 \
 -load $TEST12 \
 -load $TEST13 \
+-load $TEST14 \
 -f ert-run-tests-batch-and-exit
 }
 
@@ -88,6 +90,7 @@ entfernt () {
 -load $TEST11 \
 -load $TEST12 \
 -load $TEST13 \
+-load $TEST14 \
 -f ert-run-tests-batch-and-exit
 }
 

@@ -203,6 +203,7 @@ Default is t"
 (defcustom syntactic-close--semicolon-separator-modes
   (list
    'inferior-sml-mode
+   'java-mode
    'js-mode
    'js2-mode
    'perl-mode
@@ -232,7 +233,8 @@ Default is t"
 (defvar syntactic-close-modes (list
 			       'agda2-mode
 			       'emacs-lisp-mode 
-			       'html-mode 
+			       'html-mode
+			       'java-mode
 			       'js-mode 
 			       'mhtml-mode 
 			       'nxml-mode 
@@ -251,6 +253,7 @@ Default is t"
 ;; 			       'emacs-lisp-mode 
 ;; 			       'html-mode 
 ;; 			       'js-mode 
+;;                             'java-mode
 ;; 			       'mhtml-mode 
 ;; 			       'nxml-mode 
 ;; 			       'org-mode 
@@ -627,6 +630,7 @@ Argument PPS, the result of ‘parse-partial-sexp’."
   "Argument PPS, the result of ‘parse-partial-sexp’."
   (pcase major-mode
     (`php-mode (syntactic-close--semicolon-modes pps))
+    (`java-mode (syntactic-close--semicolon-modes pps))
     (`js-mode (syntactic-close--semicolon-modes pps))
     (`web-mode (syntactic-close--semicolon-modes pps))
     (_ 	(if
