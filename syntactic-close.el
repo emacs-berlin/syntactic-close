@@ -232,37 +232,37 @@ Default is t"
 
 (defvar syntactic-close-modes (list
 			       'agda2-mode
-			       'emacs-lisp-mode 
+			       'emacs-lisp-mode
 			       'html-mode
 			       'java-mode
-			       'js-mode 
-			       'mhtml-mode 
-			       'nxml-mode 
-			       'org-mode 
-			       'php-mode 
-			       'python-mode 
-			       'ruby-mode 
-			       'sgml-mode 
-			       'web-mode 
-			       'xml-mode 
+			       'js-mode
+			       'mhtml-mode
+			       'nxml-mode
+			       'org-mode
+			       'php-mode
+			       'python-mode
+			       'ruby-mode
+			       'sgml-mode
+			       'web-mode
+			       'xml-mode
 			       'xxml-mode)
   "Programming modes dealt with non-generic maybe.")
 
 ;; (setq  syntactic-close-modes (list
 ;; 			       'agda2-mode
-;; 			       'emacs-lisp-mode 
-;; 			       'html-mode 
-;; 			       'js-mode 
+;; 			       'emacs-lisp-mode
+;; 			       'html-mode
+;; 			       'js-mode
 ;;                             'java-mode
-;; 			       'mhtml-mode 
-;; 			       'nxml-mode 
-;; 			       'org-mode 
-;; 			       'php-mode 
-;; 			       'python-mode 
-;; 			       'ruby-mode 
-;; 			       'sgml-mode 
-;; 			       'web-mode 
-;; 			       'xml-mode 
+;; 			       'mhtml-mode
+;; 			       'nxml-mode
+;; 			       'org-mode
+;; 			       'php-mode
+;; 			       'python-mode
+;; 			       'ruby-mode
+;; 			       'sgml-mode
+;; 			       'web-mode
+;; 			       'xml-mode
 ;; 			       'xxml-mode))
 
 
@@ -538,6 +538,11 @@ Optional argument ORG read ‘org-mode’."
     (syntactic-close-pure-syntax pps))
    ((syntactic-close--generic))))
 
+(defun syntactic-close--delimited-inside-string(pos)
+  (and (< 0 (abs (skip-chars-backward "^{" pos)))
+       (char-before)))
+
+
 (defun syntactic-close-python-close (b-of-st b-of-bl &optional pps)
   "Might deliver equivalent to `py-dedent'.
 
@@ -551,11 +556,19 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
 	  (or b-of-st
 	      (if (ignore-errors (functionp 'py-backward-statement))
 		  'py-backward-statement
-		(lambda ()(beginning-of-line)(back-to-indentation)))))
-	 (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*")))
+		(lambda ()(beginning-of-line) (back-to-indentation)))))
+	 (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
+	 matcher)
     (cond
      ((nth 8 pps)
-      (syntactic-close-generic-forms pps))
+      (if (save-excursion (save-excursion (progn (syntactic-close--delimited-inside-string (nth 8 pps))
+						 (looking-back "{+"))))
+			  (progn
+			    ;; construct the string possibly matching according to length
+			    (setq matcher (make-string (length (match-string-no-properties 0)) ?}))
+			    (unless (looking-back matcher (nth 8 pps))
+			      matcher))
+	  (syntactic-close-generic-forms pps)))
      ((nth 1 pps)
       (syntactic-close-pure-syntax pps))
      (t (syntactic-close--generic)))))
@@ -629,9 +642,10 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 (defun syntactic-close--modes (pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
   (pcase major-mode
-    (`php-mode (syntactic-close--semicolon-modes pps))
     (`java-mode (syntactic-close--semicolon-modes pps))
     (`js-mode (syntactic-close--semicolon-modes pps))
+    (`php-mode (syntactic-close--semicolon-modes pps))
+    (`python-mode (syntactic-close-python-close nil nil pps))
     (`web-mode (syntactic-close--semicolon-modes pps))
     (_ 	(if
 	    (ignore-errors (< (nth 1 pps) (nth 8 pps)))
@@ -756,9 +770,10 @@ Argument PPS result of ‘parse-partial-sexp’."
 (defun syntactic-close-intern (orig beg iact &optional pps)
   "A first dispatch.
 
-Argument PPS, the result of ‘parse-partial-sexp’.
+Argument ORIG the position command was called from.
 Argument BEG the lesser border.
-Argument IACT signals an interactive call."
+Argument IACT signals an interactive call.
+Optional argument PPS, the result of ‘parse-partial-sexp’."
   (let* ((pps (or pps (parse-partial-sexp beg (point))))
 	 closer)
     (when syntactic-close-electric-delete-whitespace-p
