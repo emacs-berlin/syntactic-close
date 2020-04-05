@@ -39,18 +39,12 @@
     (syntactic-close)
     (should (char-equal (char-before) ?'))))
 
-(ert-deftest syntactic-close-python-tqs-sq-test-uGICyI ()
-  (syntactic-close-test-with-python-buffer
-      "'''asdf"
-    (goto-char (point-max))
-    (syntactic-close)
-    (should (char-equal (char-before (- (point) 1)) ?'))))
-
 (ert-deftest syntactic-close-python-tqs-sq-test-eS7oPB ()
   (syntactic-close-test-with-python-buffer
       "'''asdf"
     (goto-char (point-max))
     (syntactic-close)
+    (sit-for 0.1) 
     (should (char-equal (char-before (- (point) 2)) ?'))))
 
 (ert-deftest syntactic-close-python-tqs-dq-test-10mjq3 ()

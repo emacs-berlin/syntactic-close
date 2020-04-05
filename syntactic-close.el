@@ -538,9 +538,17 @@ Optional argument ORG read ‘org-mode’."
     (syntactic-close-pure-syntax pps))
    ((syntactic-close--generic))))
 
-(defun syntactic-close--delimited-inside-string(pos)
-  (and (< 0 (abs (skip-chars-backward "^{" pos)))
-       (char-before)))
+(defun syntactic-close--braced-inside-string (pos)
+  "Return the brace(s) if existing inside a string at point."
+  (let ((orig (point))
+	(counter 0))
+    (while (and (or (eq (char-before) ?})(< 0 (abs (skip-chars-backward "^{}" (1+ pos))))))
+      (if (eq (char-before) ?})
+	  (setq counter (1- counter))
+	(when (eq (char-before) ?{)
+	  (setq counter (1+ counter))))
+      (backward-char))
+    (and (< 0 counter) "}")))
 
 
 (defun syntactic-close-python-close (&optional pps)
@@ -553,22 +561,17 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
   (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
 	 ;; (syntactic-close-beginning-of-statement
-	  ;; (or b-of-st
-	  ;;     (if (ignore-errors (functionp 'py-backward-statement))
-	  ;; 	  'py-backward-statement
-	  ;; 	(lambda ()(beginning-of-line) (back-to-indentation)))))
+	 ;; (or b-of-st
+	 ;;     (if (ignore-errors (functionp 'py-backward-statement))
+	 ;; 	  'py-backward-statement
+	 ;; 	(lambda ()(beginning-of-line) (back-to-indentation)))))
 	 ;; (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
-	 matcher)
+	 matcher erg)
     (cond
-     ((nth 8 pps)
-      (or  (and (save-excursion (save-excursion (progn (syntactic-close--delimited-inside-string (nth 8 pps))
-						 (looking-back "{+" (nth 8 pps)))))
-			  (progn
-			    ;; construct the string possibly matching according to length
-			    (setq matcher (make-string (length (match-string-no-properties 0)) ?}))
-			    (unless (looking-back matcher (nth 8 pps))
-			      matcher)))
-	  (syntactic-close-generic-forms pps)))
+     ((and (nth 8 pps)(nth 3 pps))
+      (or (save-excursion (syntactic-close--braced-inside-string (nth 8 pps)))
+	  ;; (syntactic-close-generic-forms pps)
+	  (save-excursion (goto-char (nth 8 pps)) (looking-at "[\"']+")(match-string-no-properties 0))))
      ((nth 1 pps)
       (syntactic-close-pure-syntax pps))
      (t (syntactic-close--generic)))))
