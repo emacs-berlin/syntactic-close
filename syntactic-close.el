@@ -543,7 +543,7 @@ Optional argument ORG read ‘org-mode’."
        (char-before)))
 
 
-(defun syntactic-close-python-close (b-of-st b-of-bl &optional pps)
+(defun syntactic-close-python-close (&optional pps)
   "Might deliver equivalent to `py-dedent'.
 
 Argument B-OF-ST read beginning-of-statement.
@@ -552,29 +552,29 @@ Optional argument PADDING to be done.
 Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
   (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
-	 (syntactic-close-beginning-of-statement
-	  (or b-of-st
-	      (if (ignore-errors (functionp 'py-backward-statement))
-		  'py-backward-statement
-		(lambda ()(beginning-of-line) (back-to-indentation)))))
-	 (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
+	 ;; (syntactic-close-beginning-of-statement
+	  ;; (or b-of-st
+	  ;;     (if (ignore-errors (functionp 'py-backward-statement))
+	  ;; 	  'py-backward-statement
+	  ;; 	(lambda ()(beginning-of-line) (back-to-indentation)))))
+	 ;; (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
 	 matcher)
     (cond
      ((nth 8 pps)
-      (if (save-excursion (save-excursion (progn (syntactic-close--delimited-inside-string (nth 8 pps))
-						 (looking-back "{+"))))
+      (or  (and (save-excursion (save-excursion (progn (syntactic-close--delimited-inside-string (nth 8 pps))
+						 (looking-back "{+" (nth 8 pps)))))
 			  (progn
 			    ;; construct the string possibly matching according to length
 			    (setq matcher (make-string (length (match-string-no-properties 0)) ?}))
 			    (unless (looking-back matcher (nth 8 pps))
-			      matcher))
+			      matcher)))
 	  (syntactic-close-generic-forms pps)))
      ((nth 1 pps)
       (syntactic-close-pure-syntax pps))
      (t (syntactic-close--generic)))))
 
 ;; Haskell
-(defun syntactic-close-haskell-close (b-of-st b-of-bl &optional pps)
+(defun syntactic-close-haskell-close (&optional pps)
   "Might deliver equivalent to `py-dedent'.
 
 Argument B-OF-ST read beginning-of-statement.
@@ -583,12 +583,13 @@ Optional argument PADDING to be done.
 Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
   (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
-	 (syntactic-close-beginning-of-statement
-	  (or b-of-st
-	      (if (ignore-errors (functionp 'py-backward-statement))
-		  'py-backward-statement
-		(lambda ()(beginning-of-line)(back-to-indentation)))))
-	 (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*")))
+	 ;; (syntactic-close-beginning-of-statement
+	 ;;  (or b-of-st
+	 ;;      (if (ignore-errors (functionp 'py-backward-statement))
+	 ;; 	  'py-backward-statement
+	 ;; 	(lambda ()(beginning-of-line)(back-to-indentation)))))
+	 ;; (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
+	 )
     (cond
      ((nth 8 pps)
       (syntactic-close-generic-forms pps))
@@ -645,7 +646,7 @@ Argument PPS, the result of ‘parse-partial-sexp’."
     (`java-mode (syntactic-close--semicolon-modes pps))
     (`js-mode (syntactic-close--semicolon-modes pps))
     (`php-mode (syntactic-close--semicolon-modes pps))
-    (`python-mode (syntactic-close-python-close nil nil pps))
+    (`python-mode (syntactic-close-python-close pps))
     (`web-mode (syntactic-close--semicolon-modes pps))
     (_ 	(if
 	    (ignore-errors (< (nth 1 pps) (nth 8 pps)))
@@ -664,9 +665,9 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 Argument PPS result of ‘parse-partial-sexp’."
   (pcase major-mode
     (`python-mode
-     (syntactic-close-python-close nil nil pps))
+     (syntactic-close-python-close pps))
     (`agda2-mode
-     (syntactic-close-haskell-close nil nil pps))
+     (syntactic-close-haskell-close pps))
     (`emacs-lisp-mode
      (syntactic-close-emacs-lisp-close pps))
     (`org-mode

@@ -74,14 +74,28 @@
     (syntactic-close)
     (should (looking-back "\"asdf\"" (line-beginning-position)))))
 
-(ert-deftest syntactic-close-python-brace-test-Zu6qkI ()
+(ert-deftest syntactic-close-python-f-string-test-Zu6qkI ()
   (syntactic-close-test-with-python-buffer
       "print(f\"Elementweise Addition: {m1 + m2"
     (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
-    
+
+(ert-deftest syntactic-close-python-f-string-test-JaSpMC ()
+  (syntactic-close-test-with-python-buffer
+      "print(f'{val:.5f}"
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (eq (char-before) ?'))))
+
+(ert-deftest syntactic-close-python-f-string-test-UAau25 ()
+  (syntactic-close-test-with-python-buffer
+      ;; print(f'{name} is {age} years old')
+      "print(f'{name} is {age} years old"
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (eq (char-before) ?'))))
 
 (provide 'syntactic-close-python-tests)
 
