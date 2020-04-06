@@ -41,6 +41,15 @@
  (require 'sgml-mode)
  (require 'comint))
 
+(defvar  syntactic-close-install-directory default-directory
+  "Detect current .cask stuff.")
+
+(defvar syntactic-close-debug-p nil
+  "Avoid error")
+;; (setq syntactic-close-debug-p t)
+
+(and syntactic-close-debug-p (message "syntactic-close.el: default-directory: %s" default-directory))
+
 (defgroup syntactic-close nil
   "Insert closing delimiter whichever needed. "
   :group 'languages
@@ -264,7 +273,6 @@ Default is t"
 ;; 			       'web-mode
 ;; 			       'xml-mode
 ;; 			       'xxml-mode))
-
 
 (defvar syntactic-close-emacs-lisp-block-re
   (concat
@@ -548,33 +556,23 @@ Optional argument ORG read ‘org-mode’."
 	(when (eq (char-before) ?{)
 	  (setq counter (1+ counter))))
       (backward-char))
-    (and (< 0 counter) "}")))
+    (and (< 0 counter)  "}")))
 
-
-(defun syntactic-close-python-close (&optional pps)
+(defun syntactic-close-python-close (pps)
   "Might deliver equivalent to `py-dedent'.
 
 Argument B-OF-ST read beginning-of-statement.
 Argument B-OF-BL read beginning-of-block.
 Optional argument PADDING to be done.
 Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
-  (interactive "*")
-  (let* ((pps (or pps (parse-partial-sexp (point-min) (point))))
-	 ;; (syntactic-close-beginning-of-statement
-	 ;; (or b-of-st
-	 ;;     (if (ignore-errors (functionp 'py-backward-statement))
-	 ;; 	  'py-backward-statement
-	 ;; 	(lambda ()(beginning-of-line) (back-to-indentation)))))
-	 ;; (syntactic-close-beginning-of-block-re (or b-of-bl "[ 	]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n	]*"))
-	 matcher erg)
-    (cond
-     ((and (nth 8 pps)(nth 3 pps))
-      (or (save-excursion (syntactic-close--braced-inside-string (nth 8 pps)))
-	  ;; (syntactic-close-generic-forms pps)
-	  (save-excursion (goto-char (nth 8 pps)) (looking-at "[\"']+")(match-string-no-properties 0))))
-     ((nth 1 pps)
-      (syntactic-close-pure-syntax pps))
-     (t (syntactic-close--generic)))))
+  (cond
+   ((and (nth 8 pps) (nth 3 pps))
+    (or (save-excursion (syntactic-close--braced-inside-string (nth 8 pps)))
+	;; (syntactic-close-generic-forms pps)
+	(save-excursion (goto-char (nth 8 pps)) (looking-at "[\"']+") (match-string-no-properties 0))))
+   ((nth 1 pps)
+    (syntactic-close-pure-syntax pps))
+   (t (syntactic-close--generic))))
 
 ;; Haskell
 (defun syntactic-close-haskell-close (&optional pps)
@@ -771,15 +769,14 @@ Argument PPS result of ‘parse-partial-sexp’."
   (cond ((syntactic-close--generic (point) nil (nth 8 pps)))
 	((syntactic-close-pure-syntax-intern pps))))
 
-(defun syntactic-close-intern (orig beg iact &optional pps)
+(defun syntactic-close-intern (orig beg iact pps)
   "A first dispatch.
 
 Argument ORIG the position command was called from.
 Argument BEG the lesser border.
 Argument IACT signals an interactive call.
 Optional argument PPS, the result of ‘parse-partial-sexp’."
-  (let* ((pps (or pps (parse-partial-sexp beg (point))))
-	 closer)
+  (let (closer)
     (when syntactic-close-electric-delete-whitespace-p
       (delete-region orig (progn (skip-chars-backward " \t" (line-beginning-position))(point))))
     ;; (save-excursion
@@ -809,17 +806,16 @@ Optional argument ARG signals interactive use.
 Optional argument BEG sets the lesser border.
 Argument PPS, the result of ‘parse-partial-sexp’."
   (interactive "p*")
-  (let (orig
+  (let* ((orig (copy-marker (point)))
 	(beg (or beg (syntactic-close--point-min)))
+	(pps (or pps (parse-partial-sexp beg (point))))
 	(iact (or iact arg))
 	(arg (or arg 1)))
     (pcase (prefix-numeric-value arg)
-      (4 (while (syntactic-close-intern (setq orig (copy-marker (point))) beg iact (parse-partial-sexp beg (point))))
+      (4 (while (syntactic-close-intern (setq orig (copy-marker (point))) beg iact pps))
 	 (< orig (point)))
-      (_
-       (dotimes (_ arg)
-	 (syntactic-close-intern (setq orig (copy-marker (point))) beg iact pps))
-       (< orig (point))))))
+      (_ (syntactic-close-intern orig beg iact pps)))
+       (< orig (point))))
 
 (provide 'syntactic-close)
 ;;; syntactic-close.el ends here

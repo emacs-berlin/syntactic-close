@@ -44,8 +44,10 @@
       "'''asdf"
     (goto-char (point-max))
     (syntactic-close)
-    (sit-for 0.1) 
-    (should (char-equal (char-before (- (point) 2)) ?'))))
+    (should
+     ;; (char-equal (char-before (- (point) 2)) ?')
+     (char-equal (char-before) ?')
+     )))
 
 (ert-deftest syntactic-close-python-tqs-dq-test-10mjq3 ()
   (syntactic-close-test-with-python-buffer
@@ -74,7 +76,6 @@
     (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?}))))
-
 
 (ert-deftest syntactic-close-python-f-string-test-JaSpMC ()
   (syntactic-close-test-with-python-buffer

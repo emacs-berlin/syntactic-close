@@ -22,15 +22,6 @@
 
 ;;; Code:
 
-(setq syntactic-close-install-directory default-directory)
-(message "default-directory: %s" default-directory)
-
-(sit-for 0.1 t)
-
-(defvar syntactic-close-debug-p nil
-  "Avoid error")
-;; (setq syntactic-close-debug-p t)
-
 (unless (featurep 'haskell)
   (add-to-list 'load-path (concat syntactic-close-install-directory ".cask/24.4/elpa/haskell-mode-20160818.437"))
   (if (file-readable-p
