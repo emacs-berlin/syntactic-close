@@ -62,10 +62,10 @@
   :type 'regexp
   :group 'sytactic-close)
 
-(defcustom syntactic-close-unary-delimiter-chars (list ?` ?\" ?' ?+ ?: ?$ ?#)
-  "Permitted unary delimiters."
-  :type '(repeat character)
-  :group 'sytactic-close)
+(defvar syntactic-close-unary-delimiter-chars (list ?` ?\" ?' ?+ ?: ?$ ?#)
+  "Permitted unary delimiters. 
+
+Set/modified by mode-specific functions."
 (make-variable-buffer-local 'syntactic-close-unary-delimiter-chars)
 
 (defcustom syntactic-close-empty-line-p-chars "^[ \t\r]*$"
@@ -538,13 +538,14 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 Argument CLOSER the char to close.
 Argument PPS should provide result of ‘parse-partial-sexp’.
 Optional argument ORG read ‘org-mode’."
-  ;; (unary-delimiters-strg (cl-map 'string 'identity unary-delimiter-chars))
-  ;; (delimiters (concat syntactic-close-paired-openers-strg syntactic-close-paired-closers-strg unary-delimiters-strg))
-  (cond
-   (org (syntactic-close--org-mode-close))
-   ((and (not (nth 8 pps))(nth 1 pps))
-    (syntactic-close-pure-syntax pps))
-   ((syntactic-close--generic))))
+  (let ((syntactic-close-unary-delimiter-chars (list ?` ?\" ?+)))
+    ;; (unary-delimiters-strg (cl-map 'string 'identity unary-delimiter-chars))
+    ;; (delimiters (concat syntactic-close-paired-openers-strg syntactic-close-paired-closers-strg unary-delimiters-strg))
+    (cond
+     (org (syntactic-close--org-mode-close))
+     ((and (not (nth 8 pps))(nth 1 pps))
+      (syntactic-close-pure-syntax pps))
+     ((syntactic-close--generic)))))
 
 (defun syntactic-close--braced-inside-string (pos)
   "Return the brace(s) if existing inside a string at point."

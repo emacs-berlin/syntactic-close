@@ -156,6 +156,7 @@ asdf"
   ;; comint-password-prompt-regexp
   (syntactic-close-test-with-elisp-buffer
       "\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th"
+      (goto-char (point-max))
       (let ((syntactic-close-unary-delimiter-chars (list ?` ?\" ?+)))
 	(syntactic-close '(4))
 	(should (eq (char-before) ?\")))))
