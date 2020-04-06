@@ -63,9 +63,7 @@
   :group 'sytactic-close)
 
 (defvar syntactic-close-unary-delimiter-chars (list ?` ?\" ?' ?+ ?: ?$ ?#)
-  "Permitted unary delimiters. 
-
-Set/modified by mode-specific functions."
+  "Permitted unary delimiters." )
 (make-variable-buffer-local 'syntactic-close-unary-delimiter-chars)
 
 (defcustom syntactic-close-empty-line-p-chars "^[ \t\r]*$"
@@ -103,7 +101,6 @@ Set/modified by mode-specific functions."
   "Handle escaped parens.
 
 Consider strings like
-\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th
 Argument LIMIT lower border."
   (save-excursion
     (when (eq (char-before) syntactic-close--escape-char)
