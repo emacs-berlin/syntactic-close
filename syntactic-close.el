@@ -788,7 +788,7 @@ Optional argument PPS, the result of ‘parse-partial-sexp’."
       ;; (goto-char orig)
       (insert closer)
       ;; ruby end
-      (indent-according-to-mode))
+      (save-excursion (indent-according-to-mode)))
     (or (< orig (point)) (and iact (message "%s" "nil") nil))))
 
 ;;;###autoload
