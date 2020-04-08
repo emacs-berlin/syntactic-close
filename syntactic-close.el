@@ -785,8 +785,10 @@ Optional argument PPS, the result of ‘parse-partial-sexp’."
 	    (syntactic-close--generic)))
     ;; insert might be hardcoded like in ‘nxml-finish-element-1’
     (when (and closer (stringp closer))
-      (goto-char orig)
-      (insert closer))
+      ;; (goto-char orig)
+      (insert closer)
+      ;; ruby end
+      (indent-according-to-mode))
     (or (< orig (point)) (and iact (message "%s" "nil") nil))))
 
 ;;;###autoload

@@ -50,7 +50,7 @@
     syntactic-close-debug-p
     (let ((syntactic-close-unary-delimiter-chars (push 43 syntactic-close-unary-delimiter-chars)))
       (syntactic-close)
-      (should (looking-back "{{{[[[[+++asdf+++" (line-beginning-position))))))
+      (should (eq (char-before) ?+)))))
 
 (ert-deftest syntactic-close--triple-grave-accent-test-WlZ71s ()
   (syntactic-close-test
