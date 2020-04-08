@@ -570,7 +570,11 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
 	(save-excursion (goto-char (nth 8 pps)) (looking-at "[\"']+") (match-string-no-properties 0))))
    ((nth 1 pps)
     (syntactic-close-pure-syntax pps))
-   (t (syntactic-close--generic))))
+   (t (syntactic-close--generic (point) nil
+				(if (functionp 'py--beginning-of-statement-position)
+				    (py--beginning-of-statement-position)
+				  (save-excursion (python-nav-beginning-of-statement)))
+				t))))
 
 ;; Haskell
 (defun syntactic-close-haskell-close (&optional pps)
@@ -694,7 +698,7 @@ Argument PPS result of ‘parse-partial-sexp’."
     ;; in comment
     (syntactic-close--insert-comment-end-maybe pps))))
 
-(defun syntactic-close--generic (&optional orig stack limit)
+(defun syntactic-close--generic (&optional orig stack limit skip_list)
   "Detect delimiters inside string or comment maybe.
 
 Optional argument UNARY-DELIMITER-CHARS like quoting chara1cter,
@@ -710,53 +714,58 @@ Optional argument LIMIT bound."
 	 (paired-delimiters-strg (concat (cl-map 'string 'identity syntactic-close-paired-openers) (cl-map 'string 'identity syntactic-close-paired-closers)))
 	 (stack stack)
 	 closer done escapes padding)
-    (while (and (not (bobp)) (not done) (<= limit (1- (point))))
-      (cond ((member (char-before)
-		     ;; (list ?\) ?\] ?})
-		     syntactic-close-paired-closers)
-	     (push (char-before) stack)
-	     (unless (bobp) (forward-char -1)))
-	    (;; (list ?\( ?\" ?{ ?\[)
-	     (member (char-before)
-		     syntactic-close-paired-openers)
-	     (if (eq (car stack) (syntactic-close--return-complement-char-maybe (char-before)))
-		 (progn
-		   (pop stack)
-		   (unless (bobp)
-		     (forward-char -1)))
-	       (setq done t)
-	       (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
-	       ;; maybe more then one char
-	       (setq closer (syntactic-close--multichar-closer (char-before) limit))
-	       (unless (bobp)
-		 (setq escapes (syntactic-close--escapes-maybe limit)))))
-	    ((and (member (char-before)
-			  ;; (list ?` ?\" ?')
-			  unary-delimiter-chars)
-		  ;; $asdf$
-		  (eq 0 (mod (count-matches (char-to-string (char-before)) limit
-					    ;; (point)
-					    orig) 2))
-		  ;; (setq erg (char-before))
-		  (skip-chars-backward (concat "^" (cl-map 'string 'identity (remove (char-before) unary-delimiter-chars)) paired-delimiters-strg) limit)))
-	    ((and (member (char-before)
-			  ;; (list ?` ?\" ?')
-			  unary-delimiter-chars)
-		  ;; $asdf$
-		  (not (eq 0 (mod (count-matches (char-to-string (char-before)) limit
-						 ;; (point)
-						 orig) 2))))
-	     (setq closer (buffer-substring (save-excursion (skip-chars-backward (char-to-string (char-before)))(point)) (point)))
-	     (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
-	     (setq done t)
-	     (setq escapes (syntactic-close--escapes-maybe limit)))
-	    ((or (< 0 (abs (skip-chars-backward (concat "^" (cl-map 'string 'identity unary-delimiter-chars) paired-delimiters-strg) limit)))
-		 (setq done t)))))
-    (cond (closer
-	   (when (characterp closer) (setq closer (char-to-string closer)))
-	   (setq closer (concat padding escapes closer))))
-    (goto-char orig)
-    closer))
+    (save-restriction
+      (narrow-to-region limit orig)
+      (while (and (not (bobp)) (not done) (<= limit (1- (point))))
+	(cond
+	 ((and skip_list (nth 1 (parse-partial-sexp (point-min) (point))))
+	  (goto-char (nth 1 (parse-partial-sexp (point-min) (point)))))
+	 ((member (char-before)
+		  ;; (list ?\) ?\] ?})
+		  syntactic-close-paired-closers)
+	  (push (char-before) stack)
+	  (unless (bobp) (forward-char -1)))
+	 (;; (list ?\( ?\" ?{ ?\[)
+	  (member (char-before)
+		  syntactic-close-paired-openers)
+	  (if (eq (car stack) (syntactic-close--return-complement-char-maybe (char-before)))
+	      (progn
+		(pop stack)
+		(unless (bobp)
+		  (forward-char -1)))
+	    (setq done t)
+	    (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
+	    ;; maybe more then one char
+	    (setq closer (syntactic-close--multichar-closer (char-before) limit))
+	    (unless (bobp)
+	      (setq escapes (syntactic-close--escapes-maybe limit)))))
+	 ((and (member (char-before)
+		       ;; (list ?` ?\" ?')
+		       unary-delimiter-chars)
+	       ;; $asdf$
+	       (eq 0 (mod (count-matches (char-to-string (char-before)) limit
+					 ;; (point)
+					 orig) 2))
+	       ;; (setq erg (char-before))
+	       (skip-chars-backward (concat "^" (cl-map 'string 'identity (remove (char-before) unary-delimiter-chars)) paired-delimiters-strg) limit)))
+	 ((and (member (char-before)
+		       ;; (list ?` ?\" ?')
+		       unary-delimiter-chars)
+	       ;; $asdf$
+	       (not (eq 0 (mod (count-matches (char-to-string (char-before)) limit
+					      ;; (point)
+					      orig) 2))))
+	  (setq closer (buffer-substring (save-excursion (skip-chars-backward (char-to-string (char-before)))(point)) (point)))
+	  (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
+	  (setq done t)
+	  (setq escapes (syntactic-close--escapes-maybe limit)))
+	 ((or (< 0 (abs (skip-chars-backward (concat "^" (cl-map 'string 'identity unary-delimiter-chars) paired-delimiters-strg) limit)))
+	      (setq done t)))))
+      (cond (closer
+	     (when (characterp closer) (setq closer (char-to-string closer)))
+	     (setq closer (concat padding escapes closer))))
+      (goto-char orig)
+      closer)))
 
 (defun syntactic-close--string-before-list-maybe (pps)
   "String inside a list needs to be closed first maybe.
@@ -782,7 +791,7 @@ Optional argument PPS, the result of ‘parse-partial-sexp’."
 	  (if
 	      (member major-mode syntactic-close-modes)
 	      (syntactic-close--modes pps)
-	    (syntactic-close--generic)))
+	    (syntactic-close--generic orig nil beg)))
     ;; insert might be hardcoded like in ‘nxml-finish-element-1’
     (when (and closer (stringp closer))
       ;; (goto-char orig)
