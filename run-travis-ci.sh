@@ -37,6 +37,7 @@ FILE1=syntactic-close.el
 FILE2=.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el
 FILE3=.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el
 
+
 TEST1=test/syntactic-close-setup-ert-tests.el
 TEST2=test/syntactic-close-c-tests.el
 TEST3=test/syntactic-close-c++-tests.el
@@ -84,7 +85,6 @@ entfernt () {
 -load $TEST2 \
 -load $TEST3 \
 -load $TEST4 \
--load $TEST5 \
 -load $TEST7 \
 -load $TEST8 \
 -load $TEST9 \
