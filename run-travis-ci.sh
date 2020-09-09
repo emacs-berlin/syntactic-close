@@ -34,15 +34,12 @@ fi
 echo "\$EMACS: $EMACS"
 
 FILE1=syntactic-close.el
-FILE2=.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el
-FILE3=.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el
 
 
 TEST1=test/syntactic-close-setup-ert-tests.el
 TEST2=test/syntactic-close-c-tests.el
 TEST3=test/syntactic-close-c++-tests.el
 TEST4=test/syntactic-close-sml-tests.el
-TEST5=test/syntactic-close-haskell-tests.el
 TEST6=test/syntactic-close-emacs-lisp-tests.el
 TEST7=test/syntactic-close-js-tests.el
 TEST8=test/syntactic-close-php-tests.el
@@ -53,30 +50,6 @@ TEST12=test/syntactic-close-fundamental-tests.el
 TEST13=test/syntactic-close-tests.el
 TEST14=test/syntactic-close-java-tests.el
 
-# hier () {
-#     $EMACS -Q --batch \
-# --eval "(add-to-list 'load-path \"$PWD/.cask/24.4/elpa/php-mode-20160910.1801\")" \
-# --eval "(add-to-list 'load-path \"$PWD/.cask/24.4/elpa/haskell-mode-20160818.437\")" \
-# -load $FILE1 \
-# -load $FILE2 \
-# -load $FILE3 \
-# -load $TEST1 \
-# -load $TEST2 \
-# -load $TEST3 \
-# -load $TEST4 \
-# -load $TEST5 \
-# -load $TEST6 \
-# -load $TEST7 \
-# -load $TEST8 \
-# -load $TEST9 \
-# -load $TEST10 \
-# -load $TEST11 \
-# -load $TEST12 \
-# -load $TEST13 \
-# -load $TEST14 \
-# -f ert-run-tests-batch-and-exit
-# }
-
 entfernt () {
     $EMACS -Q --batch \
 --eval "(message (emacs-version))" \
@@ -86,7 +59,6 @@ entfernt () {
 -load $TEST3 \
 -load $TEST4 \
 -load $TEST7 \
--load $TEST8 \
 -load $TEST9 \
 -load $TEST10 \
 -load $TEST11 \
@@ -103,6 +75,7 @@ if [ $ORT -eq 0 ]; then
     
 else
     echo "Lade Testumgebung \"entfernt\""
+    echo \$ORT: $ORT
     entfernt
 fi
 
