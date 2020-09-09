@@ -82,6 +82,7 @@
   :group 'sytactic-close)
 
 ;; (setq syntactic-close-paired-openers
+
 ;;    (list ?‘ ?< ?\( ?\[ ?{ ?\〈 ?\⦑ ?\⦓ ?\【 ?\⦗ ?\⸤ ?\「 ?\《 ?\⦕ ?\⸨ ?\⧚ ?\｛ ?\（ ?\［ ?\｟ ?\｢ ?\❰ ?\❮ ?\“ ?\‘ ?\❲ ?\⟨ ?\⟪ ?\⟮ ?\⟦ ?\⟬ ?\❴ ?\❪ ?\❨ ?\❬ ?\᚛ ?\〈 ?\⧼ ?\⟅ ?\⸦ ?\﹛ ?\﹙ ?\﹝ ?\⁅ ?\⦏ ?\⦍ ?\⦋ ?\₍ ?\⁽ ?\༼ ?\༺ ?\⸢ ?\〔 ?\『 ?\⦃ ?\〖 ?\⦅ ?\〚 ?\〘 ?\⧘ ?\⦉ ?\⦇))
 
 (defcustom syntactic-close-paired-closers (list ?’ ?> ?\) ?\] ?} ?\〉 ?\⦒ ?\⦔ ?\】 ?\⦘ ?\⸥ ?\」 ?\》 ?\⦖ ?\⸩ ?\⧛ ?\｝ ?\） ?\］ ?\｠ ?\｣ ?\❱ ?\❯ ?\” ?\’ ?\❳ ?\⟩ ?\⟫ ?\⟯ ?\⟧ ?\⟭ ?\❵ ?\❫ ?\❩ ?\❭ ?\᚜ ?\〉 ?\⧽ ?\⟆ ?\⸧ ?\﹜ ?\﹚ ?\﹞ ?\⁆ ?\⦎ ?\⦐ ?\⦌ ?\₎ ?\⁾ ?\༽ ?\༻ ?\⸣ ?\〕 ?\』 ?\⦄ ?\〗 ?\⦆ ?\〛 ?\〙 ?\⧙ ?\⦊ ?\⦈)
@@ -254,22 +255,10 @@ Default is t"
 			       'xxml-mode)
   "Programming modes dealt with non-generic maybe.")
 
-;; (setq  syntactic-close-modes (list
-;; 			       'agda2-mode
-;; 			       'emacs-lisp-mode
-;; 			       'html-mode
-;; 			       'js-mode
-;;                             'java-mode
-;; 			       'mhtml-mode
-;; 			       'nxml-mode
-;; 			       'org-mode
-;; 			       'php-mode
-;; 			       'python-mode
-;; 			       'ruby-mode
-;; 			       'sgml-mode
-;; 			       'web-mode
-;; 			       'xml-mode
-;; 			       'xxml-mode))
+(defvar syntactic-close-indent-modes (list
+				      'ruby-mode)
+  "Mode where ‘indent-according-to-mode’ shall be after closer is inserted. ")
+
 
 (defvar syntactic-close-emacs-lisp-block-re
   (concat
@@ -797,7 +786,8 @@ Optional argument PPS, the result of ‘parse-partial-sexp’."
       ;; (goto-char orig)
       (insert closer)
       ;; ruby end
-      (save-excursion (indent-according-to-mode)))
+      (when (member major-mode syntactic-close-indent-modes)
+	(save-excursion (indent-according-to-mode))))
     (or (< orig (point)) (and iact (message "%s" "nil") nil))))
 
 ;;;###autoload
