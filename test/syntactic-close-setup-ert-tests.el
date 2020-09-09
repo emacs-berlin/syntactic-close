@@ -22,24 +22,24 @@
 
 ;;; Code:
 
-(unless (featurep 'haskell)
-  (add-to-list 'load-path (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437"))
-  (if (file-readable-p
-       (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
-      (progn
-	(message "Lade %s" (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
-	(load (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el") nil t))
-    (message "Nicht gefunden: %s" (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))))
+;; (unless (featurep 'haskell)
+;;   (add-to-list 'load-path (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437"))
+;;   (if (file-readable-p
+;;        (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
+;;       (progn
+;; 	(message "Lade %s" (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))
+;; 	(load (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el") nil t))
+;;     (message "Nicht gefunden: %s" (concat syntactic-close-install-directory "/.cask/24.4/elpa/haskell-mode-20160818.437/haskell.el"))))
 
 ;; .cask/24.4/elpa/php-mode-20160910.1801/
-(unless (featurep 'php-mode)
-  (add-to-list 'load-path (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801"))
-  (if (file-readable-p
-       (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
-      (progn
-	(message "Lade %s" (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
-	(load (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el") nil t))
-    (message "Nicht gefunden: %s" (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))))
+;; (unless (featurep 'php-mode)
+;;   (add-to-list 'load-path (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801"))
+;;   (if (file-readable-p
+;;        (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
+;;       (progn
+;; 	(message "Lade %s" (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))
+;; 	(load (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el") nil t))
+;;     (message "Nicht gefunden: %s" (concat syntactic-close-install-directory "/.cask/24.4/elpa/php-mode-20160910.1801/php-mode.el"))))
 
 (defmacro syntactic-close-test (contents mode verbose &rest body)
   "Create temp buffer inserting CONTENTS.
