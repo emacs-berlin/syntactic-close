@@ -18,7 +18,7 @@
 
 # Code:
 
-ORT=${ORT:-$1}
+ORT=${ORT:=1}
 
 echo "\$ORT: $ORT"
 
