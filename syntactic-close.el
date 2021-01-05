@@ -485,6 +485,103 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 	 (font-lock-fontify-region (point-min)(point-max))
 	 t)))
 
+(defun syntactic-close--generic (&optional orig stack pps skip_list)
+  "Detect delimiters inside string or comment maybe.
+
+Optional argument UNARY-DELIMITER-CHARS like quoting chara1cter,
+a list.
+Optional argument DELIMITERS-STRG composed of unary and paired delimiters,
+a list.
+Optional argument ORIG position.
+Optional argument STACK used by recursive call maybe.
+Optional argument LIMIT bound."
+  (let* ((orig (or orig (point)))
+	 (limit (or (ignore-errors (nth 8 pps)) (point-min)))
+	 (unary-delimiter-chars syntactic-close-unary-delimiter-chars)
+	 (paired-delimiters-strg (concat (cl-map 'string 'identity syntactic-close-paired-openers) (cl-map 'string 'identity syntactic-close-paired-closers)))
+	 (stack stack)
+	 closer done escapes padding)
+    (save-restriction
+      (narrow-to-region limit orig)
+      (while (and (not (bobp)) (not closer)(not done) (<= limit (1- (point))))
+	(cond
+	 ((and skip_list (nth 1 (parse-partial-sexp (point-min) (point))))
+	  (goto-char (nth 1 (parse-partial-sexp (point-min) (point)))))
+	 ((member (char-before)
+		  ;; (list ?\) ?\] ?})
+		  syntactic-close-paired-closers)
+	  (push (char-before) stack)
+	  (unless (bobp) (forward-char -1)))
+	 (;; (list ?\( ?\" ?{ ?\[)
+	  (member (char-before)
+		  syntactic-close-paired-openers)
+	  (if (eq (car stack) (syntactic-close--return-complement-char-maybe (char-before)))
+	      (progn
+		(pop stack)
+		(unless (bobp)
+		  (forward-char -1)))
+	    (setq done t)
+	    (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
+	    ;; maybe more then one char
+	    (setq closer (syntactic-close--multichar-closer (char-before) limit))
+	    (unless (bobp)
+	      (setq escapes (syntactic-close--escapes-maybe limit)))))
+	 ((and (member (char-before)
+		       ;; (list ?` ?\" ?')
+		       unary-delimiter-chars)
+	       ;; syntactic-close--tqs-test-hglm99.el
+	       ;; (search-forward "'''
+	       (eq 3 (- limit (- limit (count-matches (char-to-string (char-before)) limit
+						      ;; (point)
+						      orig)))))
+	  (if (nth 3 pps)
+	      (progn
+		(goto-char (nth 8 pps))
+
+		(setq closer (buffer-substring-no-properties (point) (progn (skip-chars-forward (char-to-string (char-after))) (point)))))
+	    (setq closer (make-string 3 (char-before)))
+	    ))
+	 ((and (member (char-before)
+		       ;; (list ?` ?\" ?')
+		       unary-delimiter-chars)
+	       ;; $asdf$
+	       (eq 0 (mod (count-matches (char-to-string (char-before)) limit orig) 2)))
+	  (setq erg (char-to-string (char-before)))
+	  (while (search-backward erg limit t)))
+	  ;; (setq closer (buffer-substring (save-excursion (skip-chars-backward (char-to-string (char-before)))(point)) (point)))
+	  ;; (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
+	  ;; (setq escapes (syntactic-close--escapes-maybe limit)))
+	 ((and (member (char-before)
+		       ;; (list ?` ?\" ?')
+		       unary-delimiter-chars)
+	       ;; $asdf$
+	       (not (eq 0 (mod (count-matches (char-to-string (char-before)) limit orig) 2))))
+	  (setq closer (buffer-substring (save-excursion (skip-chars-backward (char-to-string (char-before)))(point)) (point)))
+	  (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
+	  (setq escapes (syntactic-close--escapes-maybe limit)))
+	 ((or (< 0 (abs (skip-chars-backward (concat "^" (cl-map 'string 'identity unary-delimiter-chars) paired-delimiters-strg) limit)))
+	      (setq done t)))
+	 ((and (member (char-before)
+		       ;; (list ?` ?\" ?')
+		       unary-delimiter-chars)
+	       ;; $asdf$
+	       ;; (eq 0 (mod (count-matches (char-to-string (char-before)) limit
+	       ;; 				 ;; (point)
+	       ;; 				 orig) 2))
+	       )
+	  ;; (setq erg (char-before))
+	  ;; syntactic-close--multibrace-unary-fundamental-test-WlZ71s
+	  ;; {{{[[[[+++asdf+++
+	  (setq closer (buffer-substring-no-properties (point) (progn
+								 (skip-chars-backward (concat "^" (cl-map 'string 'identity (remove (char-before) unary-delimiter-chars)) paired-delimiters-strg) limit) (point)))))
+
+	 ))
+      (cond (closer
+	     (when (characterp closer) (setq closer (char-to-string closer)))
+	     (setq closer (concat padding escapes closer))))
+      (goto-char orig)
+      closer)))
+
 (defun syntactic-close-python-listclose (orig closer force pps)
   "If inside list, assume another item first.
 
@@ -497,7 +594,7 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 	     (progn
 	       (insert closer)
 	       ;; only closing `"' or `'' was inserted here
-	       (when (setq closer (syntactic-close--generic))
+	       (when (setq closer (syntactic-close--generic orig nil pps))
 		 (insert closer))
 	       t)
 	   (if (nth 3 pps)
@@ -531,7 +628,7 @@ Optional argument ORG read ‘org-mode’."
      (org (syntactic-close--org-mode-close))
      ((and (not (nth 8 pps))(nth 1 pps))
       (syntactic-close-pure-syntax pps))
-     ((syntactic-close--generic)))))
+     ((syntactic-close--generic nil nil pps)))))
 
 (defun syntactic-close--braced-inside-string (pos)
   "Return the brace(s) if existing inside a string at point."
@@ -587,7 +684,7 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
       (syntactic-close-generic-forms pps))
      ((nth 1 pps)
       (syntactic-close-pure-syntax pps))
-     (t (syntactic-close--generic)))))
+     (t (syntactic-close--generic nil nil pps)))))
 
 ;; Ruby
 (defun syntactic-close--ruby ()
@@ -615,7 +712,7 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 				(char-to-string (char-after))))
 	       ((save-excursion
 		  (and (nth 1 pps) (syntactic-close-pure-syntax-intern pps))))
-	       (t (syntactic-close--generic)))))
+	       (t (syntactic-close--generic nil nil pps)))))
     (cond
      ((and closer (string-match "}" closer))
       (if (save-excursion (skip-chars-backward " \t\r\n\f") (member (char-before) (list ?\; ?})))
@@ -682,79 +779,10 @@ Argument PPS result of ‘parse-partial-sexp’."
 (defun syntactic-close-generic-forms (pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
   (cond
-   ((syntactic-close--generic))
+   ((syntactic-close--generic nil nil pps))
    ((nth 4 pps)
     ;; in comment
     (syntactic-close--insert-comment-end-maybe pps))))
-
-(defun syntactic-close--generic (&optional orig stack limit skip_list)
-  "Detect delimiters inside string or comment maybe.
-
-Optional argument UNARY-DELIMITER-CHARS like quoting chara1cter,
-a list.
-Optional argument DELIMITERS-STRG composed of unary and paired delimiters,
-a list.
-Optional argument ORIG position.
-Optional argument STACK used by recursive call maybe.
-Optional argument LIMIT bound."
-  (let* ((orig (or orig (point)))
-	 (limit (or limit (point-min)))
-	 (unary-delimiter-chars syntactic-close-unary-delimiter-chars)
-	 (paired-delimiters-strg (concat (cl-map 'string 'identity syntactic-close-paired-openers) (cl-map 'string 'identity syntactic-close-paired-closers)))
-	 (stack stack)
-	 closer done escapes padding)
-    (save-restriction
-      (narrow-to-region limit orig)
-      (while (and (not (bobp)) (not done) (<= limit (1- (point))))
-	(cond
-	 ((and skip_list (nth 1 (parse-partial-sexp (point-min) (point))))
-	  (goto-char (nth 1 (parse-partial-sexp (point-min) (point)))))
-	 ((member (char-before)
-		  ;; (list ?\) ?\] ?})
-		  syntactic-close-paired-closers)
-	  (push (char-before) stack)
-	  (unless (bobp) (forward-char -1)))
-	 (;; (list ?\( ?\" ?{ ?\[)
-	  (member (char-before)
-		  syntactic-close-paired-openers)
-	  (if (eq (car stack) (syntactic-close--return-complement-char-maybe (char-before)))
-	      (progn
-		(pop stack)
-		(unless (bobp)
-		  (forward-char -1)))
-	    (setq done t)
-	    (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
-	    ;; maybe more then one char
-	    (setq closer (syntactic-close--multichar-closer (char-before) limit))
-	    (unless (bobp)
-	      (setq escapes (syntactic-close--escapes-maybe limit)))))
-	 ((and (member (char-before)
-		       ;; (list ?` ?\" ?')
-		       unary-delimiter-chars)
-	       ;; $asdf$
-	       (eq 0 (mod (count-matches (char-to-string (char-before)) limit
-					 ;; (point)
-					 orig) 2))
-	       ;; (setq erg (char-before))
-	       (skip-chars-backward (concat "^" (cl-map 'string 'identity (remove (char-before) unary-delimiter-chars)) paired-delimiters-strg) limit)))
-	 ((and (member (char-before)
-		       ;; (list ?` ?\" ?')
-		       unary-delimiter-chars)
-	       ;; $asdf$
-	       (not (eq 0 (mod (count-matches (char-to-string (char-before)) limit
-					      ;; (point)
-					      orig) 2))))
-	  (setq closer (buffer-substring (save-excursion (skip-chars-backward (char-to-string (char-before)))(point)) (point)))
-	  (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
-	  (setq done t)
-	  (setq escapes (syntactic-close--escapes-maybe limit)))
-	 ((or (< 0 (abs (skip-chars-backward (concat "^" (cl-map 'string 'identity unary-delimiter-chars) paired-delimiters-strg) limit)))
-	      (setq done t)))))
-      (cond (closer
-	     (when (characterp closer) (setq closer (char-to-string closer)))
-	     (setq closer (concat padding escapes closer))))
-      (goto-char orig)
-      closer)))
 
 (defun syntactic-close--string-before-list-maybe (pps)
   "String inside a list needs to be closed first maybe.
@@ -762,7 +790,7 @@ Optional argument LIMIT bound."
 Expects start of string behind start of list
 Argument PPS result of ‘parse-partial-sexp’."
   ;; maybe close generic first
-  (cond ((syntactic-close--generic (point) nil (nth 8 pps)))
+  (cond ((syntactic-close--generic (point) nil pps))
 	((syntactic-close-pure-syntax-intern pps))))
 
 (defun syntactic-close-intern (orig beg iact pps)
@@ -780,7 +808,7 @@ Optional argument PPS, the result of ‘parse-partial-sexp’."
 	  (if
 	      (member major-mode syntactic-close-modes)
 	      (syntactic-close--modes pps)
-	    (syntactic-close--generic orig nil beg)))
+	    (syntactic-close--generic orig nil pps)))
     ;; insert might be hardcoded like in ‘nxml-finish-element-1’
     (when (and closer (stringp closer))
       ;; (goto-char orig)

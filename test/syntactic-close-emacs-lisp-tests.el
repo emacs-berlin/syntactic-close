@@ -161,6 +161,14 @@ asdf"
 	(syntactic-close '(4))
 	(should (eq (char-before) ?\")))))
 
+
+(ert-deftest syntactic-close--tqs-test-hglm99 ()
+  ;; comint-password-prompt-regexp
+  (syntactic-close-test-with-elisp-buffer
+      "(search-forward \"'''"
+      (syntactic-close)
+    (should (eq (char-before) ?\"))))
+
 ;; (ert-deftest syntactic-close--escaped-test-4 ()
 ;;   ;; comint-password-prompt-regexp
 ;;   (syntactic-close-test-with-elisp-buffer
@@ -169,5 +177,7 @@ asdf"
 ;; 	    (syntactic-close-generic-p t))
 ;; 	(syntactic-close)
 ;; 	(should (eq orig (point))))))
+
+;; \([[:alpha]]
 
 ;;; syntactic-close-emacs-lisp-tests.el ends here
