@@ -107,21 +107,6 @@
       (syntactic-close)
       (should (eq (char-before) ?}))))
 
-(ert-deftest syntactic-close-close-js-test-5 ()
-  (syntactic-close-test-with-js-buffer
-      " $(document).ready(function() {
-
-          $('.nav-tabs-custom-2').tabs();
-
-          $('.table').delegate('td','mouseover mouseleave',function(e) {
-              if (e.type == 'mouseover') {
-                  $(this).addClass('hover"
-      (insert "');\n")
-      (insert (make-string 14 32))
-      (insert "}")
-      (syntactic-close)
-      (should (eq (char-before) ?}))))
-
 (ert-deftest syntactic-close-close-js-test-6 ()
   (syntactic-close-test-with-js-buffer
       " $(document).ready(function() {

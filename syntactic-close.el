@@ -250,6 +250,7 @@ Default is t"
 			       'python-mode
 			       'ruby-mode
                                'scala-mode
+                               'shell-mode
 			       'sgml-mode
 			       'web-mode
 			       'xml-mode
@@ -701,6 +702,17 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
       (syntactic-close-pure-syntax pps))
      (t (syntactic-close--generic nil nil pps)))))
 
+(defun syntactic-close-shell-close (&optional pps)
+  "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
+  (interactive "*")
+  (let* ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+    (cond
+     ((nth 8 pps)
+      (syntactic-close-generic-forms pps))
+     ((nth 1 pps)
+      (syntactic-close-pure-syntax pps))
+     (t (syntactic-close--generic nil nil pps)))))
+
 (defun syntactic-close--semicolon-modes (pps)
   "Close specific modes.
 
@@ -770,6 +782,8 @@ Argument PPS result of ‘parse-partial-sexp’."
      (syntactic-close-ruby-close pps))
     (`scala-mode
      (syntactic-close-scala-close pps))
+    (`shell-mode
+     (syntactic-close-shell-close pps))
     (`sgml-mode
      (syntactic-close-ml))
     (`xml-mode

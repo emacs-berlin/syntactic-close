@@ -93,7 +93,7 @@
     (syntactic-close)
     (should (char-equal (char-before) ?}))))
 
-(ert-deftest syntactic-close-ruby-test-gszMLh ()
+(ert-deftest syntactic-close-ruby-test-yKdmju ()
   (syntactic-close-test
       ;; "puts \"Hello #{name}!\""
       "puts \"Hello #{name}!"
