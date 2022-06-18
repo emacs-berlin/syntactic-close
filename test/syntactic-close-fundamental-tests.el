@@ -26,7 +26,7 @@
 
 ;;; Code:
 
-(ert-deftest syntactic-close--multibrace-fundamental-test ()
+(ert-deftest syntactic-close--multibrace-fundamental-test-pgwBPJ ()
   (syntactic-close-test
       "{{{{asdf"
     'fundamental-mode
