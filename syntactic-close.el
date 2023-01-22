@@ -691,6 +691,15 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
 	((and (or (nth 1 pps) (nth 3 pps)) (syntactic-close-pure-syntax-intern pps)))
 	(t (syntactic-close--ruby))))
 
+(defun syntactic-close-scala-another-filter-clause ()
+  (when (looking-back "^[ \t]+if[ \t].*" (line-beginning-position))
+    (back-to-indentation)
+    (let ((indent (current-column))
+          done)
+      (while (and (progn (forward-line 1) (back-to-indentation) (eq (current-column) indent)))
+        (when (looking-at "if[ \t]")(setq done t)))
+      done)))
+
 (defun syntactic-close-scala-close (&optional pps)
   "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
@@ -699,7 +708,9 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
      ((nth 8 pps)
       (syntactic-close-generic-forms pps))
      ((nth 1 pps)
-      (syntactic-close-pure-syntax pps))
+      (if (save-excursion (syntactic-close-scala-another-filter-clause))
+          ";"
+      (syntactic-close-pure-syntax pps)))
      (t (syntactic-close--generic nil nil pps)))))
 
 (defun syntactic-close-shell-close (&optional pps)
