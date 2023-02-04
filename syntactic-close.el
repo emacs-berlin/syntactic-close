@@ -218,7 +218,8 @@ Default is t"
    'sml-mode
    'web-mode
    )
-  "List of modes which commands must be closed by a separator."
+  "List of modes which commands must be closed by a separator,
+but have no specific treatment at the moment."
 
   :type 'list
   :tag "syntactic-close--semicolon-separator-modes"
@@ -234,7 +235,7 @@ Default is t"
    )
   "List of modes using markup language."
   :type 'list
-  :tag "syntactic-close--semicolon-separator-modes"
+  :tag "syntactic-close--ml-modes"
   :group 'syntactic-close)
 
 (defvar syntactic-close-modes (list
@@ -255,7 +256,7 @@ Default is t"
 			       'web-mode
 			       'xml-mode
 			       'xxml-mode)
-  "Programming modes dealt with non-generic maybe.")
+  "Programming modes dealt with explicitly in some way.")
 
 (defvar syntactic-close-indent-modes (list
 				      'ruby-mode)
@@ -691,16 +692,25 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
 	((and (or (nth 1 pps) (nth 3 pps)) (syntactic-close-pure-syntax-intern pps)))
 	(t (syntactic-close--ruby))))
 
-(defun syntactic-close-scala-another-filter-clause ()
+(defun syntactic-close-scala-another-filter-clause (pps)
+  "Semicolon only required with inside parentized
+
+If you prefer, you can use curly braces instead of parentheses to
+surround the generators and filters. One advantage to using curly
+braces is that you can leave off some of the semicolons that are
+needed when you use parentheses.
+
+Source: Odersky, Spoon, Venners: Programming in Scala"
+  (unless (save-excursion (goto-char (nth 1 pps)) (eq (char-after) ?{))
   (when (looking-back "^[ \t]+if[ \t].*" (line-beginning-position))
     (back-to-indentation)
     (let ((indent (current-column))
           done)
       (while (and (progn (forward-line 1) (back-to-indentation) (eq (current-column) indent)))
         (when (looking-at "if[ \t]")(setq done t)))
-      done)))
+      done))))
 
-(defun syntactic-close-scala-close (&optional pps)
+(defun syntactic-close-scala-close (pps)
   "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
   (let* ((pps (or pps (parse-partial-sexp (point-min) (point)))))
@@ -708,9 +718,11 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
      ((nth 8 pps)
       (syntactic-close-generic-forms pps))
      ((nth 1 pps)
-      (if (save-excursion (syntactic-close-scala-another-filter-clause))
-          ";"
-      (syntactic-close-pure-syntax pps)))
+      (if (save-excursion (syntactic-close-scala-another-filter-clause pps))
+          (unless (eq (char-before) ?\;) ";")
+        (syntactic-close-pure-syntax pps)))
+     ((looking-back syntactic-close-assignment-re (line-beginning-position))
+      (unless (eq (char-before) ?\;) ";"))
      (t (syntactic-close--generic nil nil pps)))))
 
 (defun syntactic-close-shell-close (&optional pps)
@@ -751,30 +763,8 @@ Argument PPS, the result of ‘parse-partial-sexp’."
       (setq closer ";"))
      (t closer))))
 
-;; used in guess-what
-(defun syntactic-close--modes (pps)
-  "Argument PPS, the result of ‘parse-partial-sexp’."
-  (pcase major-mode
-    (`java-mode (syntactic-close--semicolon-modes pps))
-    (`js-mode (syntactic-close--semicolon-modes pps))
-    (`php-mode (syntactic-close--semicolon-modes pps))
-    (`python-mode (syntactic-close-python-close pps))
-    (`web-mode (syntactic-close--semicolon-modes pps))
-    (_ 	(if
-	    (ignore-errors (< (nth 1 pps) (nth 8 pps)))
-	    (syntactic-close--string-before-list-maybe pps)
-	  (syntactic-close--common-modes pps)))))
-
-(defun syntactic-close--finish-element ()
-  "Finish the current element by inserting an end-tag."
-  (interactive "*")
-  (let ((orig (point)))
-    (nxml-finish-element-1 nil)
-    (< orig (point))))
-
-(defun syntactic-close--common-modes (pps)
-  "No special treatment required.
-Argument PPS result of ‘parse-partial-sexp’."
+(defun syntactic-close--specific-modes (pps)
+  "Argument PPS result of ‘parse-partial-sexp’."
   (pcase major-mode
     (`agda2-mode
      (syntactic-close-haskell-close pps))
@@ -803,6 +793,29 @@ Argument PPS result of ‘parse-partial-sexp’."
     (`xxml-mode
      (syntactic-close-ml))))
 
+(defun syntactic-close--modes (pps)
+  "Argument PPS, the result of ‘parse-partial-sexp’."
+  (cond ((member major-mode syntactic-close--semicolon-separator-modes)
+         (syntactic-close--semicolon-modes pps))
+        ;; (pcase major-mode
+        ;;   (`java-mode (syntactic-close--semicolon-modes pps))
+        ;;   (`js-mode (syntactic-close--semicolon-modes pps))
+        ;;   (`php-mode (syntactic-close--semicolon-modes pps))
+        ;;   (`python-mode (syntactic-close-python-close pps))
+        ;;   (`web-mode (syntactic-close--semicolon-modes pps))
+        ;;   (_
+        (t (if
+	       (ignore-errors (< (nth 1 pps) (nth 8 pps)))
+	       (syntactic-close--string-before-list-maybe pps)
+	     (syntactic-close--specific-modes pps)))))
+
+(defun syntactic-close--finish-element ()
+  "Finish the current element by inserting an end-tag."
+  (interactive "*")
+  (let ((orig (point)))
+    (nxml-finish-element-1 nil)
+    (< orig (point))))
+
 (defun syntactic-close-generic-forms (pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
   (cond
@@ -820,7 +833,7 @@ Argument PPS result of ‘parse-partial-sexp’."
   (cond ((syntactic-close--generic (point) nil pps))
 	((syntactic-close-pure-syntax-intern pps))))
 
-(defun syntactic-close-intern (orig beg iact pps)
+(defun syntactic-close-intern (orig iact pps)
   "A first dispatch.
 
 Argument ORIG the position command was called from.
@@ -866,9 +879,9 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 	 (iact (or iact arg))
 	 (arg (or arg 1)))
     (pcase (prefix-numeric-value arg)
-      (4 (while (syntactic-close-intern (setq orig (copy-marker (point))) beg iact pps))
+      (4 (while (syntactic-close-intern (setq orig (copy-marker (point))) iact pps))
 	 (< orig (point)))
-      (_ (syntactic-close-intern orig beg iact pps)
+      (_ (syntactic-close-intern orig iact pps)
          (< orig (point))))))
 
 (provide 'syntactic-close)

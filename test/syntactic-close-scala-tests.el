@@ -61,11 +61,62 @@ def grep(pattern: String) =
 grep(\".*gcd.*\")
 "
     'scala-mode
-    (font-lock-ensure) 
+    (font-lock-ensure)
     syntactic-close-debug-p
     (goto-char (point-max))
     (search-backward "scala")
     (end-of-line)
+    (syntactic-close)
+    (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-scala-test-2LJ2DM ()
+  "If you add more than one filter on a generator,
+
+the filter’s if clauses must be separated by semicolons.
+
+If you prefer, you can use curly braces instead of parentheses to
+surround the generators and filters. One advantage to using curly
+braces is that you can leave off some of the semicolons that are
+needed when you use parentheses.
+
+Source: Odersky, Spoon, Venners: Programming in Scala"
+  (syntactic-close-test
+      "def fileLines(file: java.io.File) =
+  scala.io.Source.fromFile(file).getLines.toList
+
+def grep(pattern: String) =
+  for {
+    file <- filesHere
+    if file.getName.endsWith(\".scala\")
+    line <- fileLines(file)
+    if line.trim.matches(pattern)
+  } println(file +\": \"+ line.trim)
+grep(\".*gcd.*\")
+"
+    'scala-mode
+    (font-lock-ensure)
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (search-backward "scala")
+    (end-of-line)
+    (syntactic-close)
+    (should (eq (char-before) ?}))))
+
+(ert-deftest syntactic-close-close-scala-test-5xD6NO ()
+  (syntactic-close-test
+ "val a = 1
+{
+  val a = 2;
+  {
+    println(a)
+  }
+}
+"
+    'scala-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (search-backward "1")
+    (forward-char 1) 
     (syntactic-close)
     (should (eq (char-before) ?\;))))
 
