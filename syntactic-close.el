@@ -98,6 +98,12 @@
   :type 'char
   :group 'sytactic-close)
 
+(defun syntactic-close--escaped-p (&optional pos)
+  "Return t if char at POS is preceded by an odd number of backslashes. "
+  (save-excursion
+    (when pos (goto-char pos))
+    (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
+
 (defun syntactic-close--escapes-maybe (limit)
   "Handle escaped parens.
 
@@ -137,8 +143,8 @@ Argument PPS is result of ‘parse-partial-sexp’"
   (save-excursion
     (let (closer padding)
       (cond
-       ((and (nth 3 pps) (nth 1 pps) (< (nth 1 pps) (nth 3 pps)))
-	(goto-char (nth 1 pps))
+       ((and (nth 3 pps) (nth 1 pps) (< (nth 1 pps) (nth 8 pps)))
+	(goto-char (nth 8 pps))
 	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point)))))
 	(setq closer (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
 	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point))))))
@@ -270,9 +276,9 @@ but have no specific treatment at the moment."
 
 (defvar syntactic-close-verbose-p nil)
 
-(defvar syntactic-close-assignment-re   ".*[^ =\t]+[ \t]*=[^=]*")
+(defvar syntactic-close-assignment-re   ".*[^ =\t]+[ \t]+=[ \t]+[^=]+")
 
-(setq syntactic-close-assignment-re   ".*[^ =\t]+[ \t]*=[^=]*")
+(setq syntactic-close-assignment-re   ".*[^ =\t]+[ \t]+=[ \t]+[^=]+")
 
 (unless (boundp 'py-block-re)
   (defvar py-block-re "[ \t]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n\t]*"
@@ -631,16 +637,185 @@ Optional argument ORG read ‘org-mode’."
       (syntactic-close-pure-syntax pps))
      ((syntactic-close--generic nil nil pps)))))
 
-(defun syntactic-close--braced-inside-string (pos)
+(defun syntactic-close--paren-conditions (bracecounter bracketcounter parencounter)
+  (cond
+   ((eq (char-before) ?{)
+    (setq bracecounter (1+ bracecounter)))
+   ((eq (char-before) ?\[)
+    (setq bracketcounter (1+ bracketcounter)))
+   ((eq (char-before) 40)
+    (setq parencounter (1+ parencounter)))
+   ((eq (char-before) ?})
+    (setq bracecounter (1- bracecounter)))
+   ((eq (char-before) ?\])
+    (setq bracketcounter (1- bracketcounter)))
+   ((eq (char-before) 41)
+    (setq parencounter (1- parencounter)))))
+
+(defun syntactic-close--paren-inside-string (pos)
   "Return the brace(s) if existing inside a string at point."
-  (let ((counter 0))
-    (while (and (or (eq (char-before) ?})(< 0 (abs (skip-chars-backward "^{}" (1+ pos))))))
-      (if (eq (char-before) ?})
-	  (setq counter (1- counter))
-	(when (eq (char-before) ?{)
-	  (setq counter (1+ counter))))
-      (backward-char))
-    (and (< 0 counter)  "}")))
+  (let (
+        (bracecounter 0)
+        (bracketcounter 0)
+        (parencounter 0))
+    (while (and (or
+                 (prog1
+                     (and
+                      (syntactic-close--paren-conditions bracecounter bracecounter parencounter)
+                      (forward-char -1)))
+                 (< 0 (abs (skip-chars-backward "^{}()[]'\"" (1+ pos))))))
+      (syntactic-close--paren-conditions bracecounter bracecounter parencounter)
+       (unless (or (< bracecounter 0) (< bracketcounter 0) (< parencounter 0))
+         (forward-char -1)))
+    (cond
+     ((< 0 bracecounter)
+      "}")
+     ((< 0 bracketcounter)
+      "]")
+     ((< 0 parencounter)
+      ")"))))
+
+(defun syntactic-close--check-bracecounter (bracecounter doublequotecounter singlequotecounter)
+  (when (and (< 0 bracecounter) (eq (char-after) ?{))
+    (cond
+     ((and (< 0 (% doublequotecounter 2)))
+      "\"")
+     ((< 0 (% singlequotecounter 2))
+      "'")
+     (t
+      (char-to-string (syntactic-close--return-complement-char-maybe (char-after)))))))
+
+(defun syntactic-close--check-bracketcounter (bracketcounter doublequotecounter singlequotecounter)
+  (when (and (< 0 bracketcounter) (eq (char-after) ?\[))
+    (cond
+     ((and (< 0 (% doublequotecounter 2)))
+      "\"")
+     ((< 0 (% singlequotecounter 2))
+      "'")
+     (t
+      (char-to-string (syntactic-close--return-complement-char-maybe (char-after)))))))
+
+(defun syntactic-close--check-parencounter (parencounter doublequotecounter singlequotecounter)
+  (when (and (< 0 parencounter) (eq (char-after) ?\())
+    (cond
+     ((and (< 0 (% doublequotecounter 2)))
+      "\"")
+     ((< 0 (% singlequotecounter 2))
+      "'")
+     (t
+      (char-to-string (syntactic-close--return-complement-char-maybe (char-after)))))))
+
+(defun syntactic-close--check-doublequotecounter (doublequotecounter bracecounter)
+  (cond ((and (< 0 (% doublequotecounter 2)) (eq (char-after) ?\"))
+         (if (<  bracecounter 0)
+             "}"
+           (char-to-string (syntactic-close--return-complement-char-maybe (char-after)))))))
+
+(defun syntactic-close--check-singlequotecounter (singlequotecounter bracecounter)
+  (cond ((and (< 0 (% singlequotecounter 2)) (eq (char-after) ?'))
+         (if (<  bracecounter 0)
+             "}"
+           (char-to-string (syntactic-close--return-complement-char-maybe (char-after)))))))
+
+;; (defun syntactic-close--check-singlequotecounter (singlequotecounter singlequotecounter)
+;;   (cond ((and (< 0 singlequotecounter) (eq (char-after) ?'))
+;;          (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))))
+
+(defun syntactic-close--discard-closed-braced ()
+  (interactive)
+  (save-excursion
+    (let ((bracecounter 0))
+      (while
+          (and 
+           (not (< 0 bracecounter))
+           (re-search-backward "[{}]" (line-beginning-position) t))
+        (unless (syntactic-close--escaped-p)
+          (cond
+           ((eq (char-after) ?{)
+            (setq bracecounter (1+ bracecounter)))
+           ((eq (char-after) ?})
+            (setq bracecounter (1- bracecounter)))
+           ))
+        (and (eq 0 bracecounter) (kill-sexp))))))
+
+;; ((pps (parse-partial-sexp (point-min) (point))))
+;; f\"{f\"{f\"{f\"{f\"{f\"{1+1
+;; (nth 1 pps) tells all, (nth 8 pps) is zero
+;; f\"{f\"{f\"{f\"{f\"{f\"{1+1}
+;; (nth 1 pps) and (nth 8 pps) is zero, but ‘\\"’ required
+;; f\"{f\"{f\"{f\"{f\"{f\"{f\"{1+1
+;; (nth 1 pps) zero, < (nth 8 pps) {
+;; f'Useless use of lambdas: { (lambda x: x*2
+;; (nth 1 pps) zero, < (nth 8 pps) (, < (nth 8 pps) {
+(defun syntactic-close--python-f-string (strg &optional bracecounter bracketcounter parencounter doublequotecounter singlequotecounter erg)
+  (with-temp-buffer
+    (switch-to-buffer (current-buffer))
+    (insert strg)
+    (let ((bracecounter (or bracecounter 0))
+          (bracketcounter (or bracketcounter 0))
+          (parencounter (or parencounter 0))
+          (doublequotecounter (or doublequotecounter 0))
+          (singlequotecounter (or singlequotecounter 0))
+          (erg (or erg nil))
+          padding)
+      (syntactic-close--discard-closed-braced)
+      (while (syntactic-close--escaped-p)
+        (forward-char -1))
+      (when
+          (or
+           (prog1 (< 0 (abs (skip-chars-backward "^[](){}\"'")))
+             ;; (re-search-backward "[\\\\[(){\"'}\]]" nil t 3)
+
+             (while (syntactic-close--escaped-p)
+               (forward-char -1)))
+           (prog1 (member (char-before) (list 40 41 91 93 ?{ ?} ?\" ?'))
+             (while (syntactic-close--escaped-p)
+               (forward-char -1))))
+        (cond
+         ((eq (char-before) ?{)
+          (setq bracecounter (1+ bracecounter))
+          (forward-char -1))
+         ((eq (char-before) ?\[)
+          (setq bracketcounter (1+ bracketcounter))
+          (forward-char -1))
+         ((eq (char-before) 40)
+          (setq parencounter (1+ parencounter))
+          (forward-char -1))
+         ((eq (char-before) ?})
+          (setq bracecounter (1- bracecounter))
+          (forward-char -1))
+         ((eq (char-before) ?\])
+          (setq bracketcounter (1- bracketcounter))
+          (forward-char -1))
+         ((eq (char-before) 41)
+          (setq parencounter (1- parencounter))
+          (forward-char -1))
+         ((eq (char-before) ?\")
+          (setq doublequotecounter (1+ doublequotecounter))
+          (forward-char -1))
+         ((eq (char-before) ?')
+          (setq singlequotecounter (1+ singlequotecounter))
+          (forward-char -1)))
+        (when (or (and (member (char-after) (list 40 91 ?{))
+                       (not (syntactic-close--escaped-p)))
+                  (bobp))
+          (when (looking-at ".\\([ \t]+\\)")
+            (setq padding (match-string-no-properties 1)))
+          (setq erg (or (syntactic-close--check-bracecounter bracecounter doublequotecounter singlequotecounter)
+                        (syntactic-close--check-bracketcounter bracketcounter doublequotecounter singlequotecounter)
+                        (syntactic-close--check-parencounter parencounter doublequotecounter singlequotecounter)
+                        (syntactic-close--check-doublequotecounter doublequotecounter bracecounter)
+                        (syntactic-close--check-singlequotecounter singlequotecounter bracecounter)
+                        (cond
+                         ((and (looking-back "[fF]r?" (line-beginning-position)) (eq (char-after) ?\")(< 0 (% doublequotecounter 2)))
+                          (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
+                         ((and (looking-back "[fF]r?" (line-beginning-position)) (eq (char-after) ?')(< 0 (% singlequotecounter 2)))
+                          (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))))))
+        (if erg
+            (if padding
+                (setq erg (concat padding erg))
+              erg)
+          (syntactic-close--python-f-string (buffer-substring-no-properties (line-beginning-position) (point)) bracecounter bracketcounter parencounter doublequotecounter singlequotecounter erg))))))
 
 (defun syntactic-close-python-close (pps)
   "Might deliver equivalent to `py-dedent'.
@@ -649,18 +824,22 @@ Argument B-OF-ST read beginning-of-statement.
 Argument B-OF-BL read beginning-of-block.
 Optional argument PADDING to be done.
 Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
-  (cond
-   ((and (nth 8 pps) (nth 3 pps))
-    (or (save-excursion (syntactic-close--braced-inside-string (nth 8 pps)))
-	;; (syntactic-close-generic-forms pps)
-	(save-excursion (goto-char (nth 8 pps)) (looking-at "[\"']+") (match-string-no-properties 0))))
-   ((nth 1 pps)
-    (syntactic-close-pure-syntax pps))
-   (t (syntactic-close--generic (point) nil
-				(if (functionp 'py--beginning-of-statement-position)
-				    (py--beginning-of-statement-position)
-				  (save-excursion (python-nav-beginning-of-statement)))
-				t))))
+  (let* ((orig (point))
+         (f-pos (progn (while (re-search-backward "\\(.*\\)[fF]r?\\(['\"]\\{1,3\\}\\).*" (line-beginning-position) t)) (match-beginning 2))))
+    (cond
+     (f-pos
+      (syntactic-close--python-f-string (buffer-substring-no-properties f-pos orig)))
+     ((and (nth 8 pps) (nth 3 pps))
+      (or (save-excursion (syntactic-close--paren-inside-string (nth 8 pps)))
+	  ;; (syntactic-close-generic-forms pps)
+	  (save-excursion (goto-char (nth 8 pps)) (looking-at "[\"']\\{1,3\\}") (match-string-no-properties 0))))
+     ((nth 1 pps)
+      (syntactic-close-pure-syntax pps))
+     (t (syntactic-close--generic (point) nil
+				  (if (functionp 'py--beginning-of-statement-position)
+				      (py--beginning-of-statement-position)
+				    (save-excursion (python-nav-beginning-of-statement)))
+				  t)))))
 
 ;; Haskell
 (defun syntactic-close-haskell-close (&optional pps)
@@ -677,10 +856,9 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
 ;; Ruby
 (defun syntactic-close--ruby ()
   (unless (or (looking-back ";[ \t]*" nil))
-    (unless (and (bolp) (eolp))
-      (newline))
-    (unless (looking-back "^[^ \t]*\\_<end" nil)
-      "end")))
+    (if (and (bolp) (eolp))
+        "end"
+      "\nend")))
 
 (defun syntactic-close-ruby-close (pps)
   "Ruby specific close.
@@ -701,29 +879,33 @@ braces is that you can leave off some of the semicolons that are
 needed when you use parentheses.
 
 Source: Odersky, Spoon, Venners: Programming in Scala"
-  (unless (save-excursion (goto-char (nth 1 pps)) (eq (char-after) ?{))
-  (when (looking-back "^[ \t]+if[ \t].*" (line-beginning-position))
-    (back-to-indentation)
-    (let ((indent (current-column))
-          done)
-      (while (and (progn (forward-line 1) (back-to-indentation) (eq (current-column) indent)))
-        (when (looking-at "if[ \t]")(setq done t)))
-      done))))
+  (let ((indent (current-indentation))
+        done)
+    (cond ((looking-back "^[ \t]+if[ \t].*" (line-beginning-position))
+           (unless (save-excursion (goto-char (nth 1 pps)) (eq (char-after) ?{))
+
+             (back-to-indentation)
+             (while (and (forward-line 1)
+                         (progn (back-to-indentation) (eq (current-column) indent)))
+               (when (looking-at "if[ \t]") (setq done t)))))
+          ((looking-back syntactic-close-assignment-re (line-beginning-position))
+           (setq done t)))
+    done))
 
 (defun syntactic-close-scala-close (pps)
-  "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
-  (interactive "*")
-  (let* ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (cond
-     ((nth 8 pps)
-      (syntactic-close-generic-forms pps))
-     ((nth 1 pps)
-      (if (save-excursion (syntactic-close-scala-another-filter-clause pps))
-          (unless (eq (char-before) ?\;) ";")
-        (syntactic-close-pure-syntax pps)))
-     ((looking-back syntactic-close-assignment-re (line-beginning-position))
-      (unless (eq (char-before) ?\;) ";"))
-     (t (syntactic-close--generic nil nil pps)))))
+"Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
+(interactive "*")
+(let* ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+  (cond
+   ((nth 8 pps)
+    (syntactic-close-generic-forms pps))
+   ((nth 1 pps)
+    (if (save-excursion (syntactic-close-scala-another-filter-clause pps))
+        (unless (eq (char-before) ?\;) ";")
+      (syntactic-close-pure-syntax pps)))
+   ((looking-back syntactic-close-assignment-re (line-beginning-position))
+    (unless (eq (char-before) ?\;) ";"))
+   (t (syntactic-close--generic nil nil pps)))))
 
 (defun syntactic-close-shell-close (&optional pps)
   "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
@@ -795,19 +977,21 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 
 (defun syntactic-close--modes (pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
-  (cond ((member major-mode syntactic-close--semicolon-separator-modes)
-         (syntactic-close--semicolon-modes pps))
-        ;; (pcase major-mode
-        ;;   (`java-mode (syntactic-close--semicolon-modes pps))
-        ;;   (`js-mode (syntactic-close--semicolon-modes pps))
-        ;;   (`php-mode (syntactic-close--semicolon-modes pps))
-        ;;   (`python-mode (syntactic-close-python-close pps))
-        ;;   (`web-mode (syntactic-close--semicolon-modes pps))
-        ;;   (_
-        (t (if
-	       (ignore-errors (< (nth 1 pps) (nth 8 pps)))
-	       (syntactic-close--string-before-list-maybe pps)
-	     (syntactic-close--specific-modes pps)))))
+  (save-excursion
+    (cond ((member major-mode syntactic-close--semicolon-separator-modes)
+           (syntactic-close--semicolon-modes pps))
+          ;; (pcase major-mode
+          ;;   (`java-mode (syntactic-close--semicolon-modes pps))
+          ;;   (`js-mode (syntactic-close--semicolon-modes pps))
+          ;;   (`php-mode (syntactic-close--semicolon-modes pps))
+          ;;   (`python-mode (syntactic-close-python-close pps))
+          ;;   (`web-mode (syntactic-close--semicolon-modes pps))
+          ;;   (_
+          (t
+           ;; (if
+	   ;;       (ignore-errors (and (nth 3 pps) (< (nth 1 pps) (nth 8 pps))))
+	   ;;       (syntactic-close--string-before-list-maybe pps)
+	   (syntactic-close--specific-modes pps)))))
 
 (defun syntactic-close--finish-element ()
   "Finish the current element by inserting an end-tag."
@@ -830,8 +1014,10 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 Expects start of string behind start of list
 Argument PPS result of ‘parse-partial-sexp’."
   ;; maybe close generic first
-  (cond ((syntactic-close--generic (point) nil pps))
-	((syntactic-close-pure-syntax-intern pps))))
+  (cond
+	((syntactic-close-pure-syntax-intern pps))
+        ((syntactic-close--generic (point) nil pps))
+        ))
 
 (defun syntactic-close-intern (orig iact pps)
   "A first dispatch.

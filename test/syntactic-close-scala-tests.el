@@ -116,6 +116,24 @@ grep(\".*gcd.*\")
     syntactic-close-debug-p
     (goto-char (point-max))
     (search-backward "1")
+    (forward-char 1)
+    (syntactic-close)
+    (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-close-scala-test-moJaUT ()
+  (syntactic-close-test
+ "val a = 1;
+{
+  val a = 2
+  {
+    println(a)
+  }
+}
+"
+    'scala-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (search-backward "2")
     (forward-char 1) 
     (syntactic-close)
     (should (eq (char-before) ?\;))))

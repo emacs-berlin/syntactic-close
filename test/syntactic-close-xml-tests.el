@@ -27,7 +27,8 @@
   (syntactic-close-test-with-xml-buffer
       "<body>"
     (syntactic-close)
-    (should (looking-back "</body>" (line-beginning-position))))) 
+    (goto-char (point-max)) 
+    (should (looking-back "</body>" (line-beginning-position)))))
 
 (provide 'syntactic-close-xml-tests)
 ;;; syntactic-close-xml-tests.el ends here
