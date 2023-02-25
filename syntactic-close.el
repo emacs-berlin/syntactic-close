@@ -276,9 +276,13 @@ but have no specific treatment at the moment."
 
 (defvar syntactic-close-verbose-p nil)
 
-(defvar syntactic-close-assignment-re   "^[^:]*[^ =\t:]+[ \t]+=[ \t]+[^=]+")
+(defvar syntactic-close-assignment-re   "^[^:]*[^ =\t:]+[ \t]+=[ \t]+[^=]+" "")
 
 (setq syntactic-close-assignment-re     "^[^:]*[^ =\t:]+[ \t]+=[ \t]+[^=]+")
+
+(defvar syntactic-close-funcdef-re   "^[ \t]*def[ \t]+[[:alnum:]_]+([^()]+)" "")
+
+(setq syntactic-close-funcdef-re     "^[ \t]*def[ \t]+[[:alnum:]_]+([^()]+)")
 
 (unless (boundp 'py-block-re)
   (defvar py-block-re "[ \t]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n\t]*"
@@ -906,6 +910,10 @@ Source: Odersky, Spoon, Venners: Programming in Scala"
         (syntactic-close-pure-syntax pps)))
      ((looking-back syntactic-close-assignment-re (line-beginning-position))
       (unless (eq (char-before) ?\;) ";"))
+     ((and (looking-back syntactic-close-funcdef-re (line-beginning-position))
+           (eq (char-before) 41))
+      ":")
+
      (t (syntactic-close--generic nil nil pps)))))
 
 (defun syntactic-close-shell-close (&optional pps)

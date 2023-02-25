@@ -144,9 +144,22 @@ grep(\".*gcd.*\")
         'scala-mode
     syntactic-close-debug-p
     (goto-char (point-max))
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
     (syntactic-close)
     (should (eq (char-before) ?\)))))
+
+(ert-deftest syntactic-close-close-scala-test-OcCPv9 ()
+  (syntactic-close-test
+      "def sum(s: Seq[Int])"
+        'scala-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
+    (should (eq (char-before) ?:))
+    (should (eq (char-before  (1- (point))) 41))
+    ))
+
 
 (provide 'syntactic-close-scala-tests)
 ;;; syntactic-close-scala-tests.el ends here
