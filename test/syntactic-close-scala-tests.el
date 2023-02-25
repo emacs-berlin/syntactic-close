@@ -124,7 +124,7 @@ grep(\".*gcd.*\")
   (syntactic-close-test
  "val a = 1;
 {
-  val a = 2
+  val a = 2;
   {
     println(a)
   }
@@ -134,9 +134,19 @@ grep(\".*gcd.*\")
     syntactic-close-debug-p
     (goto-char (point-max))
     (search-backward "2")
-    (forward-char 1) 
+    (forward-char 1)
     (syntactic-close)
     (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-close-scala-test-sbaqDQ ()
+  (syntactic-close-test
+      "def sum(s: Seq[Int]): Int = leftFold(s, 0, (x, y"
+        'scala-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f") 
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
 
 (provide 'syntactic-close-scala-tests)
 ;;; syntactic-close-scala-tests.el ends here
