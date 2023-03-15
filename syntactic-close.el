@@ -274,6 +274,9 @@ but have no specific treatment at the moment."
    "(if\\|(cond\\|when\\|unless"
    "\\_>[ \t]*"))
 
+(defvar syntactic-close-import-re "^[ \t]*import[ \t]+.+"
+  "")
+
 (defvar syntactic-close-verbose-p nil)
 
 (defvar syntactic-close-assignment-re   "^[^:]*[^ =\t:]+[ \t]+=[ \t]+[^=]+" "")
@@ -938,6 +941,8 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 				(char-to-string (char-after))))
 	       ((save-excursion
 		  (and (nth 1 pps) (syntactic-close-pure-syntax-intern pps))))
+               ((looking-back syntactic-close-import-re (line-beginning-position))
+                ";")
 	       (t (syntactic-close--generic nil nil pps)))))
     (cond
      ((and closer (string-match "}" closer))

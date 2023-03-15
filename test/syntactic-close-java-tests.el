@@ -25,19 +25,30 @@
 ;;; Code:
 (ert-deftest syntactic-close-java-string-test-8fM8uW ()
   (syntactic-close-test
-      "public class Foo { 
-    public static void main(String\[] args) 
-    { 
-        System\.out\.println(\"Foo Bar: \" + foo) 
-    } 
+      "public class Foo {
+    public static void main(String\[] args)
+    {
+        System\.out\.println(\"Foo Bar: \" + foo)
+    }
 } "
     'java-mode
     syntactic-close-debug-p
     (goto-char (point-max))
     (search-backward ")")
-    (forward-char 1) 
+    (forward-char 1)
     (syntactic-close)
     (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-java-import-test-wo4a9t ()
+  (syntactic-close-test
+      "import java.util.Random"
+          'java-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f") 
+    (syntactic-close)
+    (should (eq (char-before) ?\;))))
+
 
 (provide 'syntactic-close-java-tests)
 ;;; syntactic-close-java-tests.el ends here

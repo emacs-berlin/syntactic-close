@@ -9,9 +9,12 @@
 *.txt
 *~
 .#*
-.cask/24.4/elpa/.elpa/
+.cask/*
+*.log
 /test/nxml1.xml
 RCS
+ein
+run-travis-hier.sh
 test/#*
 test/*.hs
 test/*.js
@@ -20,6 +23,7 @@ test/*.php
 test/*.py
 test/*.rb
 test/*.txt
+test/*.scala
 test/charclass.el
 test/cpp-comment.cpp
 test/lisp-bracket.el
