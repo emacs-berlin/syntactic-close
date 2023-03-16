@@ -42,7 +42,17 @@
 (ert-deftest syntactic-close-java-import-test-wo4a9t ()
   (syntactic-close-test
       "import java.util.Random"
-          'java-mode
+    'java-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
+    (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-java-test-oc9rmB ()
+  (syntactic-close-test
+      "System.out.println(\"x\")"
+    'java-mode
     syntactic-close-debug-p
     (goto-char (point-max))
     (skip-chars-backward " \t\r\n\f") 

@@ -216,7 +216,6 @@ Default is t"
 (defcustom syntactic-close--semicolon-separator-modes
   (list
    'inferior-sml-mode
-   'java-mode
    'js-mode
    'js2-mode
    'perl-mode
@@ -873,6 +872,44 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
 	((and (or (nth 1 pps) (nth 3 pps)) (syntactic-close-pure-syntax-intern pps)))
 	(t (syntactic-close--ruby))))
 
+(defun syntactic-close-java-another-filter-clause (pps)
+  ""
+  (let ((indent (current-indentation))
+        (pps pps))
+    (cond ((save-excursion (goto-char (nth 1 pps))
+                           (while (nth 1 (setq pps (parse-partial-sexp (point-min) (point))))
+                             (goto-char (nth 1 pps)))
+                           (forward-sexp) (not (nth 1 (parse-partial-sexp (point-min) (point)))))
+           t)
+          ((looking-back syntactic-close-assignment-re (line-beginning-position))))))
+
+(defun syntactic-close-java (&optional pps)
+  "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
+  (interactive "*")
+  (let* ((pps (or pps (parse-partial-sexp (point-min) (point)))))
+    (cond
+     ((nth 8 pps)
+      (syntactic-close-generic-forms pps))
+     ((nth 1 pps)
+      (if (save-excursion (syntactic-close-java-another-filter-clause pps))
+          (if (and (not (eq (char-before) ?\;))
+                   (or
+                    (eq (char-before) 41)
+                    (looking-back syntactic-close-assignment-re (line-beginning-position))))
+              ";"
+            (syntactic-close-pure-syntax pps))
+        (syntactic-close-pure-syntax pps)))
+     ((looking-back syntactic-close-assignment-re (line-beginning-position))
+      (unless (eq (char-before) ?\;) ";"))
+     ((and (looking-back syntactic-close-funcdef-re (line-beginning-position))
+           (eq (char-before) 41))
+      ":")
+
+     (t
+      ";"
+      ;; (syntactic-close--generic nil nil pps)
+      ))))
+
 (defun syntactic-close-scala-another-filter-clause (pps)
   "Semicolon only required with inside parentized
 
@@ -968,6 +1005,8 @@ Argument PPS, the result of ‘parse-partial-sexp’."
      (syntactic-close-emacs-lisp-close pps))
     (`html-mode
      (syntactic-close-ml))
+    (`java-mode
+     (syntactic-close-java))
     (`mhtml-mode
      (syntactic-close-ml))
     (`nxml-mode
