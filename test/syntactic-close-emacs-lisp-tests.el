@@ -169,6 +169,18 @@ asdf"
       (syntactic-close)
     (should (eq (char-before) ?\"))))
 
+(ert-deftest syntactic-close-close-elisp-nested-bracket-paren-test ()
+  (syntactic-close-test
+    "(list ([\n;;{123\n;;{123\n"
+    'emacs-lisp-mode
+    syntactic-close-debug-p
+    (syntactic-close)
+    (should (eq (char-before) ?\]))
+    (syntactic-close)
+    (should (eq (char-before) ?\)))
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
+
 ;; (ert-deftest syntactic-close--escaped-test-4 ()
 ;;   ;; comint-password-prompt-regexp
 ;;   (syntactic-close-test-with-elisp-buffer

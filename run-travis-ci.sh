@@ -68,9 +68,7 @@ TEST9=test/syntactic-close-python-tests.el
 TEST10=test/syntactic-close-ruby-tests.el
 TEST11=test/syntactic-close-xml-tests.el
 TEST12=test/syntactic-close-fundamental-tests.el
-TEST13=test/syntactic-close-tests.el
-TEST14=test/syntactic-close-java-tests.el
-
+TEST13=test/syntactic-close-java-tests.el
 
 entfernt () {
     $EMACS -Q --batch \
@@ -87,7 +85,6 @@ entfernt () {
 -load $TEST11 \
 -load $TEST12 \
 -load $TEST13 \
--load $TEST14 \
 -f ert-run-tests-batch-and-exit
 }
 
@@ -106,10 +103,8 @@ hier () {
 -load $TEST11 \
 -load $TEST12 \
 -load $TEST13 \
--load $TEST14 \
 -f ert-run-tests-batch-and-exit
 }
-
 
 if [ $WERKSTATT -eq 0 ]; then
     while getopts 123456789abcdefghijklmnopqrstuvx option
@@ -162,4 +157,3 @@ fi
 #     echo \$ORT: $ORT
 #     entfernt
 # fi
-

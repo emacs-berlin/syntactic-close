@@ -55,17 +55,22 @@
     'java-mode
     syntactic-close-debug-p
     (goto-char (point-max))
-    (skip-chars-backward " \t\r\n\f")
+    (skip-chars-backward " \t\r\n\f") 
     (syntactic-close)
     (should (eq (char-before) ?\;))))
 
-(ert-deftest syntactic-close-java-test-nw2mXu ()
+(ert-deftest syntactic-close-java-test-ikuEEF ()
   (syntactic-close-test
-      "System.out.println(\"x: \" +  x"
+      "public class Foo1 {
+    public static void foo1() {
+        int x = 1;
+        double y = 2.0;
+        foo2(x, y);
+        System.out.println(y + \" \" + x"
     'java-mode
     syntactic-close-debug-p
     (goto-char (point-max))
-    (skip-chars-backward " \t\r\n\f")
+    (skip-chars-backward " \t\r\n\f") 
     (syntactic-close)
     (should (eq (char-before) 41))))
 
