@@ -55,7 +55,7 @@
     'java-mode
     syntactic-close-debug-p
     (goto-char (point-max))
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
     (syntactic-close)
     (should (eq (char-before) ?\;))))
 
@@ -70,9 +70,30 @@
     'java-mode
     syntactic-close-debug-p
     (goto-char (point-max))
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
     (syntactic-close)
     (should (eq (char-before) 41))))
+
+(ert-deftest syntactic-close-java-test-UApYpP ()
+  (syntactic-close-test
+"public class FooBau {
+
+  public static void main(String[] args) {
+    var sb = new Foo();
+    for(int i = 0; i < 100; i++) {
+        sb.append(\"bla\" + i + \" \");
+    }
+    String s = sb.toString();
+    System.out.println(s);
+    }
+"
+    'java-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (eq (char-before) ?}))))
+
+
 
 (provide 'syntactic-close-java-tests)
 ;;; syntactic-close-java-tests.el ends here

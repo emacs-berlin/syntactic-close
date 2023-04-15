@@ -885,19 +885,19 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
 (defun syntactic-close-java (&optional pps)
   "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
-  (let* ((orig (point)) 
-         (pps (or pps (parse-partial-sexp (point-min) (point))))
-         )
+  (let* ((orig (point))
+         (pps (or pps (parse-partial-sexp (point-min) (point)))))
     (cond
      ((nth 8 pps)
       (syntactic-close-generic-forms pps))
      ((nth 1 pps)
       (save-excursion (goto-char (nth 1 pps))
-                      (cond ((eq (char-after) 40)
-                             ")")
-                            ;; ((looking-back "^[ \t]*" (line-beginning-position))
-                             ;; "}")
-                            (t (goto-char orig) (unless (eq (char-before) ?\;) ";")))))
+                      (if (eq (char-after) 40)
+                          ")"
+                        (goto-char orig)
+                        (cond ((looking-back "^[ \t]*" (line-beginning-position))
+                               "}")
+                              (t (unless (eq (char-before) ?\;) ";"))))))
      ;; ((syntactic-close-java-another-filter-clause pps)
      ;;  (if (not (eq (char-before) ?\;))
 
