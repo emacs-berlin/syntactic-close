@@ -276,6 +276,9 @@ but have no specific treatment at the moment."
 (defvar syntactic-close-import-re "^[ \t]*import[ \t]+.+"
   "")
 
+(defvar syntactic-close-for-re "^[ \t]*for([^)]+"
+  "")
+
 (defvar syntactic-close-verbose-p nil)
 
 (defvar syntactic-close-assignment-re   "^[^:]*[^ =\t:]+[ \t]+=[ \t]+[^=]+" "")
@@ -891,13 +894,15 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
      ((nth 8 pps)
       (syntactic-close-generic-forms pps))
      ((nth 1 pps)
-      (save-excursion (goto-char (nth 1 pps))
-                      (if (eq (char-after) 40)
-                          ")"
-                        (goto-char orig)
-                        (cond ((looking-back "^[ \t]*" (line-beginning-position))
-                               "}")
-                              (t (unless (eq (char-before) ?\;) ";"))))))
+      (cond ((and (looking-back syntactic-close-for-re (line-beginning-position)) (not (eq (char-before) ?\;)) (not (string-match "\\+\\+" (buffer-substring-no-properties (line-beginning-position) (point)))))
+             ";")
+            (t (save-excursion (goto-char (nth 1 pps))
+                               (if (eq (char-after) 40)
+                                   ")"
+                                 (goto-char orig)
+                                 (cond ((looking-back "^[ \t]*" (line-beginning-position))
+                                        "}")
+                                       (t (unless (eq (char-before) ?\;) ";"))))))))
      ;; ((syntactic-close-java-another-filter-clause pps)
      ;;  (if (not (eq (char-before) ?\;))
 

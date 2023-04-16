@@ -93,7 +93,35 @@
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
+(ert-deftest syntactic-close-java-test-rP3vyd ()
+  (syntactic-close-test
+"public static boolean main(int[] data) {
+    if(data == null || data.length < 2)
+        return false;
 
+    for(i = 0
+    "
+    'java-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
+    (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-java-test-smbeId ()
+  (syntactic-close-test
+"public static boolean main(int[] data) {
+    if(data == null || data.length < 2)
+        return false;
+
+    for(i = 0; i < x; i++
+    "
+    'java-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f") 
+    (syntactic-close)
+    (should (eq (char-before) 41))))
 
 (provide 'syntactic-close-java-tests)
 ;;; syntactic-close-java-tests.el ends here
