@@ -895,7 +895,7 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
       (syntactic-close-generic-forms pps))
      ((nth 1 pps)
       (cond ((and (looking-back syntactic-close-for-re (line-beginning-position)) (not (eq (char-before) ?\;)) (not (string-match "\\+\\+" (buffer-substring-no-properties (line-beginning-position) (point)))))
-             ";")
+             "; ")
             (t (save-excursion (goto-char (nth 1 pps))
                                (if (eq (char-after) 40)
                                    ")"

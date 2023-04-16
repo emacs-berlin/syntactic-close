@@ -106,7 +106,9 @@
     (goto-char (point-max))
     (skip-chars-backward " \t\r\n\f")
     (syntactic-close)
-    (should (eq (char-before) ?\;))))
+    (should (eq (char-before) 32))
+    (should (eq (char-before (1- (point))) ?\;))
+    ))
 
 (ert-deftest syntactic-close-java-test-smbeId ()
   (syntactic-close-test
@@ -119,7 +121,7 @@
     'java-mode
     syntactic-close-debug-p
     (goto-char (point-max))
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
     (syntactic-close)
     (should (eq (char-before) 41))))
 
