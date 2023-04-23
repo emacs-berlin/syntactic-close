@@ -840,6 +840,10 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
 	  (save-excursion (goto-char (nth 8 pps)) (looking-at "[\"']\\{1,3\\}") (match-string-no-properties 0))))
      ((nth 1 pps)
       (syntactic-close-pure-syntax pps))
+     ;; ((looking-back "^[ 	]+if[ 	]+.*" (line-beginning-position))
+     ;; py-block-or-clause-re
+     ((looking-back "[ 	]*\\_<\\(async \\(?:class\\|def\\|for\\|with\\)\\|c\\(?:ase\\|lass\\)\\|def\\|e\\(?:l\\(?:if\\|se\\)\\|xcept\\)\\|f\\(?:inally\\|or\\)\\|if\\|match\\|try\\|w\\(?:hile\\|ith\\)\\)\\_>[( 	]*.*" (line-beginning-position))
+      ":")
      (t (syntactic-close--generic (point) nil
 				  (if (functionp 'py--beginning-of-statement-position)
 				      (py--beginning-of-statement-position)

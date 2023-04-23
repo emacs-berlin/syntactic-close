@@ -285,14 +285,6 @@
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest syntactic-close-python-f-string-test-g4ijGQ ()
-  (syntactic-close-test-with-python-buffer
-      ;; f"{'\n'.join(a)}"
-      "f\"{'\\n'.join(a)"
-    (skip-chars-backward " \t\r\n\f")
-    (syntactic-close)
-    (should (eq (char-before) ?}))))
-
 
 ;; f" something { my_dict["key"] } something else "
 
@@ -312,6 +304,29 @@
 
 ;; >>> f"{f"{f"{f"{f"{f"{1+1}"}"}"}"}"}"
 ;; '2'
+
+(ert-deftest syntactic-close-python-f-string-test-g4ijGQ ()
+  (syntactic-close-test-with-python-buffer
+      ;; f"{'\n'.join(a)}"
+      "f\"{'\\n'.join(a)"
+    (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
+    (should (eq (char-before) ?}))))
+
+(ert-deftest syntactic-close-python-test-OUdEGA ()
+  (syntactic-close-test-with-python-buffer
+      "    if n < 1"
+    (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
+    (should (eq (char-before) ?:))))
+
+(ert-deftest syntactic-close-python-test-ItdHM2 ()
+  (syntactic-close-test-with-python-buffer
+      "    else"
+    (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
+    (should (eq (char-before) ?:))))
+
 
 (provide 'syntactic-close-python-tests)
 
