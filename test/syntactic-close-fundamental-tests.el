@@ -31,8 +31,16 @@
       "{{{{asdf"
     'fundamental-mode
     syntactic-close-debug-p
-    (syntactic-close)
+    (syntactic-close '(4))
     (should (looking-back "asdf}}}}" (line-beginning-position)))))
+
+(ert-deftest syntactic-close--multibrace-fundamental-test-R2F2xV ()
+  (syntactic-close-test
+      "{{{{asdf"
+    'fundamental-mode
+    syntactic-close-debug-p
+    (syntactic-close)
+    (should (looking-back "asdf}" (line-beginning-position)))))
 
 (ert-deftest syntactic-close--multibrace-unary-fundamental-test-JM8aED ()
   (syntactic-close-test

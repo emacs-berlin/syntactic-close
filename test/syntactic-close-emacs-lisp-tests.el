@@ -112,7 +112,6 @@
 
 ;; +BEGIN_QUOTE", "+BEGIN_VERSE", "+BEGIN_EXAMPLE" and "+BEGIN_SRC" to syntactic close? (Akin to C-] in latex-mode, when closing environments) So that would add a corresponding "+END_SRC", "+END_QUOT
 
-
 (ert-deftest syntactic-close--ogham-feather-mark-close-lVxPDf ()
   (syntactic-close-test-with-elisp-buffer
       "?\᚛"
@@ -134,7 +133,7 @@
 (ert-deftest syntactic-close--escaped-test-nm0AqK ()
   ;; comint-password-prompt-regexp
   (syntactic-close-test-with-elisp-buffer
-      "\"\\(^ sadf"
+      "\"\\\\(^ sadf"
       (let ((syntactic-close-generic-p t))
         (goto-char (point-max))
         (skip-chars-backward " \t\r\n\f")
@@ -152,13 +151,12 @@
 (ert-deftest syntactic-close--escaped-test-PbxFlK ()
   ;; comint-password-prompt-regexp
   (syntactic-close-test-with-elisp-buffer
-      "\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th"
+      "\"\\\\(^ *\\\\|^Passwort: *\\\\|\\\\( SMB\\\\|'s\\\\|Bad\\\\|CVS\\\\|Enter\\\\(?: \\\\(?:\\\\(?:sam\\\\|th"
       (goto-char (point-max))
     (skip-chars-backward " \t\r\n\f")
       (let ((syntactic-close-unary-delimiter-chars (list ?` ?\" ?+)))
 	(syntactic-close '(4))
 	(should (eq (char-before) ?\")))))
-
 
 (ert-deftest syntactic-close--tqs-test-pBcUxG ()
   ;; comint-password-prompt-regexp
@@ -192,7 +190,6 @@
       "(string-match \"[[:alpha:]]\""
     (syntactic-close)
     (should (eq (char-before) ?\)))))
-
 
 (provide 'syntactic-close-emacs-lisp-tests)
 ;;; syntactic-close-emacs-lisp-tests.el ends here
