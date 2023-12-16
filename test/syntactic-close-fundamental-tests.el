@@ -22,7 +22,7 @@
 
 ;;; Commentary:
 
-;; 
+;;
 
 ;;; Code:
 
@@ -59,6 +59,15 @@ foo
 "   'fundamental-mode
     syntactic-close-debug-p
     (syntactic-close)
+    (should (looking-back "`" (line-beginning-position)))))
+
+(ert-deftest syntactic-close--triple-grave-accent-test-iH0kqj ()
+  (syntactic-close-test
+      "```
+foo
+"   'fundamental-mode
+    syntactic-close-debug-p
+    (syntactic-close '(4))
     (should (looking-back "```" (line-beginning-position)))))
 
 (provide 'syntactic-close-fundamental-tests)

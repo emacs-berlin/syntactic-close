@@ -23,7 +23,7 @@
 ;;
 
 ;;; Code:
-(ert-deftest syntactic-close-close-scala-test-2EBKNw ()
+(ert-deftest syntactic-close-scala-test-2EBKNw ()
   (syntactic-close-test
       "(1 to 9).flatMap(x => (1 to 9).filter { y => (x + 4 * y) > (x * y)"
     'scala-mode
@@ -32,7 +32,7 @@
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest syntactic-close-close-scala-test-CFGK23 ()
+(ert-deftest syntactic-close-scala-test-CFGK23 ()
   (syntactic-close-test
       "(1 to 9).flatMap(x => (1 to 9).filter { y => (x + 4 * y) > (x * y) }"
     'scala-mode
@@ -102,7 +102,7 @@ grep(\".*gcd.*\")
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
-(ert-deftest syntactic-close-close-scala-test-5xD6NO ()
+(ert-deftest syntactic-close-scala-test-5xD6NO ()
   (syntactic-close-test
  "val a = 1
 {
@@ -120,7 +120,7 @@ grep(\".*gcd.*\")
     (syntactic-close)
     (should (eq (char-before) ?\;))))
 
-(ert-deftest syntactic-close-close-scala-test-moJaUT ()
+(ert-deftest syntactic-close-scala-test-moJaUT ()
   (syntactic-close-test
  "val a = 1;
 {
@@ -138,7 +138,7 @@ grep(\".*gcd.*\")
     (syntactic-close)
     (should (eq (char-before) ?\;))))
 
-(ert-deftest syntactic-close-close-scala-test-sbaqDQ ()
+(ert-deftest syntactic-close-scala-test-sbaqDQ ()
   (syntactic-close-test
       "def sum(s: Seq[Int]): Int = leftFold(s, 0, (x, y"
         'scala-mode
@@ -148,7 +148,7 @@ grep(\".*gcd.*\")
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest syntactic-close-close-scala-test-OcCPv9 ()
+(ert-deftest syntactic-close-scala-test-OcCPv9 ()
   (syntactic-close-test
       "def sum(s: Seq[Int])"
         'scala-mode
@@ -160,6 +160,32 @@ grep(\".*gcd.*\")
     (should (eq (char-before  (1- (point))) 41))
     ))
 
+(ert-deftest syntactic-close-scala-test-nJghbp ()
+  (syntactic-close-test
+      "/*Comment starts
+continues
+continues
+Comment ends"
+        'scala-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
+    (should (eq (char-before) ?/))
+    (should (eq (char-before  (1- (point))) ?\*))
+    ))
+
+(ert-deftest syntactic-close-scala-test-dOobA3 ()
+  (syntactic-close-test
+      "val foo =  this.totalFoo(Seq((\"apple\", 2))"
+        'scala-mode
+    syntactic-close-debug-p
+    (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
+    (should (eq (char-before) ?\)))
+    (should (eq (char-before  (1- (point))) ?\)))
+    ))
 
 (provide 'syntactic-close-scala-tests)
 ;;; syntactic-close-scala-tests.el ends here

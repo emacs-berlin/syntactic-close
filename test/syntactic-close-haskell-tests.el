@@ -1,5 +1,4 @@
 
-
 ;; zipWith (\x ->y(\y -> (x, y) [1, 2, 3] [1, 2, 3]
 
 (ert-deftest syntactic-close-haskell-string-test-gJVmTt ()
@@ -7,19 +6,34 @@
       "indent s = \"asdf"
     'haskell-mode
     'syntactic-close-debug-p
-    (syntactic-close)
     (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest syntactic-close-haskell-lambda-test-gJVmTt ()
+(ert-deftest syntactic-close-haskell-test-T1mOKj ()
   (syntactic-close-test
-      "zipWith (\\x ->y(\\y -> (x, y)\[1, 2, 3] \[1, 2, 3]"
+      "wertweise n x =
+  [ k | k<-[0..n-1], k == x "
     'haskell-mode
     'syntactic-close-debug-p
-    (search-backward "y")
-    (forward-char 2)
+    (skip-chars-backward " \t\r\n\f")
     (syntactic-close)
-    (should (looking-back "))" (line-beginning-position)))))
+    (should (eq (char-before) 93))))
+
+(ert-deftest syntactic-close-haskell-test-YUumkX ()
+  (syntactic-close-test
+      "{-# LANGUAGE OverloadedStrings"
+    'haskell-mode
+    'syntactic-close-debug-p
+    (skip-chars-backward " \t\r\n\f")
+    (syntactic-close)
+    (should (eq (char-before) ?}))
+    (should (eq (char-before (1- (point))) ?-))
+    (should (eq (char-before (- (point) 2)) ?#))
+    (should (eq (char-before (- (point) 3)) 32))
+    )
+  )
+
 
 
 (provide 'syntactic-close-haskell-tests)

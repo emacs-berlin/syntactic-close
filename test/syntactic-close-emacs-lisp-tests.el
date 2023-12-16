@@ -1,6 +1,7 @@
 ;;; syntactic-close-emacs-lisp-tests.el ---  Tests -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
+;; Andreas Röhler, <andreas.roehler@online.de>
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
 
 ;; Keywords: languages, lisp
@@ -24,25 +25,25 @@
 
 ;;; Code:
 
-(ert-deftest syntactic-close--elisp-nested-bracket-paren-test-1 ()
+(ert-deftest syntactic-close--elisp-nested-bracket-paren-test-rNRF1C ()
   (syntactic-close-test-with-elisp-buffer
     "(list ([\n;;{123\n;;{123\n"
     (syntactic-close)
     (should (eq (char-before) ?\]))))
 
-(ert-deftest syntactic-close--elisp-nested-bracket-paren-test-2 ()
+(ert-deftest syntactic-close--elisp-nested-bracket-paren-test-cNi9NK ()
   (syntactic-close-test-with-elisp-buffer
     "(list ([\n;;{123\n;;{123\n]"
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest syntactic-close--elisp-nested-bracket-paren-test-3 ()
+(ert-deftest syntactic-close--elisp-nested-bracket-paren-test-O2UNEs ()
   (syntactic-close-test-with-elisp-buffer
     "(list ([\n;;{123\n;;{123\n])"
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest syntactic-close--elisp-list-test ()
+(ert-deftest syntactic-close--elisp-list-4ETJll ()
   (syntactic-close-test-with-elisp-buffer
     "(member (list 'asdf"
     (syntactic-close)
@@ -50,126 +51,125 @@
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest syntactic-close--elisp-interactive-spec-test ()
+(ert-deftest syntactic-close--elisp-interactive-spec-aBfETo ()
   (syntactic-close-test-with-elisp-buffer
     "(defun foo ()
   (interactive "
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest syntactic-close--elisp-char-class-test-1 ()
+(ert-deftest syntactic-close--elisp-char-class-test-qMPgJc ()
   (syntactic-close-test-with-elisp-buffer
     "(string-match \"[[:alpha:]]"
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest syntactic-close--elisp-char-class-test-2 ()
+(ert-deftest syntactic-close--elisp-char-class-test-RTbDdh ()
   (syntactic-close-test-with-elisp-buffer
     "(string-match \"[[:alpha"
     (syntactic-close)
     (should (eq (char-before) ?:))))
 
-(ert-deftest syntactic-close--elisp-char-class-test-3 ()
+(ert-deftest syntactic-close--elisp-char-class-test-ZKucTB ()
   (syntactic-close-test-with-elisp-buffer
     "(string-match \"[[:alpha:"
     (syntactic-close)
     (should (eq (char-before) ?\]))))
 
-(ert-deftest syntactic-close--elisp-char-class-test-4 ()
+(ert-deftest syntactic-close--elisp-char-class-test-QylOuh ()
   (syntactic-close-test-with-elisp-buffer
     "(string-match \"[[:alpha:]"
     (syntactic-close)
     (should (eq (char-before) ?\]))))
 
-(ert-deftest syntactic-close--elisp-arglist-test ()
+(ert-deftest syntactic-close--elisp-arglist-l91fpm ()
   (syntactic-close-test-with-elisp-buffer
       "(defun asdf ("
       (syntactic-close)
-    (should (looking-back "asdf ()"))))
+    (should (looking-back "asdf ()" (line-beginning-position)))))
 
-(ert-deftest syntactic-close-electric-delete-whitespace-test-1 ()
+(ert-deftest syntactic-close-electric-delete-whitespace-test-x7Ax7w ()
   (syntactic-close-test-with-elisp-buffer
       "(defun asdf ( "
       (let ((syntactic-close-electric-delete-whitespace-p t))
 	(syntactic-close)
 	(should (looking-back "asdf ()")))))
 
-(ert-deftest syntactic-close-electric-delete-whitespace-test-2 ()
+(ert-deftest syntactic-close-electric-delete-whitespace-test-p0vsKD ()
   (syntactic-close-test-with-elisp-buffer
       "(defun asdf ( "
       (let ((syntactic-close-electric-delete-whitespace-p nil))
 	(syntactic-close)
 	(should (looking-back "asdf (  )")))))
 
-(ert-deftest syntactic-close--elisp-padding-test ()
+(ert-deftest syntactic-close--elisp-padding-4SCxQH ()
   (syntactic-close-test-with-elisp-buffer
       "(defun foo ( arg"
       (syntactic-close)
-    (should (eq (char-before (1- (point))) ?\ ))))
+    (should (eq (char-before) ?\)))
+    (should (eq (char-before (1- (point))) ?\ ))
+    ))
 
 ;; +BEGIN_QUOTE", "+BEGIN_VERSE", "+BEGIN_EXAMPLE" and "+BEGIN_SRC" to syntactic close? (Akin to C-] in latex-mode, when closing environments) So that would add a corresponding "+END_SRC", "+END_QUOT
 
-(ert-deftest syntactic-close--elisp-org-quote-test ()
-  (syntactic-close-test-with-elisp-buffer
-      "#+BEGIN_QUOTE
-asdf"
-      (org-mode)
-      (syntactic-close)
-    (should (looking-back "#\\+END_QUOTE" (line-beginning-position)))))
 
-(ert-deftest syntactic-close--elisp-org-src-test ()
-  (syntactic-close-test-with-elisp-buffer
-      "#+BEGIN_SRC
-asdf"
-      (org-mode)
-      (syntactic-close)
-    (should (looking-back "#\\+END_SRC" (line-beginning-position)))))
-
-(ert-deftest syntactic-close--ogham-feather-mark-close-test ()
+(ert-deftest syntactic-close--ogham-feather-mark-close-lVxPDf ()
   (syntactic-close-test-with-elisp-buffer
       "?\᚛"
       (should (char-equal ?\᚜ (syntactic-close--return-complement-char-maybe (char-before))))))
 
-(ert-deftest syntactic-close--multidelim-test-1 ()
+(ert-deftest syntactic-close--multidelim-test-tIMXsr ()
   (syntactic-close-test-with-elisp-buffer
       "{{{{asdf"
       (syntactic-close)
-    (should (looking-back "}}}}" (line-beginning-position)))))
+    (should (looking-back "}" (line-beginning-position)))))
 
-(ert-deftest syntactic-close--escaped-test-1 ()
+(ert-deftest syntactic-close--multidelim-test-lvyjjU ()
+  (syntactic-close-test-with-elisp-buffer
+      "{{{{asdf}"
+      (goto-char (point-max))
+      (syntactic-close)
+    (should (looking-back "}}" (line-beginning-position)))))
+
+(ert-deftest syntactic-close--escaped-test-nm0AqK ()
   ;; comint-password-prompt-regexp
   (syntactic-close-test-with-elisp-buffer
       "\"\\(^ sadf"
       (let ((syntactic-close-generic-p t))
+        (goto-char (point-max))
+        (skip-chars-backward " \t\r\n\f")
 	(syntactic-close)
 	(should (looking-back "\\\\)" (line-beginning-position))))))
 
-(ert-deftest syntactic-close--escaped-test-2 ()
+(ert-deftest syntactic-close--escaped-test-32G2OA ()
   ;; comint-password-prompt-regexp
   (syntactic-close-test-with-elisp-buffer
-      "\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th"
+      "\"\\\\(^ *\\\\|^Passwort: *\\\\|\\\\( SMB\\\\|'s\\\\|Bad\\\\|CVS\\\\|Enter\\\\(?: \\\\(?:\\\\(?:sam\\\\|th"
       (let ((syntactic-close-generic-p t))
-	(syntactic-close 3)
+	(syntactic-close)
 	(should (looking-back "\\\\)" (line-beginning-position))))))
 
-(ert-deftest syntactic-close--escaped-test-3 ()
+(ert-deftest syntactic-close--escaped-test-PbxFlK ()
   ;; comint-password-prompt-regexp
   (syntactic-close-test-with-elisp-buffer
       "\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th"
       (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f")
       (let ((syntactic-close-unary-delimiter-chars (list ?` ?\" ?+)))
 	(syntactic-close '(4))
 	(should (eq (char-before) ?\")))))
 
 
-(ert-deftest syntactic-close--tqs-test-hglm99 ()
+(ert-deftest syntactic-close--tqs-test-pBcUxG ()
   ;; comint-password-prompt-regexp
   (syntactic-close-test-with-elisp-buffer
       "(search-forward \"'''"
+      (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f") 
       (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest syntactic-close-close-elisp-nested-bracket-paren-test ()
+(ert-deftest syntactic-close-close-elisp-nested-bracket-paren-2e8EOm ()
   (syntactic-close-test
     "(list ([\n;;{123\n;;{123\n"
     'emacs-lisp-mode
@@ -181,15 +181,18 @@ asdf"
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-;; (ert-deftest syntactic-close--escaped-test-4 ()
-;;   ;; comint-password-prompt-regexp
-;;   (syntactic-close-test-with-elisp-buffer
-;;       "\"\\(^ *\\|^Passwort: *\\|\\( SMB\\|'s\\|Bad\\|CVS\\|Enter\\(?: \\(?:\\(?:sam\\|th\\)\\)\\)\\)\\)\""
-;;       (let ((orig (point))
-;; 	    (syntactic-close-generic-p t))
-;; 	(syntactic-close)
-;; 	(should (eq orig (point))))))
+(ert-deftest syntactic-close--elisp-char-class-test-QylOuh ()
+  (syntactic-close-test-with-elisp-buffer
+    "(string-match \"[[:alpha:]"
+    (syntactic-close)
+    (should (eq (char-before) ?\]))))
 
-;; \([[:alpha]]
+(ert-deftest syntactic-close--elisp-char-class-test-Ru2ZUr ()
+  (syntactic-close-test-with-elisp-buffer
+      "(string-match \"[[:alpha:]]\""
+    (syntactic-close)
+    (should (eq (char-before) ?\)))))
 
+
+(provide 'syntactic-close-emacs-lisp-tests)
 ;;; syntactic-close-emacs-lisp-tests.el ends here

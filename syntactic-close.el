@@ -1,7 +1,8 @@
 ;;; syntactic-close.el --- Insert closing delimiter -*- lexical-binding: t; -*-
 
-;; Author: Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
-;; Maintainer: Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
+;; Authored and maintained by
+;; Andreas Röhler, <andreas.roehler@online.de>
+;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
 
 ;; Version: 0.1
 
@@ -36,6 +37,9 @@
 
 (require 'cl-lib)
 (require 'thingatpt)
+(require 'thing-at-point-utils)
+(require 'ar-sexp)
+
 (eval-when-compile
  (require 'nxml-mode)
  (require 'sgml-mode)
@@ -90,110 +94,8 @@
   :type '(repeat character)
   :group 'sytactic-close)
 
-;; (setq syntactic-close-paired-closers
-;;       (list ?’ ?> ?\) ?\] ?} ?\〉 ?\⦒ ?\⦔ ?\】 ?\⦘ ?\⸥ ?\」 ?\》 ?\⦖ ?\⸩ ?\⧛ ?\｝ ?\） ?\］ ?\｠ ?\｣ ?\❱ ?\❯ ?\” ?\’ ?\❳ ?\⟩ ?\⟫ ?\⟯ ?\⟧ ?\⟭ ?\❵ ?\❫ ?\❩ ?\❭ ?\᚜ ?\〉 ?\⧽ ?\⟆ ?\⸧ ?\﹜ ?\﹚ ?\﹞ ?\⁆ ?\⦎ ?\⦐ ?\⦌ ?\₎ ?\⁾ ?\༽ ?\༻ ?\⸣ ?\〕 ?\』 ?\⦄ ?\〗 ?\⦆ ?\〛 ?\〙 ?\⧙ ?\⦊ ?\⦈))
 
-(defcustom syntactic-close--escape-char 92
-  "Customize the escape char if needed."
-  :type 'char
-  :group 'sytactic-close)
-
-(defun syntactic-close--escaped-p (&optional pos)
-  "Return t if char at POS is preceded by an odd number of backslashes. "
-  (save-excursion
-    (when pos (goto-char pos))
-    (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
-
-(defun syntactic-close--escapes-maybe (limit)
-  "Handle escaped parens.
-
-Consider strings like
-Argument LIMIT lower border."
-  (save-excursion
-    (when (eq (char-before) syntactic-close--escape-char)
-      (buffer-substring-no-properties (point) (progn (skip-chars-backward (char-to-string syntactic-close--escape-char) limit)(1- (point)))))))
-
-(defun syntactic-close--padding-maybe (&optional pos)
-  "Report padding to handle.
-
-Optional argument POS position to start from."
-  (save-excursion
-    (when pos (goto-char pos))
-    (when (member (char-after) (list 32 9))
-      (buffer-substring-no-properties (point) (progn (skip-chars-forward " \t")(point))))))
-
-(defun syntactic-close--multichar-intern (char limit)
-    (abs (skip-chars-backward (char-to-string char) limit)))
-
-(defun syntactic-close--multichar-closer (char limit &optional offset)
-  "Opener and closer might be composed by more than one character.
-
-construct and return the closing string
-Argument CHAR the character to contruct the string.
-Argument LIMIT the lower border.
-Optional argument OFFSET already know offset."
-  (if offset
-      (make-string (+ offset (syntactic-close--multichar-intern char limit)) (syntactic-close--return-complement-char-maybe char))
-    (make-string (syntactic-close--multichar-intern char limit) (syntactic-close--return-complement-char-maybe char))))
-
-(defun syntactic-close-pure-syntax-intern (pps)
-  "Fetch from start of list to close.
-
-Argument PPS is result of ‘parse-partial-sexp’"
-  (save-excursion
-    (let (closer padding)
-      (cond
-       ((and (nth 3 pps) (nth 1 pps) (< (nth 1 pps) (nth 8 pps)))
-	(goto-char (nth 8 pps))
-	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point)))))
-	(setq closer (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
-	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point))))))
-       ((nth 3 pps)
-	(goto-char (nth 8 pps))
-	(backward-prefix-chars)
-	(setq closer (buffer-substring-no-properties (point) (progn (skip-chars-forward (char-to-string (nth 3 pps)))(point))))
-	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point))))))
-       ((nth 1 pps)
-	(goto-char (nth 1 pps))
-	(setq closer (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
-	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point)))))))
-      (concat padding closer))))
-
-(defun syntactic-close-pure-syntax (pps)
-  "Insert closer found from beginning of list.
-
-Argument PPS is result of a call to function ‘parse-partial-sexp’"
-  (syntactic-close-pure-syntax-intern pps))
-
-(defun syntactic-close-travel-comment-maybe (pps limit)
-  "Leave commented section backward.
-
-Argument PPS is result of a call to function ‘parse-partial-sexp’.
-Argument LIMIT the lower bound."
-  (let ((pps pps))
-    (while (nth 4 pps)
-      (goto-char (nth 8 pps))
-      (skip-chars-backward " \t\r\n\f")
-      (setq pps (parse-partial-sexp limit (point))))
-    pps))
-
-(defun syntactic-close-empty-line-p (&optional iact)
-  "Return t if cursor is at an empty line, nil otherwise.
-Optional argument IACT signaling interactive use."
-  (interactive "p")
-  (save-excursion
-    (beginning-of-line)
-    (when iact
-      (message "%s" (looking-at syntactic-close-empty-line-p-chars)))
-    (looking-at syntactic-close-empty-line-p-chars)))
-
-(unless (functionp 'empty-line-p)
-  (defalias 'empty-line-p 'syntactic-close-empty-line-p))
-
-;; (defvar haskell-interactive-mode-prompt-start (ignore-errors (require 'haskell-interactive-mode) haskell-interactive-mode-prompt-start)
-;;   "Defined in haskell-interactive-mode.el, silence warnings.")
-
- (defvar syntactic-close-tag nil
+(defvar syntactic-close-tag nil
   "Functions closing mode-specific might go here.")
 
 (defcustom syntactic-close-electric-delete-whitespace-p nil
@@ -213,7 +115,7 @@ Default is t"
   :group 'syntactic-close)
 (make-variable-buffer-local 'syntactic-close-honor-padding-p)
 
-(defcustom syntactic-close--semicolon-separator-modes
+(defvar syntactic-close--semicolon-separator-modes
   (list
    'inferior-sml-mode
    'js-mode
@@ -223,14 +125,9 @@ Default is t"
    'sml-mode
    'web-mode
    )
-  "List of modes which commands must be closed by a separator,
-but have no specific treatment at the moment."
+  "syntactic-close--semicolon-separator-modes")
 
-  :type 'list
-  :tag "syntactic-close--semicolon-separator-modes"
-  :group 'syntactic-close)
-
-(defcustom syntactic-close--ml-modes
+(defvar syntactic-close--ml-modes
   (list
    'html-mode
    'mhtml-mode
@@ -238,15 +135,13 @@ but have no specific treatment at the moment."
    'xml-mode
    'xxml-mode
    )
-  "List of modes using markup language."
-  :type 'list
-  :tag "syntactic-close--ml-modes"
-  :group 'syntactic-close)
+  "syntactic-close--ml-modes")
 
 (defvar syntactic-close-modes (list
 			       'agda2-mode
-			       'emacs-lisp-mode
+			       ;; 'emacs-lisp-mode
 			       'html-mode
+                               'haskell-mode
 			       'java-mode
 			       'js-mode
 			       'mhtml-mode
@@ -255,6 +150,7 @@ but have no specific treatment at the moment."
 			       'php-mode
 			       'python-mode
 			       'ruby-mode
+                               'prolog-mode
                                'scala-mode
                                'shell-mode
 			       'sgml-mode
@@ -289,13 +185,38 @@ but have no specific treatment at the moment."
 
 (setq syntactic-close-funcdef-re     "^[ \t]*def[ \t]+[[:alnum:]_]+([^()]+)")
 
+(defvar syntactic-close-if-re   "^[ \t]*if[ \t]+.+" "")
+(setq syntactic-close-if-re   "^[ \t]*if[ \t]+.+")
+
 (unless (boundp 'py-block-re)
   (defvar py-block-re "[ \t]*\\_<\\(class\\|def\\|async def\\|async for\\|for\\|if\\|try\\|while\\|with\\|async with\\)\\_>[:( \n\t]*"
   "Matches the beginning of a compound statement. "))
 
+(defvar syntactic-close-type-re
+      "\\([[:alpha:]][^\n \t:]*\\) +:: +\\([\[\(_]*[[:alnum:]]+\\)"
+      "")
+
 (defvar syntactic-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode)
   "`parse-partial-sexp' must scan only from last prompt.")
 (setq syntactic-close-known-comint-modes (list 'shell-mode 'inferior-sml-mode 'inferior-asml-mode 'Comint-SML 'haskell-interactive-mode 'inferior-haskell-mode))
+
+(defvar  syntactic-close-beg-delimiter "»‘“{<[("
+  "Specify the delimiter char.")
+
+(defvar  syntactic-close-end-delimiter "«’”}>])"
+  "Specify the delimiter char.")
+
+(defvar  syntactic-close-end-delimiter-list  (list ?« ?’ ?” ?} ?>  ?\] ?\))
+   "Specify the delimiter char.")
+
+(defvar syntactic-close-delimiters-atpt "|\"'`#$/=?!:*+~§%_;@-"
+"Specify the delimiter chars. ")
+
+(defvar syntactic-close-match-in-string-p nil
+  "Internal use only.")
+
+(defvar syntactic-close-match-in-comment-p nil
+  "Internal use only.")
 
 (defun syntactic-close-toggle-verbosity ()
   "If `syntactic-close-verbose-p' is nil, switch it on.
@@ -305,11 +226,132 @@ Otherwise switch it off."
   (setq syntactic-close-verbose-p (not syntactic-close-verbose-p))
   (when (called-interactively-p 'any) (message "syntactic-close-verbose-p: %s" syntactic-close-verbose-p)))
 
+;; (setq syntactic-close-paired-closers
+;;       (list ?’ ?> ?\) ?\] ?} ?\〉 ?\⦒ ?\⦔ ?\】 ?\⦘ ?\⸥ ?\」 ?\》 ?\⦖ ?\⸩ ?\⧛ ?\｝ ?\） ?\］ ?\｠ ?\｣ ?\❱ ?\❯ ?\” ?\’ ?\❳ ?\⟩ ?\⟫ ?\⟯ ?\⟧ ?\⟭ ?\❵ ?\❫ ?\❩ ?\❭ ?\᚜ ?\〉 ?\⧽ ?\⟆ ?\⸧ ?\﹜ ?\﹚ ?\﹞ ?\⁆ ?\⦎ ?\⦐ ?\⦌ ?\₎ ?\⁾ ?\༽ ?\༻ ?\⸣ ?\〕 ?\』 ?\⦄ ?\〗 ?\⦆ ?\〛 ?\〙 ?\⧙ ?\⦊ ?\⦈))
+
+(defcustom syntactic-close--escape-char 92
+  "Customize the escape char if needed."
+  :type 'char
+  :group 'sytactic-close)
+
+(defun syntactic-close--escaped-p (&optional pos)
+  "Return t if char at POS is preceded by an odd number of backslashes. "
+  (save-excursion
+    (when pos (goto-char pos))
+    (< 0 (% (abs (skip-chars-backward "\\\\")) 2))))
+
+(defun syntactic-close--escaped-in-string-p ()
+  "Return t if char at POS is escaped. "
+  (let ((orig (point)))
+  (save-excursion
+    (and (eq 0 (% (abs (skip-chars-backward "\\\\")) 2))(< (point) orig)))))
+
+(defun syntactic-close--escapes-maybe (limit)
+  "Handle escaped parens.
+
+Consider strings like
+Argument LIMIT lower border."
+  (save-excursion
+    (when (eq (char-before) syntactic-close--escape-char)
+      (buffer-substring-no-properties (point) (progn (skip-chars-backward (char-to-string syntactic-close--escape-char) limit)(1- (point)))))))
+
+
+(defun syntactic-close--string-before-list-maybe (pps)
+  "String inside a list needs to be closed first maybe.
+
+Expects start of string behind start of list
+Argument PPS result of ‘parse-partial-sexp’."
+  ;; maybe close generic first
+  (syntactic-close-pure-syntax pps))
+
+(defun syntactic-close--padding-maybe (&optional pos)
+  "Report padding to handle.
+
+Optional argument POS position to start from."
+  (save-excursion
+    (when pos (goto-char pos))
+    (when (member (char-after) (list 32 9))
+      (buffer-substring-no-properties (point) (progn (skip-chars-forward " \t")(point))))))
+
+(defun syntactic-close--multichar-intern (char limit)
+    (abs (skip-chars-backward (char-to-string char) limit)))
+
+(defun syntactic-close--multichar-closer (char limit &optional offset)
+  "Opener and closer might be composed by more than one character.
+
+construct and return the closing string
+Argument CHAR the character to contruct the string.
+Argument LIMIT the lower border.
+Optional argument OFFSET already know offset."
+  (if offset
+      (make-string (+ offset (syntactic-close--multichar-intern char limit)) (syntactic-close--return-complement-char-maybe char))
+    (make-string (syntactic-close--multichar-intern char limit) (syntactic-close--return-complement-char-maybe char))))
+
+
+(defun syntactic-close-pure-syntax  (pps)
+  "Fetch from start to close.
+
+Argument PPS is result of ‘parse-partial-sexp’"
+  (save-excursion
+    (let (closer padding)
+      (cond
+       ; syntactic-close-intern
+       ;; ((nth 4 pps)
+       ;;  (goto-char (nth 8 pps)))
+       ((and (nth 3 pps) (nth 1 pps) (< (nth 1 pps) (nth 8 pps)))
+	(goto-char (nth 8 pps))
+	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point)))))
+	(setq closer (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
+	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point))))))
+       ((nth 3 pps)
+	(goto-char (nth 8 pps))
+	(backward-prefix-chars)
+	(setq closer (buffer-substring-no-properties (point) (progn (skip-chars-forward (char-to-string (nth 3 pps)))(point))))
+	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point))))))
+       ((nth 1 pps)
+	(goto-char (nth 1 pps))
+	(setq closer (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
+	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point)))))))
+      (concat padding closer))))
+
+;; (defun syntactic-close-pure-syntax (orig pps)
+;;   "Insert closer found from beginning of list.
+
+;; Argument PPS is result of a call to function ‘parse-partial-sexp’"
+;;   (syntactic-close-pure-syntax pps))
+
+(defun syntactic-close-travel-comment-maybe (pps limit)
+  "Leave commented section backward.
+
+Argument PPS is result of a call to function ‘parse-partial-sexp’.
+Argument LIMIT the lower bound."
+  (let ((pps pps))
+    (while (nth 4 pps)
+      (goto-char (nth 8 pps))
+      (skip-chars-backward " \t\r\n\f")
+      (setq pps (parse-partial-sexp limit (point))))
+    pps))
+
+(defun syntactic-close-empty-line-p (&optional iact)
+  "Return t if cursor is at an empty line, nil otherwise.
+Optional argument IACT signaling interactive use."
+  (interactive "p")
+  (save-excursion
+    (beginning-of-line)
+    (when iact
+      (message "%s" (looking-at syntactic-close-empty-line-p-chars)))
+    (looking-at syntactic-close-empty-line-p-chars)))
+
+(unless (functionp 'empty-line-p)
+  (defalias 'empty-line-p 'syntactic-close-empty-line-p))
+
+
 (defun syntactic-close--return-complement-char-maybe (erg)
   "For example return \"}\" for \"{\" but keep \"\\\"\".
 Argument ERG character to complement."
   (pcase erg
-    (?` ?')
+    (?` ?`)
+    (?» ?«)
     (?< ?>)
     (?> ?<)
     (?\( ?\))
@@ -433,10 +475,11 @@ Optional argument NAFTER read not after string."
 		   (or
 		    (eq 5 (car (syntax-after (point))))
 		    ;; (eq (char-after) ?\))
-		    nafter) (setq erg (concat erg " ")))))
+		    nafter)
+                 (setq erg (concat erg " ")))))
 	    erg))
 
-(defun syntactic-close--comments-intern (orig start end)
+(defun syntactic-close--string-fence-intern (orig start end)
   "Close comments.
 
 ORIG the position where ‘syntactic-close’ was called
@@ -449,29 +492,30 @@ END the comment end"
     (goto-char orig)
     (newline-and-indent)))
 
-(defun syntactic-close--insert-comment-end-maybe (pps)
+(defun syntactic-close--string-fence (orig)
+  "Closing a string fence."
+  (cond
+   ((looking-at "\\/\\*")
+    (syntactic-close--string-fence-intern orig "/*" "*/"))
+   ((looking-at "{-# ")
+    (syntactic-close--string-fence-intern orig "{-# " " #-}"))
+   ((looking-at "{- ")
+    (syntactic-close--string-fence-intern orig "{- " " -}"))
+   ))
+
+(defun syntactic-close--insert-comment-end-maybe (orig pps)
   "Insert comment end.
 
 Argument PPS should provide result of ‘parse-partial-sexp’."
-  (let ((orig (point)))
-    (cond
-     ((eq major-mode 'haskell-mode)
-      (goto-char (nth 8 pps))
-      (if (looking-at "{-# ")
-	  (syntactic-close--comments-intern orig "{-#" "#-}")
-	(syntactic-close--comments-intern orig "{-" "-}"))
-      t)
-     ((or (eq major-mode 'c++-mode) (eq major-mode 'c-mode))
-      (goto-char (nth 8 pps))
-      (syntactic-close--comments-intern orig "/*" "*/")
-      t)
-     (t (if (string= "" comment-end)
-	    (if (eq system-type 'windows-nt)
-		 "\r\n"
-	      "\n")
-	  comment-end)
-	comment-end))
-    ))
+  (goto-char (nth 8 pps))
+  (when (looking-at comment-start-skip)
+    (if (< 1 (length (match-string-no-properties 0)))
+        (syntactic-close--string-fence orig)
+            (if (string= "" comment-end)
+	       (if (eq system-type 'windows-nt)
+		   "\r\n"
+	         "\n")
+        ))))
 
 (defun syntactic-close--point-min ()
   "Determine the lower position in buffer to narrow."
@@ -501,150 +545,179 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 	 (font-lock-fontify-region (point-min)(point-max))
 	 t)))
 
-(defun syntactic-close--generic (&optional orig stack pps skip_list)
-  "Detect delimiters inside string or comment maybe.
+(defun syntactic-close--return-complement-string-maybe (erg)
+  (cond
+   ((string= erg "{-# ") " #-}")
+   ((string= erg "{-") "-}")
+   ))
 
-Optional argument UNARY-DELIMITER-CHARS like quoting chara1cter,
-a list.
-Optional argument DELIMITERS-STRG composed of unary and paired delimiters,
-a list.
-Optional argument ORIG position.
-Optional argument STACK used by recursive call maybe.
-Optional argument LIMIT bound."
-  (let* ((orig (or orig (point)))
-	 (limit (or (ignore-errors (nth 8 pps)) (point-min)))
-	 (unary-delimiter-chars syntactic-close-unary-delimiter-chars)
-	 (paired-delimiters-strg (concat (cl-map 'string 'identity syntactic-close-paired-openers) (cl-map 'string 'identity syntactic-close-paired-closers)))
-	 (stack stack)
-	 closer done escapes padding erg)
-    (save-restriction
-      (narrow-to-region limit orig)
-      (while (and (not (bobp)) (not closer)(not done) (<= limit (1- (point))))
-	(cond
-	 ((and skip_list (nth 1 (parse-partial-sexp (point-min) (point))))
-	  (goto-char (nth 1 (parse-partial-sexp (point-min) (point)))))
-	 ((member (char-before)
-		  ;; (list ?\) ?\] ?})
-		  syntactic-close-paired-closers)
-	  (push (char-before) stack)
-	  (unless (bobp) (forward-char -1)))
-	 (;; (list ?\( ?\" ?{ ?\[)
-	  (member (char-before)
-		  syntactic-close-paired-openers)
-	  (if (eq (car stack) (syntactic-close--return-complement-char-maybe (char-before)))
-	      (progn
-		(pop stack)
-		(unless (bobp)
-		  (forward-char -1)))
-	    (setq done t)
-	    (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
-	    ;; maybe more then one char
-	    (setq closer (syntactic-close--multichar-closer (char-before) limit))
-	    (unless (bobp)
-	      (setq escapes (syntactic-close--escapes-maybe limit)))))
-	 ((and (member (char-before)
-		       ;; (list ?` ?\" ?')
-		       unary-delimiter-chars)
-	       ;; syntactic-close--tqs-test-hglm99.el
-	       ;; (search-forward "'''
-	       (eq 3 (- limit (- limit (count-matches (char-to-string (char-before)) limit
-						      ;; (point)
-						      orig)))))
-	  (if (nth 3 pps)
-	      (progn
-		(goto-char (nth 8 pps))
+;; (defun syntactic-close-haskell (orig pps)
+;;   ;; (require 'ar-haskell-mode)
+;;   (let (erg)
+;;     ;; syntactic-close-intern
+;;     ;; (if (nth 4 pps)
+;;     ;;          (save-excursion
+;;     ;;            (goto-char (nth 8 pps))
+;;     ;;            (looking-at "{-")
 
-		(setq closer (buffer-substring-no-properties (point) (progn (skip-chars-forward (char-to-string (char-after))) (point)))))
-	    (setq closer (make-string 3 (char-before)))
-	    ))
-	 ((and (member (char-before)
-		       ;; (list ?` ?\" ?')
-		       unary-delimiter-chars)
-	       ;; $asdf$
-	       (eq 0 (mod (count-matches (char-to-string (char-before)) limit orig) 2)))
-	  (setq erg (char-to-string (char-before)))
-	  (while (search-backward erg limit t)))
-	  ;; (setq closer (buffer-substring (save-excursion (skip-chars-backward (char-to-string (char-before)))(point)) (point)))
-	  ;; (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
-	  ;; (setq escapes (syntactic-close--escapes-maybe limit)))
-	 ((and (member (char-before)
-		       ;; (list ?` ?\" ?')
-		       unary-delimiter-chars)
-	       ;; $asdf$
-	       (not (eq 0 (mod (count-matches (char-to-string (char-before)) limit orig) 2))))
-	  (setq closer (buffer-substring (save-excursion (skip-chars-backward (char-to-string (char-before)))(point)) (point)))
-	  (when syntactic-close-honor-padding-p (save-excursion (setq padding (syntactic-close--padding-maybe))))
-	  (setq escapes (syntactic-close--escapes-maybe limit)))
-	 ((or (< 0 (abs (skip-chars-backward (concat "^" (cl-map 'string 'identity unary-delimiter-chars) paired-delimiters-strg) limit)))
-	      (setq done t)))
-	 ((and (member (char-before)
-		       ;; (list ?` ?\" ?')
-		       unary-delimiter-chars)
-	       ;; $asdf$
-	       ;; (eq 0 (mod (count-matches (char-to-string (char-before)) limit
-	       ;; 				 ;; (point)
-	       ;; 				 orig) 2))
-	       )
-	  ;; (setq erg (char-before))
-	  ;; syntactic-close--multibrace-unary-fundamental-test-WlZ71s
-	  ;; {{{[[[[+++asdf+++
-	  (setq closer (buffer-substring-no-properties (point) (progn
-								 (skip-chars-backward (concat "^" (cl-map 'string 'identity (remove (char-before) unary-delimiter-chars)) paired-delimiters-strg) limit) (point)))))
+;;     ;;                  (syntactic-close--return-complement-string-maybe "{-")
+;;     ;;)
+;;     (let ((splitter (and
+;; 		     (eq 1 (count-matches "|" (line-beginning-position) (point)))
+;; 		     (nth 1 pps) (save-excursion (goto-char (nth 1 pps)) (eq (char-after) ?\[)))))
+;;       (if splitter
+;;           "]"
+;;         (cond
 
-	 ))
-      (cond (closer
-	     (when (characterp closer) (setq closer (char-to-string closer)))
-	     (setq closer (concat padding escapes closer))))
-      (goto-char orig)
-      closer)))
+;;          ;; ((nth 1 pps)
+;; 	 ;;             (syntactic-close--haskell-list-forms orig pps))
+;;          ((nth 3 pps)
+;;           (if (booleanp (nth 3 pps))
+;;               (save-excursion (goto-char (nth 8 pps)) (looking-at "[\"']\\{1,3\\}") (match-string-no-properties 0))
+;;             (char-to-string (nth 3 pps)))))))))
 
-(defun syntactic-close-python-listclose (orig closer force pps)
-  "If inside list, assume another item first.
+;; (defun delimited-atpt-intern--find-end (orig upper-bound beg)
+;;   (let ((beg (cons (match-beginning 0) (match-end 0)))
+;;         (this (point))
+;;         (erg (end-of-form-base (char-to-string (char-after)) (char-to-string (ar--return-complement-char-maybe (char-after))) upper-bound 'move 0 ar-match-in-comment-p t 'ar-syntax ar-match-in-string-p)))
+;;     (if
+;;         (ignore-errors
+;;           (and erg (< orig (cadr erg))))
+;;         (progn
+;;           (setq delimited-start beg)
+;;           (setq delimited-end erg)
+;;           beg)
+;;           (goto-char this)
+;;           nil)))
 
-Argument ORIG the start position.
-Argument CLOSER the char which closes the list.
-Argument FORCE to be done.
-Argument PPS should provide result of ‘parse-partial-sexp’."
-  (cond ((member (char-before) (list ?' ?\"))
-	 (if force
-	     (progn
-	       (insert closer)
-	       ;; only closing `"' or `'' was inserted here
-	       (when (setq closer (syntactic-close--generic orig nil pps))
-		 (insert closer))
-	       t)
-	   (if (nth 3 pps)
-	       (insert (char-before))
-	     (insert ","))
-	   t))
-	(t (syntactic-close-fix-whitespace-maybe orig)
-	   (insert closer)
-	   t)))
+(defun syntactic-close-intern--repeat (orig pps limit)
+  "Internal use only."
+  (let ((begdel (concat syntactic-close-beg-delimiter syntactic-close-delimiters-atpt)))
+    (unless (bobp)
+      (forward-char -1)
+      (unless (looking-at (concat "[" begdel "]+"))
+        (while (and (< 0 (abs (skip-chars-backward (concat "^" begdel) limit)))
+                    (or (and (not syntactic-close-match-in-comment-p)
+                             (nth 4 (setq pps (parse-partial-sexp limit (point)))))))
+          (when
+              (or (and (not syntactic-close-match-in-comment-p) (nth 4 pps))
+                  (and (not syntactic-close-match-in-string-p (nth 3 pps))))
+            (goto-char (nth 8 pps)))))
+      (syntactic-close--generic orig pps limit))))
 
-;; Emacs-lisp
-(defun syntactic-close--org-mode-close ()
-  "Org mode specific closes."
-  (unless (empty-line-p)
-    (end-of-line)
-    (newline))
-  ;; +BEGIN_QUOTE
-  (when (save-excursion (and (re-search-backward "^#\\+\\([A-Z]+\\)_\\([A-Z]+\\)" nil t 1)(string= "BEGIN" (match-string-no-properties 1))))
-    (insert (concat "#+END_" (match-string-no-properties 2)))))
+(defun syntactic-close--special-refuse (escaped)
+  "We try applying a generic function.
 
-(defun syntactic-close-emacs-lisp-close (pps &optional org)
-  "Close in Emacs Lisp.
+However, there are some corner-cases.
+In Emacs-lips ‘|’ might be a delimiter, but escaped ‘\\|’
+being just part of a regexp. "
+  (save-match-data
+    (cond ((eq major-mode 'emacs-lisp-mode)
+           (cond ((and (string= "|" (match-string-no-properties 0))
+                       escaped)
+                  t)
+                 ((string= "'" (match-string-no-properties 0))
+                  t)
+                 ((and (string= ":" (match-string-no-properties 0))
+                       (eq (char-before) ??))
+                  t)
+                 ((and (< 1 (length (match-string-no-properties 0)))
+                     (not (syntactic-close--string-fence (point)))
+                     t))
+                 (t nil)))
+          (t nil))))
 
-Argument CLOSER the char to close.
-Argument PPS should provide result of ‘parse-partial-sexp’.
-Optional argument ORG read ‘org-mode’."
-  (let ((syntactic-close-unary-delimiter-chars (list ?` ?\" ?+)))
-    ;; (unary-delimiters-strg (cl-map 'string 'identity unary-delimiter-chars))
-    ;; (delimiters (concat syntactic-close-paired-openers-strg syntactic-close-paired-closers-strg unary-delimiters-strg))
+(defun syntactic-close--generic-splitted (escaped padding)
+  (progn
+    (if (< 1 (length (match-string-no-properties 0)))
+        (if escaped
+            (concat "\\\\" (syntactic-close--string-fence (match-string-no-properties 0)))
+          (syntactic-close--string-fence (match-string-no-properties 0)))
+      (if padding
+          (if escaped
+              (concat "\\\\" (concat padding (char-to-string (syntactic-close--return-complement-char-maybe (char-after)))))
+            (concat padding (char-to-string (syntactic-close--return-complement-char-maybe (char-after)))))
+        (if escaped
+            (concat "\\\\"
+                    (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
+          (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))))))
+
+(defun syntactic-close--generic (orig pps limit)
+  (interactive)
+  (let (;; (pps (parse-partial-sexp limit (point)))
+        (escaped (if (nth 3 pps)
+                     (syntactic-close--escaped-in-string-p)
+                   (syntactic-close--escaped-p)))
+        (padding (when syntactic-close-honor-padding-p (syntactic-close--padding-maybe (1+ (point))))))
     (cond
-     (org (syntactic-close--org-mode-close))
-     ((and (not (nth 8 pps))(nth 1 pps))
-      (syntactic-close-pure-syntax pps))
-     ((syntactic-close--generic nil nil pps)))))
+     ((and (nth 3 pps) (ignore-errors (equal (char-after) (nth 3 pps)))(< (point) orig))
+      (char-to-string (nth 3 pps)))
+     ((and
+       (< (point) orig)
+       (or (looking-at (concat "[" syntactic-close-beg-delimiter "]"))
+           (and
+            (looking-at (concat "[" syntactic-close-delimiters-atpt "]+"))
+            ;; "[[:alpha:, refute last colon
+            ;; (< (point) (1- orig))
+            ;; "[[:alpha:, refute first colon
+            (not (eq 0 (%  (count-matches (match-string-no-properties 0) limit orig) 2)))))
+       (not (syntactic-close--special-refuse escaped)))
+      (syntactic-close--generic-splitted escaped padding
+                                       ;; limit pps
+                                       ;; syntactic-close-beg-delimiter
+                                       ))
+     (t (unless (bobp)
+          (save-restriction
+            (when limit (narrow-to-region limit orig))
+
+            (cond
+             ((and (not (nth 3 pps)) (not (bobp)) (save-excursion (forward-char -1) (nth 3 (parse-partial-sexp limit (point)))))
+              (backward-sexp)
+              (syntactic-close--generic orig pps limit))
+             ;; ((looking-back (concat  "[" (regexp-quote syntactic-close-end-delimiter) "]") (point-min))
+             ;;  (backward-sexp)
+             ;;  (syntactic-close-intern--repeat orig pps limit))
+
+             ((member (char-before) syntactic-close-end-delimiter-list)
+              (ar-backward-sexp)
+              (syntactic-close-intern--repeat orig pps limit))
+
+             ;; ((looking-at (concat "[" syntactic-close-delimiters-atpt "]+"))
+             ;;  (syntactic-close--generic-splitted
+             ;;   ;; limit pps
+             ;;   ;; syntactic-close-delimiters-atpt
+             ;;))
+             (t (unless (bobp) (syntactic-close-intern--repeat orig pps limit))))))))))
+
+(defun syntactic-close--org-mode-close (orig pps limit)
+  "Org mode specific closes."
+  ;; +BEGIN_QUOTE
+  (unless (or (nth 8 pps) (nth 3 pps) (nth 1 pps) (nth 4 pps))
+    (if (save-excursion
+          (and (re-search-backward "^#\\+\\([A-Z]+\\)_\\([A-Z]+\\)" limit t 1)
+               (string= "BEGIN" (match-string-no-properties 1))))
+        (progn
+          (unless (empty-line-p)
+            (end-of-line)
+            (newline))
+          (insert (concat "#+END_" (match-string-no-properties 2)))
+          t)
+      (goto-char orig)))
+  )
+
+;; (defun syntactic-close-emacs-lisp (orig pps limit)
+;;   "Close in Emacs Lisp.
+
+;; Argument CLOSER the char to close.
+;; Argument PPS should provide result of ‘parse-partial-sexp’.
+;; Optional argument ORG read ‘org-mode’."
+;;   (let ((syntactic-close-unary-delimiter-chars (list ?` ?\" ?+)))
+;;     ;; (unary-delimiters-strg (cl-map 'string 'identity unary-delimiter-chars))
+;;     ;; (delimiters (concat syntactic-close-paired-openers-strg syntactic-close-paired-closers-strg unary-delimiters-strg))
+;;     (cond
+;;      ;; ((and (not (nth 8 pps))(nth 1 pps))
+;;      ;;  (syntactic-close-pure-syntax pps))
+;;      ((syntactic-close--generic orig pps limit)))))
 
 (defun syntactic-close--paren-conditions (bracecounter bracketcounter parencounter)
   (cond
@@ -822,21 +895,19 @@ Optional argument ORG read ‘org-mode’."
               erg)
           (syntactic-close--python-f-string (buffer-substring-no-properties (line-beginning-position) (point)) bracecounter bracketcounter parencounter doublequotecounter singlequotecounter erg))))))
 
-(defun syntactic-close-python-close (pps)
+(defun syntactic-close-python-close (orig limit pps)
   "Might deliver equivalent to `py-dedent'.
 
 Argument B-OF-ST read beginning-of-statement.
 Argument B-OF-BL read beginning-of-block.
 Optional argument PADDING to be done.
 Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
-  (let* ((orig (point))
-         (f-pos (progn (while (re-search-backward "\\(.*\\)[fF]r?\\(['\"]\\{1,3\\}\\).*" (line-beginning-position) t)) (match-beginning 2))))
+  (let* ((f-pos (progn (while (re-search-backward "\\(.*\\)[fF]r?\\(['\"]\\{1,3\\}\\).*" (line-beginning-position) t)) (match-beginning 2))))
     (cond
      (f-pos
       (syntactic-close--python-f-string (buffer-substring-no-properties f-pos orig)))
      ((and (nth 8 pps) (nth 3 pps))
       (or (save-excursion (syntactic-close--paren-inside-string (nth 8 pps)))
-	  ;; (syntactic-close-generic-forms pps)
 	  (save-excursion (goto-char (nth 8 pps)) (looking-at "[\"']\\{1,3\\}") (match-string-no-properties 0))))
      ((nth 1 pps)
       (syntactic-close-pure-syntax pps))
@@ -844,23 +915,25 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
      ;; py-block-or-clause-re
      ((looking-back "[ 	]*\\_<\\(async \\(?:class\\|def\\|for\\|with\\)\\|c\\(?:ase\\|lass\\)\\|def\\|e\\(?:l\\(?:if\\|se\\)\\|xcept\\)\\|f\\(?:inally\\|or\\)\\|if\\|match\\|try\\|w\\(?:hile\\|ith\\)\\)\\_>[( 	]*.*" (line-beginning-position))
       ":")
-     (t (syntactic-close--generic (point) nil
-				  (if (functionp 'py--beginning-of-statement-position)
-				      (py--beginning-of-statement-position)
-				    (save-excursion (python-nav-beginning-of-statement)))
-				  t)))))
+     (t (syntactic-close--generic orig pps limit)))))
+
+;; nil
+;; 				  (if (functionp 'py--beginning-of-statement-position)
+;; 				      (py--beginning-of-statement-position)
+;; 				    (save-excursion (python-nav-beginning-of-statement)))
+;; 				  t)))))
 
 ;; Haskell
-(defun syntactic-close-haskell-close (&optional pps)
+(defun syntactic-close-haskell (orig pps limit)
   "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
   (let* ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (cond
      ((nth 8 pps)
-      (syntactic-close-generic-forms pps))
+      (syntactic-close-generic-forms orig limit pps))
      ((nth 1 pps)
       (syntactic-close-pure-syntax pps))
-     (t (syntactic-close--generic nil nil pps)))))
+     (t (syntactic-close--generic orig pps limit)))))
 
 ;; Ruby
 (defun syntactic-close--ruby ()
@@ -869,14 +942,14 @@ Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
         "end"
       "\nend")))
 
-(defun syntactic-close-ruby-close (pps)
+(defun syntactic-close-ruby-close (orig pps)
   "Ruby specific close.
 
 Argument PPS is result of a call to function ‘parse-partial-sexp’"
   (cond ((looking-back "#{[_[:alpha:]][_[:alnum:]]*" (line-beginning-position))
          "}")
-        ((ignore-errors (and (< (nth 1 pps) (nth 8 pps))(syntactic-close--string-before-list-maybe pps))))
-	((and (or (nth 1 pps) (nth 3 pps)) (syntactic-close-pure-syntax-intern pps)))
+        ((ignore-errors (and (< (nth 1 pps) (nth 8 pps))(syntactic-close--string-before-list-maybe  pps))))
+	((and (or (nth 1 pps) (nth 3 pps)) (syntactic-close-pure-syntax pps)))
 	(t (syntactic-close--ruby))))
 
 (defun syntactic-close-java-another-filter-clause (pps)
@@ -889,41 +962,33 @@ Argument PPS is result of a call to function ‘parse-partial-sexp’"
              (progn (ignore-errors (forward-sexp)) (and (not (nth 1 (parse-partial-sexp (point-min) (point))))(eq (char-after) ?{)))))
           ((looking-back syntactic-close-assignment-re (line-beginning-position))))))
 
-(defun syntactic-close-java (&optional pps)
+(defun syntactic-close-java (orig pps limit)
   "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
-  (let* ((orig (point))
-         (pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (cond
-     ((nth 8 pps)
-      (syntactic-close-generic-forms pps))
-     ((nth 1 pps)
-      (cond ((and (looking-back syntactic-close-for-re (line-beginning-position)) (not (eq (char-before) ?\;)) (not (string-match "\\+\\+" (buffer-substring-no-properties (line-beginning-position) (point)))))
-             "; ")
-            (t (save-excursion (goto-char (nth 1 pps))
-                               (if (eq (char-after) 40)
-                                   ")"
-                                 (goto-char orig)
-                                 (cond ((looking-back "^[ \t]*" (line-beginning-position))
-                                        "}")
-                                       (t (unless (eq (char-before) ?\;) ";"))))))))
-     ;; ((syntactic-close-java-another-filter-clause pps)
-     ;;  (if (not (eq (char-before) ?\;))
-
-     ;;      ";")
-     ;;  (syntactic-close-pure-syntax pps))
-     ;; (t (syntactic-close-pure-syntax pps)))))
-     ((looking-back syntactic-close-assignment-re (line-beginning-position))
-      (unless (eq (char-before) ?\;) ";"))
-     ((and (looking-back syntactic-close-funcdef-re (line-beginning-position))
-           (eq (char-before) 41))
-      ":")
-     ((looking-back "^[ \t]*" (line-beginning-position))
-      "}")
-     (t
-      ";"
-      ;; (syntactic-close--generic nil nil pps)
-      ))))
+  (cond
+   ((nth 8 pps)
+    (syntactic-close-generic-forms orig limit pps))
+   ((nth 1 pps)
+    (cond ((and (looking-back syntactic-close-for-re (line-beginning-position)) (not (eq (char-before) ?\;)) (not (string-match "\\+\\+" (buffer-substring-no-properties (line-beginning-position) (point)))))
+           "; ")
+          (t (save-excursion (goto-char (nth 1 pps))
+                             (if (eq (char-after) 40)
+                                 ")"
+                               (goto-char orig)
+                               (cond ((looking-back "^[ \t]*" (line-beginning-position))
+                                      "}")
+                                     (t (unless (eq (char-before) ?\;) ";"))))))))
+   ((looking-back syntactic-close-assignment-re (line-beginning-position))
+    (unless (eq (char-before) ?\;) ";"))
+   ((and (looking-back syntactic-close-funcdef-re (line-beginning-position))
+         (eq (char-before) 41))
+    ":")
+   ((looking-back "^[ \t]*" (line-beginning-position))
+    "}")
+   (t
+    ";"
+    ;; (syntactic-close--generic nil nil pps)
+    )))
 
 (defun syntactic-close-scala-another-filter-clause (pps)
   "Semicolon only required with inside parentized
@@ -947,19 +1012,25 @@ Source: Odersky, Spoon, Venners: Programming in Scala"
            (setq done t)))
     done))
 
-(defun syntactic-close-scala-close (&optional pps)
+(defun syntactic-close-scala-close (orig limit pps)
   "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
   (let* ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (cond
      ((nth 8 pps)
-      (syntactic-close-generic-forms pps))
+      (syntactic-close-pure-syntax pps)
+      )
      ((nth 1 pps)
       (if (save-excursion (syntactic-close-scala-another-filter-clause pps))
           (if (and (not (eq (char-before) ?\;))
+                    ;; (eq (char-before) 41)
+                    ;; val foo =  this.totalFoo(Seq(("apple", 2))
+                    ;; select ";" if opening paren is not at same line
+                   (< (save-excursion (goto-char (nth 1 pps))(count-lines (point-min) (line-end-position))) (count-lines (point-min) (line-end-position)))
                    (or
-                    (eq (char-before) 41)
-                    (looking-back syntactic-close-assignment-re (line-beginning-position))))
+                    (looking-back syntactic-close-if-re (line-beginning-position))
+                    (looking-back syntactic-close-assignment-re (line-beginning-position))
+                   ))
               ";"
             (syntactic-close-pure-syntax pps))
         (syntactic-close-pure-syntax pps)))
@@ -969,21 +1040,21 @@ Source: Odersky, Spoon, Venners: Programming in Scala"
            (eq (char-before) 41))
       ":")
 
-     (t (syntactic-close--generic nil nil pps)))))
+     (t (syntactic-close--generic orig pps limit)))))
 
-(defun syntactic-close-shell-close (&optional pps)
+(defun syntactic-close-shell-close (orig pps limit)
   "Optional argument PPS is result of a call to function ‘parse-partial-sexp’"
   (interactive "*")
   (let* ((pps (or pps (parse-partial-sexp (point-min) (point)))))
     (cond
      ((nth 8 pps)
-      (syntactic-close-generic-forms pps))
+      (syntactic-close-generic-forms orig limit pps))
      ((nth 1 pps)
       (syntactic-close-pure-syntax pps))
-     (t (syntactic-close--generic nil nil pps))
+     (t (syntactic-close--generic orig pps limit))
      )))
 
-(defun syntactic-close--semicolon-modes (pps)
+(defun syntactic-close--semicolon-modes (orig pps limit)
   "Close specific modes.
 
 Argument PPS, the result of ‘parse-partial-sexp’."
@@ -992,13 +1063,13 @@ Argument PPS, the result of ‘parse-partial-sexp’."
 		(save-excursion (goto-char (nth 8 pps))
 				(char-to-string (char-after))))
 	       ((save-excursion
-		  (and (nth 1 pps) (syntactic-close-pure-syntax-intern pps))))
+		  (and (nth 1 pps) (syntactic-close-pure-syntax pps))))
                ((looking-back syntactic-close-import-re (line-beginning-position))
                 ";")
-	       (t (syntactic-close--generic nil nil pps)))))
+	       (t (syntactic-close--generic orig pps limit)))))
     (cond
      ((and closer (string-match "}" closer))
-      (if (save-excursion (skip-chars-backward " \t\r\n\f") (member (char-before) (list ?\; ?})))
+      (if (save-excursion (skip-chars-backward " \t\r\n\f" limit) (member (char-before) (list ?\; ?})))
 	  closer
 	";"))
      ((ignore-errors (and (< (nth 1 pps) (nth 8 pps))
@@ -1011,31 +1082,39 @@ Argument PPS, the result of ‘parse-partial-sexp’."
       (setq closer ";"))
      (t closer))))
 
-(defun syntactic-close--specific-modes (pps)
+(defun syntactic-close--specific-modes (orig pps limit)
   "Argument PPS result of ‘parse-partial-sexp’."
   (pcase major-mode
     (`agda2-mode
-     (syntactic-close-haskell-close pps))
+     (syntactic-close-haskell orig pps limit))
     (`emacs-lisp-mode
-     (syntactic-close-emacs-lisp-close pps))
+     (syntactic-close--generic orig pps limit))
+    ;; (syntactic-close-emacs-lisp orig pps limit))
     (`html-mode
      (syntactic-close-ml))
+    (`haskell-mode
+     (syntactic-close-haskell orig pps limit))
     (`java-mode
-     (syntactic-close-java))
+     (syntactic-close-java orig pps limit))
     (`mhtml-mode
      (syntactic-close-ml))
     (`nxml-mode
      (syntactic-close--finish-element))
     (`org-mode
-     (syntactic-close-emacs-lisp-close pps t))
+     (or
+      (syntactic-close--org-mode-close orig pps limit)
+      (syntactic-close--generic orig pps limit)
+      ))
     (`python-mode
-     (syntactic-close-python-close pps))
+     (syntactic-close-python-close orig limit pps))
+    (`prolog-mode
+     (syntactic-close--generic orig pps limit))
     (`ruby-mode
-     (syntactic-close-ruby-close pps))
+     (syntactic-close-ruby-close orig pps))
     (`scala-mode
-     (syntactic-close-scala-close pps))
+     (syntactic-close-scala-close orig limit pps))
     (`shell-mode
-     (syntactic-close-shell-close pps))
+     (syntactic-close-shell-close orig pps limit))
     (`sgml-mode
      (syntactic-close-ml))
     (`xml-mode
@@ -1043,23 +1122,22 @@ Argument PPS, the result of ‘parse-partial-sexp’."
     (`xxml-mode
      (syntactic-close-ml))))
 
-(defun syntactic-close--modes (pps)
+(defun syntactic-close--modes (orig pps limit)
   "Argument PPS, the result of ‘parse-partial-sexp’."
-  (save-excursion
-    (cond ((member major-mode syntactic-close--semicolon-separator-modes)
-           (syntactic-close--semicolon-modes pps))
-          ;; (pcase major-mode
-          ;;   (`java-mode (syntactic-close--semicolon-modes pps))
-          ;;   (`js-mode (syntactic-close--semicolon-modes pps))
-          ;;   (`php-mode (syntactic-close--semicolon-modes pps))
-          ;;   (`python-mode (syntactic-close-python-close pps))
-          ;;   (`web-mode (syntactic-close--semicolon-modes pps))
-          ;;   (_
-          (t
-           ;; (if
-	   ;;       (ignore-errors (and (nth 3 pps) (< (nth 1 pps) (nth 8 pps))))
-	   ;;       (syntactic-close--string-before-list-maybe pps)
-	   (syntactic-close--specific-modes pps)))))
+  (cond ((member major-mode syntactic-close--semicolon-separator-modes)
+         (syntactic-close--semicolon-modes orig pps limit))
+        ;; (pcase major-mode
+        ;;   (`java-mode (syntactic-close--semicolon-modes pps))
+        ;;   (`js-mode (syntactic-close--semicolon-modes pps))
+        ;;   (`php-mode (syntactic-close--semicolon-modes pps))
+        ;;   (`python-mode (syntactic-close-python-close pps))
+        ;;   (`web-mode (syntactic-close--semicolon-modes pps))
+        ;;   (_
+        (t
+         ;; (if
+	 ;;       (ignore-errors (and (nth 3 pps) (< (nth 1 pps) (nth 8 pps))))
+	 ;;       (syntactic-close--string-before-list-maybe pps)
+	 (syntactic-close--specific-modes orig pps limit))))
 
 (defun syntactic-close--finish-element ()
   "Finish the current element by inserting an end-tag."
@@ -1068,49 +1146,47 @@ Argument PPS, the result of ‘parse-partial-sexp’."
     (nxml-finish-element-1 nil)
     (< orig (point))))
 
-(defun syntactic-close-generic-forms (pps)
+(defun syntactic-close-generic-forms (orig limit pps)
   "Argument PPS, the result of ‘parse-partial-sexp’."
   (cond
-   ((syntactic-close--generic nil nil pps))
+   ((syntactic-close--generic orig pps limit))
    ((nth 4 pps)
     ;; in comment
-    (syntactic-close--insert-comment-end-maybe pps))))
+    (syntactic-close--insert-comment-end-maybe orig pps))))
 
-(defun syntactic-close--string-before-list-maybe (pps)
-  "String inside a list needs to be closed first maybe.
+  ;; (cond
+  ;;       ((syntactic-close-pure-syntax pps))
+  ;;       ((syntactic-close--generic orig pps limit))
+  ;;       ))
 
-Expects start of string behind start of list
-Argument PPS result of ‘parse-partial-sexp’."
-  ;; maybe close generic first
-  (cond
-	((syntactic-close-pure-syntax-intern pps))
-        ((syntactic-close--generic (point) nil pps))
-        ))
-
-(defun syntactic-close-intern (orig iact pps)
+(defun syntactic-close-intern (orig iact pps limit)
   "A first dispatch.
 
 Argument ORIG the position command was called from.
 Argument BEG the lesser border.
 Argument IACT signals an interactive call.
 Optional argument PPS, the result of ‘parse-partial-sexp’."
-  (let (closer)
-    (when syntactic-close-electric-delete-whitespace-p
-      (delete-region orig (progn (skip-chars-backward " \t" (line-beginning-position))(point))))
-    ;; (save-excursion
-    (setq closer
-	  (if
-	      (member major-mode syntactic-close-modes)
-	      (syntactic-close--modes pps)
-	    (syntactic-close--generic orig nil pps)))
+  (when syntactic-close-electric-delete-whitespace-p
+    (delete-region orig (progn (skip-chars-backward " \t" (line-beginning-position))(point))))
+  (let ((closer
+    	 (cond ((nth 4 pps)
+                (syntactic-close--insert-comment-end-maybe orig pps))
+	       ((member major-mode syntactic-close-modes)
+	        (syntactic-close--modes orig pps limit))
+	       (t (syntactic-close--generic orig pps limit)))))
     ;; insert might be hardcoded like in ‘nxml-finish-element-1’
     (when (and closer (stringp closer))
-      ;; (goto-char orig)
+      (goto-char orig)
       (insert closer)
       ;; ruby end
       (when (member major-mode syntactic-close-indent-modes)
 	(save-excursion (indent-according-to-mode))))
     (or (< orig (point)) (and iact (message "%s" "nil") nil))))
+
+(defun syntactic-close-update-delimiters ()
+  (cond ((eq major-mode 'emacs-lisp-mode)
+         "\"':")
+        (t syntactic-close-delimiters-atpt)))
 
 ;;;###autoload
 (defun syntactic-close (&optional arg beg pps iact)
@@ -1130,13 +1206,22 @@ Argument PPS, the result of ‘parse-partial-sexp’."
   (let* ((orig (copy-marker (point)))
 	 (beg (or beg (syntactic-close--point-min)))
 	 (pps (or pps (parse-partial-sexp beg (point))))
+         (limit (cond
+                 ((and (nth 8 pps) (nth 1 pps))
+                  (max (nth 8 pps) (nth 1 pps)))
+                 ((nth 8 pps))
+                 ((nth 1 pps))
+                 (t (point-min))))
+         (syntactic-close-match-in-string-p (when (nth 3 pps) (nth 8 pps)))
+         (syntactic-close-match-in-comment-p (nth 4 pps))
 	 (iact (or iact arg))
-	 (arg (or arg 1)))
+	 (arg (or arg 1))
+         (syntactic-close-delimiters-atpt (syntactic-close-update-delimiters)))
     (pcase (prefix-numeric-value arg)
-      (4 (while (syntactic-close-intern (setq orig (copy-marker (point))) iact pps))
-	 (< orig (point)))
-      (_ (syntactic-close-intern orig iact pps)
-         (< orig (point))))))
+      (4 (while (syntactic-close))
+	 (unless (< orig (point)) (progn (goto-char orig) nil)))
+      (_ (syntactic-close-intern orig iact pps limit)
+         (if (< orig (point)) (point) (progn (goto-char orig) nil))))))
 
 (provide 'syntactic-close)
 ;;; syntactic-close.el ends here

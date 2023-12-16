@@ -24,15 +24,12 @@
 
 ;;; Code:
 
-
-;; Test succeeds at syntactic-close-interactive-tests.el but fails in batch-mode
-
-;; (ert-deftest syntactic-close-c-nesting-comment-test ()
-;;   (syntactic-close-test "/* The open system call "
-;;     'c-mode
-;;     'syntactic-close-debug-p
-;;     (syntactic-close)
-;;     (should (eq (char-before) ?/))))
+(ert-deftest syntactic-close-c-test-Ue1Rwp ()
+  (syntactic-close-test "/* The open system call "
+    'c-mode
+    'syntactic-close-debug-p
+    (syntactic-close)
+    (should (eq (char-before) ?/))))
 
 (provide 'syntactic-close-c-tests)
 ;;; syntactic-close-c-tests.el ends here

@@ -43,37 +43,287 @@ fi
 
 echo "before shift \$EMACS: $EMACS"
 shift
+
 echo "\$*: $*"
 PDIR=$PWD
 echo "\$PWD: $PWD"
 # WERKSTATT set in .bashrc, thus unset remotly
 WERKSTATT=${WERKSTATT:=1}
 echo "\$WERKSTATT: $WERKSTATT"
-TESTDIR=$PDIR/test
-export TESTDIR
+IFLOCAL=${IFLOCAL:=1}
+echo "\$IFLOCAL: $IFLOCAL"
 
-#  echo "\$EMACS: $EMACS"
+TESTDIR=$PDIR/test/
+#  export TESTDIR
+echo "\$TESTDIR: $TESTDIR"
 
-FILE1=syntactic-close.el
+echo "\$HASKELL_MODE_DIR: $HASKELL_MODE_DIR"
 
-TEST1=test/syntactic-close-setup-ert-tests.el
-TEST2=test/syntactic-close-c-tests.el
-TEST3=test/syntactic-close-c++-tests.el
-TEST4=test/syntactic-close-sml-tests.el
-TEST5=test/syntactic-close-scala-tests.el
-TEST6=test/syntactic-close-emacs-lisp-tests.el
-TEST7=test/syntactic-close-js-tests.el
-TEST8=test/syntactic-close-php-tests.el
-TEST9=test/syntactic-close-python-tests.el
-TEST10=test/syntactic-close-ruby-tests.el
-TEST11=test/syntactic-close-xml-tests.el
-TEST12=test/syntactic-close-fundamental-tests.el
-TEST13=test/syntactic-close-java-tests.el
+FILE1=$WERKSTATT/thingatpt-utils-core/ar-subr.el
+FILE2=$WERKSTATT/thingatpt-utils-core/beg-end.el
+FILE3=$WERKSTATT/thingatpt-utils-core/ar-thingatpt-basic-definitions.el
+FILE4=$WERKSTATT/thingatpt-utils-core/thingatpt-utils-core.el
+FILE5=$WERKSTATT/thing-at-point-utils/thing-at-point-utils.el
+FILE6=$WERKSTATT/thing-at-point-utils/ar-sexp.el
+FILE7=syntactic-close.el
+FILE8=test/syntactic-close-setup-ert-tests.el
+FILE9=$HASKELL_MODE_DIR/haskell-mode.el
+
+TEST1=test/syntactic-close-emacs-lisp-tests.el
+TEST2=test/syntactic-close-org-mode-tests.el
+TEST3=test/syntactic-close-python-tests.el
+TEST4=test/syntactic-close-scala-tests.el
+TEST5=test/syntactic-close-haskell-tests.el
+TEST6=test/syntactic-close-js-tests.el
+TEST7=test/syntactic-close-php-tests.el
+TEST8=test/syntactic-close-sml-tests.el
+TEST9=test/syntactic-close-ruby-tests.el
+TEST10=test/syntactic-close-xml-tests.el
+TEST11=test/syntactic-close-fundamental-tests.el
+TEST12=test/syntactic-close-java-tests.el
+TEST13=test/syntactic-close-c++-tests.el
+TEST14=test/syntactic-close-c-tests.el
+
+h1 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST1 \
+-f ert-run-tests-batch-and-exit
+}
+
+h2 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+\
+-load $TEST2 \
+-f ert-run-tests-batch-and-exit
+}
+
+h3 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST3 \
+-f ert-run-tests-batch-and-exit
+}
+
+h4 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST4 \
+-f ert-run-tests-batch-and-exit
+}
+
+h5 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST5 \
+-f ert-run-tests-batch-and-exit
+}
+
+h6 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST6 \
+-f ert-run-tests-batch-and-exit
+}
+
+h7 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+--eval "(when (< 25 (string-to-number (substring emacs-version 0 2))) (defvar bootstrap-version) (let ((bootstrap-file (expand-file-name \"straight/repos/straight.el/bootstrap.el\" user-emacs-directory)) (bootstrap-version 5)) (unless (file-exists-p bootstrap-file) (with-current-buffer (url-retrieve-synchronously \"https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el\" (quote silent) (quote inhibit-cookies)) (goto-char (point-max)) (eval-print-last-sexp))) (load bootstrap-file nil (quote nomessage))) (straight-use-package (quote php-mode)))" \
+--eval "(sit-for 3)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST7 \
+-f ert-run-tests-batch-and-exit
+}
+
+h8 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST8 \
+-f ert-run-tests-batch-and-exit
+}
+
+h9 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST9 \
+-f ert-run-tests-batch-and-exit
+}
+
+h10 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST10 \
+-f ert-run-tests-batch-and-exit
+}
+
+h11 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST11 \
+-f ert-run-tests-batch-and-exit
+}
+
+h12 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST12 \
+-f ert-run-tests-batch-and-exit
+}
+
+h13 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+--eval "(when (< 25 (string-to-number (substring emacs-version 0 2))) (defvar bootstrap-version) (let ((bootstrap-file (expand-file-name \"straight/repos/straight.el/bootstrap.el\" user-emacs-directory)) (bootstrap-version 5)) (unless (file-exists-p bootstrap-file) (with-current-buffer (url-retrieve-synchronously \"https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el\" (quote silent) (quote inhibit-cookies)) (goto-char (point-max)) (eval-print-last-sexp))) (load bootstrap-file nil (quote nomessage))) (straight-use-package (quote haskell-mode)))" \
+--eval "(sit-for 3)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST13 \
+-f ert-run-tests-batch-and-exit
+}
+
+h14 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+-load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
+-load $TEST14 \
+-f ert-run-tests-batch-and-exit
+}
 
 entfernt () {
     $EMACS -Q --batch \
 --eval "(message (emacs-version))" \
 -load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
 -load $TEST1 \
 -load $TEST2 \
 -load $TEST3 \
@@ -92,6 +342,13 @@ hier () {
     $EMACS -Q --batch \
 --eval "(message (emacs-version))" \
 -load $FILE1 \
+-load $FILE2 \
+-load $FILE3 \
+-load $FILE4 \
+-load $FILE5 \
+-load $FILE6 \
+-load $FILE7 \
+-load $FILE8 \
 -load $TEST1 \
 -load $TEST2 \
 -load $TEST3 \
@@ -103,27 +360,28 @@ hier () {
 -load $TEST11 \
 -load $TEST12 \
 -load $TEST13 \
+-load $TEST14 \
 -f ert-run-tests-batch-and-exit
 }
 
-if [ $WERKSTATT -eq 0 ]; then
+if [ $IFLOCAL -eq 0 ]; then
     while getopts 123456789abcdefghijklmnopqrstuvx option
     do
         case $option in
-	    # 1) echo "h1: Lade \$TEST1: \"$TEST1\"";h1;;
-	    # 2) echo "h2: Lade \$TEST2: \"$TEST2\"";h2;;
-	    # 3) echo "h3: Lade \$TEST3: \"$TEST3\"";h3;;
-	    # 4) echo "h4: Lade \$TEST4: \"$TEST4\"";h4;;
-	    # 5) echo "h5: Lade \$TEST5: \"$TEST5\"";h5;;
-	    # 6) echo "h6: Lade \$TEST6: \"$TEST6\"";h6;;
-	    # 7) echo "h7: Lade \$TEST7: \"$TEST7\"";h7;;
-	    # 8) echo "h8: Lade \$TEST8: \"$TEST8\"";h8;;
-	    # 9) echo "h9: Lade \$TEST9: \"$TEST9\"";h9;;
-	    # a) echo "h10: Lade \$TEST10: \"$TEST10\"";h10;;
-	    # b) echo "h11: Lade \$TEST11: \"$TEST11\"";h11;;
-	    # c) echo "h12: Lade \$TEST12: \"$TEST12\"";h12;;
-	    # d) echo "h13: Lade \$TEST13: \"$TEST13\"";h13;;
-	    # e) echo "h14: Lade \$TEST14: \"$TEST14\"";h14;;
+	    1) echo "h1: Lade \$TEST1: \"$TEST1\"";h1;;
+	    2) echo "h2: Lade \$TEST2: \"$TEST2\"";h2;;
+	    3) echo "h3: Lade \$TEST3: \"$TEST3\"";h3;;
+	    4) echo "h4: Lade \$TEST4: \"$TEST4\"";h4;;
+	    5) echo "h5: Lade \$TEST5: \"$TEST5\"";h5;;
+	    6) echo "h6: Lade \$TEST6: \"$TEST6\"";h6;;
+	    7) echo "h7: Lade \$TEST7: \"$TEST7\"";h7;;
+	    8) echo "h8: Lade \$TEST8: \"$TEST8\"";h8;;
+	    9) echo "h9: Lade \$TEST9: \"$TEST9\"";h9;;
+	    a) echo "h10: Lade \$TEST10: \"$TEST10\"";h10;;
+	    b) echo "h11: Lade \$TEST11: \"$TEST11\"";h11;;
+	    c) echo "h12: Lade \$TEST12: \"$TEST12\"";h12;;
+	    d) echo "h13: Lade \$TEST13: \"$TEST13\"";h13;;
+	    e) echo "h14: Lade \$TEST14: \"$TEST14\"";h14;;
 	    # f) echo "h15: Lade \$TEST15: \"$TEST15\"";h15;;
 	    # g) echo "h16: Lade \$TEST16: \"$TEST16\"";h16;;
             # h) echo "h17: Running python-tests.el";h17;;
