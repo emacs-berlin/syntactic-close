@@ -1,8 +1,10 @@
 ;;; syntactic-close.el --- Insert closing delimiter -*- lexical-binding: t; -*-
 
-;; Authored and maintained by
-;; Andreas Röhler, <andreas.roehler@online.de>
-;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
+;; Author: Andreas Röhler <andreas.roehler@online.de>
+;;     Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
+
+;; A first draft was published at emacs-devel list:
+;; http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
 
 ;; Version: 0.1
 
@@ -30,15 +32,9 @@
 
 ;; ['a','b' ==> ['a','b']
 
-;; A first draft was published at emacs-devel list:
-;; http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
-
 ;;; Code:
 
 (require 'cl-lib)
-(require 'thingatpt)
-(require 'thing-at-point-utils)
-(require 'ar-sexp)
 
 (eval-when-compile
  (require 'nxml-mode)
@@ -93,7 +89,6 @@
   "Specify the delimiter char."
   :type '(repeat character)
   :group 'sytactic-close)
-
 
 (defvar syntactic-close-tag nil
   "Functions closing mode-specific might go here.")
@@ -255,7 +250,6 @@ Argument LIMIT lower border."
     (when (eq (char-before) syntactic-close--escape-char)
       (buffer-substring-no-properties (point) (progn (skip-chars-backward (char-to-string syntactic-close--escape-char) limit)(1- (point)))))))
 
-
 (defun syntactic-close--string-before-list-maybe (pps)
   "String inside a list needs to be closed first maybe.
 
@@ -286,7 +280,6 @@ Optional argument OFFSET already know offset."
   (if offset
       (make-string (+ offset (syntactic-close--multichar-intern char limit)) (syntactic-close--return-complement-char-maybe char))
     (make-string (syntactic-close--multichar-intern char limit) (syntactic-close--return-complement-char-maybe char))))
-
 
 (defun syntactic-close-pure-syntax  (pps)
   "Fetch from start to close.
@@ -344,7 +337,6 @@ Optional argument IACT signaling interactive use."
 
 (unless (functionp 'empty-line-p)
   (defalias 'empty-line-p 'syntactic-close-empty-line-p))
-
 
 (defun syntactic-close--return-complement-char-maybe (erg)
   "For example return \"}\" for \"{\" but keep \"\\\"\".
@@ -640,7 +632,8 @@ being just part of a regexp. "
         (if escaped
             (concat "\\\\"
                     (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
-          (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))))))
+          (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))))
+    ))
 
 (defun syntactic-close--generic (orig pps limit)
   (interactive)
@@ -660,7 +653,9 @@ being just part of a regexp. "
             ;; "[[:alpha:, refute last colon
             ;; (< (point) (1- orig))
             ;; "[[:alpha:, refute first colon
-            (not (eq 0 (%  (count-matches (match-string-no-properties 0) limit orig) 2)))))
+            ;; ```foo
+            (or (eq (char-after) (char-before)) (not (eq 0 (%  (count-matches (match-string-no-properties 0) limit orig) 2))))
+            ))
        (not (syntactic-close--special-refuse escaped)))
       (syntactic-close--generic-splitted escaped padding
                                        ;; limit pps
@@ -669,24 +664,13 @@ being just part of a regexp. "
      (t (unless (bobp)
           (save-restriction
             (when limit (narrow-to-region limit orig))
-
             (cond
              ((and (not (nth 3 pps)) (not (bobp)) (save-excursion (forward-char -1) (nth 3 (parse-partial-sexp limit (point)))))
               (backward-sexp)
               (syntactic-close--generic orig pps limit))
-             ;; ((looking-back (concat  "[" (regexp-quote syntactic-close-end-delimiter) "]") (point-min))
-             ;;  (backward-sexp)
-             ;;  (syntactic-close-intern--repeat orig pps limit))
-
              ((member (char-before) syntactic-close-end-delimiter-list)
               (ar-backward-sexp)
               (syntactic-close-intern--repeat orig pps limit))
-
-             ;; ((looking-at (concat "[" syntactic-close-delimiters-atpt "]+"))
-             ;;  (syntactic-close--generic-splitted
-             ;;   ;; limit pps
-             ;;   ;; syntactic-close-delimiters-atpt
-             ;;))
              (t (unless (bobp) (syntactic-close-intern--repeat orig pps limit))))))))))
 
 (defun syntactic-close--org-mode-close (orig pps limit)
