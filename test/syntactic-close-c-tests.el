@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(ert-deftest syntactic-close-c-test-Ue1Rwp ()
+(ert-deftest syntactic-close--c-test-Ue1Rwp ()
   (syntactic-close-test "/* The open system call "
     'c-mode
     'syntactic-close-debug-p

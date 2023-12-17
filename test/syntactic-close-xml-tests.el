@@ -23,7 +23,7 @@
 ;;
 
 ;;; Code:
-(ert-deftest syntactic-close-xml-1-test ()
+(ert-deftest syntactic-close--xml-test-lnZ4WE ()
   (syntactic-close-test-with-xml-buffer
       "<body>"
     (syntactic-close)

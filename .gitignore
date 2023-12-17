@@ -15,6 +15,7 @@
 RCS
 ein
 run-travis-hier.sh
+test/syntactic-close--*.*
 test/#*
 test/*.hs
 test/*.java
@@ -33,3 +34,4 @@ test/syntactic-close--elisp-char-class-test-2.el
 test/syntactic-close-c-comment-test.c
 test/web-mode.el
 v
+neu-*

@@ -23,7 +23,7 @@
 ;;
 
 ;;; Code:
-(ert-deftest syntactic-close-close-ruby-string-test ()
+(ert-deftest syntactic-close--ruby-string-test ()
   (syntactic-close-test
       "def deliver(from: \"A\", to: nil, via: \"mail"
     'ruby-mode
@@ -32,7 +32,7 @@
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest syntactic-close-close-ruby-paren-test ()
+(ert-deftest syntactic-close--ruby-paren-test ()
   (syntactic-close-test
       "def deliver(from: \"A\", to: nil, via: \"mail\""
     'ruby-mode
@@ -40,7 +40,7 @@
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
-(ert-deftest syntactic-close-close-ruby-string-interpolation-test-2 ()
+(ert-deftest syntactic-close--ruby-string-interpolation-test-2 ()
   (syntactic-close-test
       "def deliver(from: \"A\", to: nil, via: \"mail\")
   \"Sending from #{from} to #{to} via #{via}"
@@ -49,7 +49,7 @@
     (syntactic-close)
     (should (eq (char-before) ?\"))))
 
-(ert-deftest syntactic-close-ruby-block-close-GZBbFA ()
+(ert-deftest syntactic-close--ruby-block-close-GZBbFA ()
   (syntactic-close-test
       "values.each do |value|
   break if value.even?"
@@ -58,7 +58,7 @@
     (syntactic-close)
     (should (looking-back "end" (line-beginning-position)))))
 
-(ert-deftest syntactic-close-ruby-block-close-oP7aaw ()
+(ert-deftest syntactic-close--ruby-block-close-oP7aaw ()
   (syntactic-close-test
       "more_nested_array.each do |element|
   element.each do |inner_element|
@@ -71,7 +71,7 @@
     (should (looking-back "end" (line-beginning-position)))
     (should (eq (current-indentation) 2))))
 
-(ert-deftest syntactic-close-ruby-block-close-XhSYAJ ()
+(ert-deftest syntactic-close--ruby-block-close-XhSYAJ ()
   (syntactic-close-test
       "more_nested_array.each do |element|
   element.each do |inner_element|
@@ -84,7 +84,7 @@
     (should (looking-back "end" (line-beginning-position)))
     (should (eq (current-indentation) 0))))
 
-(ert-deftest syntactic-close-ruby-test-gszMLh ()
+(ert-deftest syntactic-close--ruby-test-gszMLh ()
   (syntactic-close-test
       ;; "puts \"Hello #{name}!\""
       "puts \"Hello #{name"
@@ -93,7 +93,7 @@
     (syntactic-close)
     (should (char-equal (char-before) ?}))))
 
-(ert-deftest syntactic-close-ruby-test-yKdmju ()
+(ert-deftest syntactic-close--ruby-test-yKdmju ()
   (syntactic-close-test
       ;; "puts \"Hello #{name}!\""
       "puts \"Hello #{name}!"
@@ -102,7 +102,7 @@
     (syntactic-close)
     (should (char-equal (char-before) ?\"))))
 
-(ert-deftest syntactic-close-mode-ruby-test-VvXkWj ()
+(ert-deftest syntactic-close--ruby-test-VvXkWj ()
   (syntactic-close-test
       ;; "hi(\"Matz\")"
       "hi(\"Matz"
@@ -111,7 +111,7 @@
     (syntactic-close)
     (should (char-equal (char-before) ?\"))))
 
-(ert-deftest syntactic-close-mode-ruby-mode-test-3Sumx6 ()
+(ert-deftest syntactic-close--ruby-test-3Sumx6 ()
   (syntactic-close-test
       ;; "hi(\"Matz\")"
       "hi(\"Matz\""
@@ -121,5 +121,5 @@
     (syntactic-close)
     (should (char-equal (char-before) ?\)))))
 
-(provide 'syntactic-close-ruby-tests)
-;;; syntactic-close-ruby-tests.el ends here
+(provide 'syntactic-close--ruby-tests)
+;;; syntactic-close--ruby-tests.el ends here
