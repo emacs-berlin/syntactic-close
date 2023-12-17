@@ -204,7 +204,7 @@ Default is t"
 (defvar  syntactic-close-end-delimiter-list  (list ?« ?’ ?” ?} ?>  ?\] ?\))
    "Specify the delimiter char.")
 
-(defvar syntactic-close-delimiters-atpt "|\"'`#$/=?!:*+~§%_;@-"
+(defvar syntactic-close-unary-delimiters-atpt "|\"'`#$/=?!:*+~§%_;@-"
 "Specify the delimiter chars. ")
 
 (defvar syntactic-close-match-in-string-p nil
@@ -584,7 +584,7 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
 
 (defun syntactic-close-intern--repeat (orig pps limit)
   "Internal use only."
-  (let ((begdel (concat syntactic-close-beg-delimiter syntactic-close-delimiters-atpt)))
+  (let ((begdel (concat syntactic-close-beg-delimiter syntactic-close-unary-delimiters-atpt)))
     (unless (bobp)
       (forward-char -1)
       (unless (looking-at (concat "[" begdel "]+"))
@@ -649,7 +649,7 @@ being just part of a regexp. "
        (< (point) orig)
        (or (looking-at (concat "[" syntactic-close-beg-delimiter "]"))
            (and
-            (looking-at (concat "[" syntactic-close-delimiters-atpt "]+"))
+            (looking-at (concat "[" syntactic-close-unary-delimiters-atpt "]+"))
             ;; "[[:alpha:, refute last colon
             ;; (< (point) (1- orig))
             ;; "[[:alpha:, refute first colon
@@ -1170,7 +1170,7 @@ Optional argument PPS, the result of ‘parse-partial-sexp’."
 (defun syntactic-close-update-delimiters ()
   (cond ((eq major-mode 'emacs-lisp-mode)
          "\"':")
-        (t syntactic-close-delimiters-atpt)))
+        (t syntactic-close-unary-delimiters-atpt)))
 
 ;;;###autoload
 (defun syntactic-close (&optional arg beg pps iact)
@@ -1200,7 +1200,7 @@ Argument PPS, the result of ‘parse-partial-sexp’."
          (syntactic-close-match-in-comment-p (nth 4 pps))
 	 (iact (or iact arg))
 	 (arg (or arg 1))
-         (syntactic-close-delimiters-atpt (syntactic-close-update-delimiters)))
+         (syntactic-close-unary-delimiters-atpt (syntactic-close-update-delimiters)))
     (pcase (prefix-numeric-value arg)
       (4 (while (syntactic-close))
 	 (unless (< orig (point)) (progn (goto-char orig) nil)))
