@@ -669,7 +669,7 @@ being just part of a regexp. "
               (backward-sexp)
               (syntactic-close--generic orig pps limit))
              ((member (char-before) syntactic-close-end-delimiter-list)
-              (ar-backward-sexp)
+              (backward-sexp)
               (syntactic-close-intern--repeat orig pps limit))
              (t (unless (bobp) (syntactic-close-intern--repeat orig pps limit))))))))))
 

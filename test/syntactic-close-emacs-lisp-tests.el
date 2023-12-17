@@ -156,6 +156,7 @@
     (skip-chars-backward " \t\r\n\f")
       (let ((syntactic-close-unary-delimiter-chars (list ?` ?\" ?+)))
 	(syntactic-close '(4))
+        (sit-for 0.1) 
 	(should (eq (char-before) ?\")))))
 
 (ert-deftest syntactic-close--tqs-test-pBcUxG ()
@@ -163,7 +164,7 @@
   (syntactic-close-test-with-elisp-buffer
       "(search-forward \"'''"
       (goto-char (point-max))
-    (skip-chars-backward " \t\r\n\f") 
+    (skip-chars-backward " \t\r\n\f")
       (syntactic-close)
     (should (eq (char-before) ?\"))))
 
