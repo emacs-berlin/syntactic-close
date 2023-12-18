@@ -32,12 +32,12 @@
 
 ;; ['a','b' ==> ['a','b']
 
-;; A first draft was published at emacs-devel list:
-;; http://lists.gnu.org/archive/html/emacs-devel/2013-09/msg00512.html
-
 ;;; Code:
 
 (require 'cl-lib)
+(require 'thingatpt)
+(require 'thing-at-point-utils)
+(require 'ar-sexp)
 
 (eval-when-compile
  (require 'nxml-mode)
@@ -171,7 +171,7 @@ Argument PPS is result of ‘parse-partial-sexp’"
        ((nth 3 pps)
 	(goto-char (nth 8 pps))
 	(backward-prefix-chars)
-	(setq closer (buffer-substring-no-properties (point) (progn (skip-chars-forward (char-to-string (nth 3 pps)))(point))))
+	(setq closer (buffer-substring-no-properties (point) (progn (skip-chars-forward (char-to-string (char-after)))(point))))
 	(when syntactic-close-honor-padding-p (setq padding (syntactic-close--padding-maybe (1+ (point))))))
        ((nth 1 pps)
 	(goto-char (nth 1 pps))
