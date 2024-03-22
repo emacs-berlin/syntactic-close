@@ -36,8 +36,8 @@
 
 (require 'cl-lib)
 (require 'thingatpt)
-(require 'ar-thingatpt-utils)
-(require 'ar-sexp)
+;; (require 'ar-thingatpt-utils)
+;; (require 'ar-sexp)
 
 (eval-when-compile
  (require 'nxml-mode)

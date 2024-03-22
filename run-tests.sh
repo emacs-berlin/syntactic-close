@@ -59,15 +59,16 @@ echo "\$TESTDIR: $TESTDIR"
 
 echo "\$HASKELL_MODE_DIR: $HASKELL_MODE_DIR"
 
-FILE1=$WERKSTATT/thingatpt-utils-core/ar-subr.el
-FILE2=$WERKSTATT/thingatpt-utils-core/beg-end.el
-FILE3=$WERKSTATT/thingatpt-utils-core/ar-thingatpt-basic-definitions.el
-FILE4=$WERKSTATT/thingatpt-utils-core/thingatpt-utils-core.el
-FILE5=$WERKSTATT/thing-at-point-utils/ar-thingatpt-utils.el
-FILE6=$WERKSTATT/thing-at-point-utils/ar-sexp.el
-FILE7=syntactic-close.el
-FILE8=test/syntactic-close-setup-ert-tests.el
-FILE9=$HASKELL_MODE_DIR/haskell-mode.el
+FILE1=syntactic-close.el
+FILE2=$WERKSTATT/thingatpt-utils-core/ar-subr.el
+FILE3=$WERKSTATT/thingatpt-utils-core/ar-beg-end.el
+FILE4=$WERKSTATT/thingatpt-utils-core/ar-thingatpt-basic-definitions.el
+FILE5=$WERKSTATT/thingatpt-utils-core/ar-thingatpt-utils-core.el
+FILE6=$WERKSTATT/thing-at-point-utils/ar-thingatpt-utils.el
+FILE7=$WERKSTATT/thing-at-point-utils/ar-sexp.el
+FILE8=$HASKELL_MODE_DIR/haskell-mode.el
+
+SETUP=test/syntactic-close-setup-ert-tests.el
 
 TEST1=test/syntactic-close-emacs-lisp-tests.el
 TEST2=test/syntactic-close-org-mode-tests.el
@@ -89,13 +90,8 @@ h1 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
+\
 -load $TEST1 \
 -f ert-run-tests-batch-and-exit
 }
@@ -105,13 +101,7 @@ h2 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 \
 -load $TEST2 \
 -f ert-run-tests-batch-and-exit
@@ -122,13 +112,7 @@ h3 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST3 \
 -f ert-run-tests-batch-and-exit
 }
@@ -138,13 +122,7 @@ h4 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST4 \
 -f ert-run-tests-batch-and-exit
 }
@@ -153,14 +131,10 @@ h5 () {
     $EMACS -Q --batch \
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
+--eval "(add-to-list 'load-path (getenv\"HASKELL_MODE_DIR\"))" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
 -load $FILE8 \
+-load $SETUP \
 -load $TEST5 \
 -f ert-run-tests-batch-and-exit
 }
@@ -170,13 +144,7 @@ h6 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST6 \
 -f ert-run-tests-batch-and-exit
 }
@@ -188,13 +156,7 @@ h7 () {
 --eval "(when (< 25 (string-to-number (substring emacs-version 0 2))) (defvar bootstrap-version) (let ((bootstrap-file (expand-file-name \"straight/repos/straight.el/bootstrap.el\" user-emacs-directory)) (bootstrap-version 5)) (unless (file-exists-p bootstrap-file) (with-current-buffer (url-retrieve-synchronously \"https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el\" (quote silent) (quote inhibit-cookies)) (goto-char (point-max)) (eval-print-last-sexp))) (load bootstrap-file nil (quote nomessage))) (straight-use-package (quote php-mode)))" \
 --eval "(sit-for 3)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST7 \
 -f ert-run-tests-batch-and-exit
 }
@@ -204,13 +166,7 @@ h8 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST8 \
 -f ert-run-tests-batch-and-exit
 }
@@ -220,13 +176,7 @@ h9 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST9 \
 -f ert-run-tests-batch-and-exit
 }
@@ -236,13 +186,7 @@ h10 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST10 \
 -f ert-run-tests-batch-and-exit
 }
@@ -252,13 +196,7 @@ h11 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST11 \
 -f ert-run-tests-batch-and-exit
 }
@@ -268,13 +206,7 @@ h12 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST12 \
 -f ert-run-tests-batch-and-exit
 }
@@ -286,13 +218,8 @@ h13 () {
 --eval "(when (< 25 (string-to-number (substring emacs-version 0 2))) (defvar bootstrap-version) (let ((bootstrap-file (expand-file-name \"straight/repos/straight.el/bootstrap.el\" user-emacs-directory)) (bootstrap-version 5)) (unless (file-exists-p bootstrap-file) (with-current-buffer (url-retrieve-synchronously \"https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el\" (quote silent) (quote inhibit-cookies)) (goto-char (point-max)) (eval-print-last-sexp))) (load bootstrap-file nil (quote nomessage))) (straight-use-package (quote haskell-mode)))" \
 --eval "(sit-for 3)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
 -load $FILE8 \
+-load $SETUP \
 -load $TEST13 \
 -f ert-run-tests-batch-and-exit
 }
@@ -302,13 +229,7 @@ h14 () {
 --eval "(message (emacs-version))" \
 --eval "(setq operator-mode-debug nil)" \
 -load $FILE1 \
--load $FILE2 \
--load $FILE3 \
--load $FILE4 \
--load $FILE5 \
--load $FILE6 \
--load $FILE7 \
--load $FILE8 \
+-load $SETUP \
 -load $TEST14 \
 -f ert-run-tests-batch-and-exit
 }
@@ -324,6 +245,8 @@ entfernt () {
 -load $FILE6 \
 -load $FILE7 \
 -load $FILE8 \
+-load $SETUP \
+\
 -load $TEST1 \
 -load $TEST2 \
 -load $TEST3 \
@@ -341,6 +264,7 @@ entfernt () {
 hier () {
     $EMACS -Q --batch \
 --eval "(message (emacs-version))" \
+--eval "(add-to-list 'load-path (getenv\"HASKELL_MODE_DIR\"))" \
 -load $FILE1 \
 -load $FILE2 \
 -load $FILE3 \
@@ -349,6 +273,8 @@ hier () {
 -load $FILE6 \
 -load $FILE7 \
 -load $FILE8 \
+-load $SETUP \
+\
 -load $TEST1 \
 -load $TEST2 \
 -load $TEST3 \
