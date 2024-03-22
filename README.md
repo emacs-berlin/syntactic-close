@@ -1,4 +1,4 @@
-[![CircleCI thingatpt-utils-core](https://circleci.com/gh/andreas-roehler/syntactic-close.svg?style=svg)](https://app.circleci.com/pipelines/gh/andreas-roehler/syntactic-close)
+[![CircleCI syntactic-close](https://circleci.com/gh/emacs-berlin/syntactic-close.svg?style=svg)](https://app.circleci.com/pipelines/gh/emacs-berlin/syntactic-close)
 
 Insert closing delimiter char(s), i.e. parenthesis, bracket(s), brace(s) or
 whatever is needed - think of syntactic consequence.
