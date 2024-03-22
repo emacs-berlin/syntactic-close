@@ -123,13 +123,6 @@
       (syntactic-close)
     (should (looking-back "}" (line-beginning-position)))))
 
-(ert-deftest syntactic-close--multidelim-test-lvyjjU ()
-  (syntactic-close-test-with-elisp-buffer
-      "{{{{asdf}"
-      (goto-char (point-max))
-      (syntactic-close)
-    (should (looking-back "}}" (line-beginning-position)))))
-
 (ert-deftest syntactic-close--escaped-test-nm0AqK ()
   ;; comint-password-prompt-regexp
   (syntactic-close-test-with-elisp-buffer

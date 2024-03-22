@@ -187,5 +187,13 @@ Comment ends"
     (should (eq (char-before  (1- (point))) ?\)))
     ))
 
+(ert-deftest syntactic-close-scala-multidelim-test-lvyjjU ()
+  (syntactic-close-test
+      "{{{{asdf}"
+    'scala-mode
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (looking-back "}}" (line-beginning-position)))))
+
 (provide 'syntactic-close-scala-tests)
 ;;; syntactic-close-scala-tests.el ends here
