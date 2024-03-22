@@ -36,7 +36,7 @@
 
 (require 'cl-lib)
 (require 'thingatpt)
-(require 'thing-at-point-utils)
+(require 'ar-thingatpt-utils)
 (require 'ar-sexp)
 
 (eval-when-compile
