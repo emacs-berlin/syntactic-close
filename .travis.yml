@@ -4,4 +4,4 @@ env:
   EMACS=emacs
 
 script:
-  ./run-travis-ci.sh 
+  ./run-tests.sh 
