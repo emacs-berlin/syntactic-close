@@ -1,4 +1,4 @@
-;;; syntactic-close-java-tests.el --- Ruby tests -*- lexical-binding: t; -*-
+;;; syntactic-close-java-tests.el --- java tests -*- lexical-binding: t; -*-
 
 ;; Authored and maintained by
 ;; Emacs User Group Berlin <emacs-berlin@emacs-berlin.org>
