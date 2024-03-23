@@ -1,15 +1,15 @@
 version: 2.1
 
 aktion:
-  echo "Gebe Umgebung aus" 
+  echo "Gebe Umgebung aus"
   ls -lart
 
 jobs:
-  syntactic-close:
+  general-close:
     docker:
       # - image: ubuntu-2004:202010-01
       - image: silex/emacs:27.2
-    working_directory: ~/syntactic-close
+    working_directory: ~/general-close
     steps:
       - run: apt update && apt install -y git ssh emacs
       - checkout
@@ -21,14 +21,35 @@ jobs:
       - run:
           name: ERT tests
           command: |
-          emacs -Q --batch \
+            emacs -Q --batch \
             --eval "(message (emacs-version))" \
             --eval "(message (getenv \"PWD\"))" \
             --eval "(load \"/root/syntactic-close/syntactic-close.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-emacs-lisp-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-coq-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-c++-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-c-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-fundamental-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-haskell-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-html-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-java-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-js-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-org-mode-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-php-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-python-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-ruby-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-scala-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-setup-ert-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-shell-script-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-sml-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-text-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-xml-tests.el\")" \
             --eval "(sit-for 1)" \
             -f ert-run-tests-batch-and-exit
+
 
 workflows:
   syntactic-close-workflow:
     jobs:
-      - syntactic-close  
+      - syntactic-close
