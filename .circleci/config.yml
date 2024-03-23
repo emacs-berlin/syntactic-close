@@ -5,11 +5,11 @@ aktion:
   ls -lart
 
 jobs:
-  general-close:
+  syntactic-close:
     docker:
       # - image: ubuntu-2004:202010-01
       - image: silex/emacs:27.2
-    working_directory: ~/general-close
+    working_directory: ~/syntactic-close
     steps:
       - run: apt update && apt install -y git ssh emacs
       - checkout
