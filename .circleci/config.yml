@@ -24,7 +24,7 @@ jobs:
           emacs -Q --batch \
             --eval "(message (emacs-version))" \
             --eval "(message (getenv \"PWD\"))" \
-            --eval "(load \"/root/syntactic-close/syntactic-close.el\"))" \
+            --eval "(load \"/root/syntactic-close/syntactic-close.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-elisp-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-coq-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-c++-tests.el\")" \
