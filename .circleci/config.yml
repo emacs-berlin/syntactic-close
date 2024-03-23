@@ -25,12 +25,11 @@ jobs:
             --eval "(message (emacs-version))" \
             --eval "(message (getenv \"PWD\"))" \
             --eval "(load \"/root/syntactic-close/syntactic-close.el\")" \
-            --eval "(load \"/root/syntactic-close/test/syntactic-close-elisp-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-emacs-lisp-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-coq-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-c++-tests.el\")" \
-            --eval "(load \"/root/syntactic-close/test/syntactic-close-c-tests.el\")" \
-            --eval "(load \"/root/syntactic-close/test/syntactic-close-emacs-lisp-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-fundamental-tests.el\")" \
+            --eval "(load \"/root/syntactic-close/test/syntactic-close-c-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-haskell-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-html-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-interactive-tests.el\")" \
