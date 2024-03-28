@@ -501,6 +501,8 @@ END the comment end"
 (defun syntactic-close--string-fence (orig)
   "Closing a string fence."
   (cond
+   ((looking-at "(\\* *")
+    comment-end)
    ((looking-at "\\/\\*")
     "*/")
    ((looking-at "{-# ")

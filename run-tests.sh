@@ -86,6 +86,7 @@ TEST12=test/syntactic-close-java-tests.el
 TEST13=test/syntactic-close-c++-tests.el
 TEST14=test/syntactic-close-c-tests.el
 TEST15=test/syntactic-close-shell-script-tests.el
+TEST16=test/syntactic-close-coq-tests.el
 
 h1 () {
     $EMACS -Q --batch \
@@ -246,6 +247,18 @@ h15 () {
 -f ert-run-tests-batch-and-exit
 }
 
+h16 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+--eval "(add-to-list 'load-path (expand-file-name \"~/.emacs.d/straight/build/proof-general\"))" \
+--eval "(require 'proof-general)" \
+-load $FILE1 \
+-load $SETUP \
+-load $TEST16 \
+-f ert-run-tests-batch-and-exit
+}
+
 entfernt () {
     $EMACS -Q --batch \
 --eval "(message (emacs-version))" \
@@ -277,6 +290,8 @@ hier () {
     $EMACS -Q --batch \
 --eval "(message (emacs-version))" \
 --eval "(add-to-list 'load-path (getenv\"HASKELL_MODE_DIR\"))" \
+--eval "(add-to-list 'load-path (expand-file-name \"~/.emacs.d/straight/build/proof-general\"))" \
+--eval "(require 'proof-general)" \
 -load $FILE1 \
 -load $FILE2 \
 -load $FILE3 \
@@ -300,6 +315,7 @@ hier () {
 -load $TEST13 \
 -load $TEST14 \
 -load $TEST15 \
+-load $TEST16 \
 -f ert-run-tests-batch-and-exit
 }
 
@@ -322,7 +338,7 @@ if [ $IFLOCAL -eq 0 ]; then
 	    d) echo "h13: Lade \$TEST13: \"$TEST13\"";h13;;
 	    e) echo "h14: Lade \$TEST14: \"$TEST14\"";h14;;
 	    f) echo "h15: Lade \$TEST15: \"$TEST15\"";h15;;
-	    # g) echo "h16: Lade \$TEST16: \"$TEST16\"";h16;;
+	    g) echo "h16: Lade \$TEST16: \"$TEST16\"";h16;;
             # h) echo "h17: Running python-tests.el";h17;;
 	    # i) echo "h18: Lade \$TEST18: \"$TEST18\"";h18;;
 	    # j) echo "h19: Lade \$TEST19: \"$TEST19\"";h19;;

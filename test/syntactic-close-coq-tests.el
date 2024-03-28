@@ -24,11 +24,14 @@
 
 ;;; Code:
 
+(require 'proof-general)
+
 ;; Test succeeds at syntactic-close-interactive-tests.el but fails in batch-mode
-(ert-deftest syntactic-close-coq-comment-test ()
-  (syntactic-close-test "(* definition of nat"
+(ert-deftest syntactic-close-coq-comment-test-5SMA9e ()
+  (syntactic-close-test
+      "(* definition of nat"
     'coq-mode
-    'syntactic-close-debug-p
+    syntactic-close-debug-p
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
