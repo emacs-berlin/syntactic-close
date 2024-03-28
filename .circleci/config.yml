@@ -11,7 +11,7 @@ jobs:
       - image: silex/emacs:27.2
     working_directory: ~/syntactic-close
     steps:
-      - run: apt update && apt install -y git ssh emacs
+      - run: apt update && apt install -y git ssh emacs proof-general
       - checkout
       - run:
           name: Umgebung
