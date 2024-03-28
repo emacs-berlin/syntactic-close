@@ -24,7 +24,7 @@
 
 ;;; Code:
 
-(ert-deftest syntactic-close-shell-script-paren-test-1 ()
+(ert-deftest syntactic-close-shell-script-paren-test-06Pk3t ()
   (syntactic-close-test-with-shell-script-buffer
       "MULTIFORM=$(
     curl -k -A http://foo.com |

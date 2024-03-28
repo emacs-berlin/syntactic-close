@@ -649,52 +649,57 @@ being just part of a regexp. "
           (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))))))
 
 (defun syntactic-close--generic (orig pps limit)
-  "Returns the string which closes the current form."
   (interactive)
-  (if (nth 1 pps)
-      (progn
-        (goto-char (nth 1 pps))
-        (char-to-string (syntactic-close--return-complement-char-maybe (char-after))))
-
-    (let ((escaped (if (nth 3 pps)
-                       (syntactic-close--escaped-in-string-p)
-                     (syntactic-close--escaped-p)))
-          (padding (when syntactic-close-honor-padding-p (syntactic-close--padding-maybe (1+ (point))))))
-      (cond
-       ((and (nth 3 pps) (ignore-errors (equal (char-after) (nth 3 pps)))(< (point) orig))
-        (char-to-string (nth 3 pps)))
-       ((and
-         (< (point) orig)
-         (looking-at (concat "[" syntactic-close-beg-delimiter "]"))
-         (not (syntactic-close--special-refuse escaped)))
-        (syntactic-close--generic-splitted escaped padding))
-       ((and
-         (< (point) orig)
-         (looking-at (concat "[" syntactic-close-unary-delimiters-atpt "]+"))
-         (not
-          (or
-           ;; (member (list 'asdf
-           (eq (car-safe (syntax-after (point))) 6)
-           (eq 0 (%  (count-matches (match-string-no-properties 0) limit orig) 2))))
-         ;; (forward-char -1)
-         (skip-chars-backward syntactic-close-unary-delimiters-atpt)
-         ;; "[[:alpha:, refute last colon
-         ;; (< (point) (1- orig))
-         ;; "[[:alpha:, refute first colon
-         (looking-at (concat "[" syntactic-close-unary-delimiters-atpt "]+")))
-        ;; (not (syntactic-close--special-refuse escaped))
-        (syntactic-close--generic-splitted escaped padding))
-       (t (unless (bobp)
-            (save-restriction
-              (when limit (narrow-to-region limit orig))
-              (cond
-               ((and (not (nth 3 pps)) (not (bobp)) (save-excursion (forward-char -1) (nth 3 (parse-partial-sexp limit (point)))))
-                (backward-sexp)
-                (syntactic-close--generic orig pps limit))
-               ((member (char-before) syntactic-close-end-delimiter-list)
-                (backward-sexp)
-                (syntactic-close-intern--repeat orig pps limit))
-               (t (unless (bobp) (syntactic-close-intern--repeat orig pps limit)))))))))))
+  (let ((escaped (if (nth 3 pps)
+                     (syntactic-close--escaped-in-string-p)
+                   (syntactic-close--escaped-p)))
+        (padding (when syntactic-close-honor-padding-p (syntactic-close--padding-maybe (1+ (point))))))
+    (cond
+     ((and (nth 3 pps) (ignore-errors (equal (char-after) (nth 3 pps)))(< (point) orig))
+      (char-to-string (nth 3 pps)))
+     ((and
+       (< (point) orig)
+       (looking-at (concat "[" syntactic-close-beg-delimiter "]"))
+       (not (syntactic-close--special-refuse escaped)))
+      (syntactic-close--generic-splitted escaped padding))
+     ((and
+       (< (point) orig)
+       (looking-at (concat "[" syntactic-close-unary-delimiters-atpt "]+"))
+       (not
+        (or
+         (eq (car-safe (syntax-after (point))) 6)
+         ;; MULTIFORM=$(
+         ;; curl -k -A http://foo.com |
+         ;; grep -m1 multiform |
+         ;; tr '=' '\n' |
+         ;; tail -1 |
+         ;; cut -d "'" -f 2
+         ;; avvoid match of syntax-chars
+         (eq (car-safe (syntax-after (point))) 7)
+         ;; exclude ://
+         ;; http://foo.com
+         (save-excursion
+           (skip-chars-backward syntactic-close-unary-delimiters-atpt)
+           (looking-at "://"))
+         (eq 0 (%  (count-matches (match-string-no-properties 0) limit orig) 2))))
+       (progn (skip-chars-backward syntactic-close-unary-delimiters-atpt)
+              ;; "[[:alpha:, refute last colon
+              ;; (< (point) (1- orig))
+              ;; "[[:alpha:, refute first colon
+              (looking-at (concat "[" syntactic-close-unary-delimiters-atpt "]+")))
+       ;; (not (syntactic-close--special-refuse escaped))
+       (syntactic-close--generic-splitted escaped padding)))
+     (t (unless (bobp)
+          (save-restriction
+            (when limit (narrow-to-region limit orig))
+            (cond
+             ((and (not (nth 3 pps)) (not (bobp)) (save-excursion (forward-char -1) (nth 3 (parse-partial-sexp limit (point)))))
+              (backward-sexp)
+              (syntactic-close--generic orig pps limit))
+             ((member (char-before) syntactic-close-end-delimiter-list)
+              (backward-sexp)
+              (syntactic-close-intern--repeat orig pps limit))
+             (t (unless (bobp) (syntactic-close-intern--repeat orig pps limit))))))))))
 
 (defun syntactic-close--org-mode-close (orig pps limit)
   "Org mode specific closes."
