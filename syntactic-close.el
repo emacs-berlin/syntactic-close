@@ -487,17 +487,6 @@ END the comment end"
     (goto-char orig)
     (newline-and-indent)))
 
-;; (defun syntactic-close--string-fence (orig)
-;;   "Closing a string fence."
-;;   (cond
-;;    ((looking-at "\\/\\*")
-;;     (syntactic-close--string-fence-intern orig "/*" "*/"))
-;;    ((looking-at "{-# ")
-;;     (syntactic-close--string-fence-intern orig "{-# " " #-}"))
-;;    ((looking-at "{- ")
-;;     (syntactic-close--string-fence-intern orig "{- " " -}"))
-;;    ))
-
 (defun syntactic-close--string-fence (orig)
   "Closing a string fence."
   (cond
@@ -550,7 +539,7 @@ Argument PPS should provide result of ‘parse-partial-sexp’."
   (cond ((derived-mode-p 'sgml-mode)
 	 (setq syntactic-close-tag 'sgml-close-tag)
 	 (funcall syntactic-close-tag)
-	 (font-lock-fontify-region (point-min)(point-max))
+	 ;; (save-excursion (font-lock-fontify-region (point-min)(point-max)))
 	 t)))
 
 (defun syntactic-close--return-complement-string-maybe (erg)

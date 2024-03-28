@@ -43,19 +43,14 @@
 
 ;; http://jinja.pocoo.org/docs/2.10/templates/#escaping
 
-(ert-deftest syntactic-close-html-1-test ()
-  (syntactic-close-test-with-html-buffer
-      "<body>"
-    (syntactic-close)
-    (should (looking-back "</body>" (line-beginning-position))))) 
-
 (ert-deftest syntactic-close-html-test-RiZF5w ()
   (syntactic-close-test
       "<body>"
     'html-mode
-    t
+    syntactic-close-verbose-p
     (syntactic-close)
-    (should (looking-back "</body>" (line-beginning-position))))) 
+    ;; (goto-char (point-max)) 
+    (should (looking-back "</body>" (line-beginning-position)))))
 
 
 (provide 'syntactic-close-html-tests)

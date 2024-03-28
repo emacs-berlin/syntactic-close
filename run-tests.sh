@@ -87,6 +87,7 @@ TEST13=test/syntactic-close-c++-tests.el
 TEST14=test/syntactic-close-c-tests.el
 TEST15=test/syntactic-close-shell-script-tests.el
 TEST16=test/syntactic-close-coq-tests.el
+TEST17=test/syntactic-close-html-tests.el
 
 h1 () {
     $EMACS -Q --batch \
@@ -259,6 +260,18 @@ h16 () {
 -f ert-run-tests-batch-and-exit
 }
 
+h17 () {
+    $EMACS -Q --batch \
+--eval "(message (emacs-version))" \
+--eval "(setq operator-mode-debug nil)" \
+--eval "(add-to-list 'load-path (expand-file-name \"~/.emacs.d/straight/build/proof-general\"))" \
+--eval "(require 'proof-general)" \
+-load $FILE1 \
+-load $SETUP \
+-load $TEST17 \
+-f ert-run-tests-batch-and-exit
+}
+
 entfernt () {
     $EMACS -Q --batch \
 --eval "(message (emacs-version))" \
@@ -339,7 +352,7 @@ if [ $IFLOCAL -eq 0 ]; then
 	    e) echo "h14: Lade \$TEST14: \"$TEST14\"";h14;;
 	    f) echo "h15: Lade \$TEST15: \"$TEST15\"";h15;;
 	    g) echo "h16: Lade \$TEST16: \"$TEST16\"";h16;;
-            # h) echo "h17: Running python-tests.el";h17;;
+            h) echo "h17: Running python-tests.el";h17;;
 	    # i) echo "h18: Lade \$TEST18: \"$TEST18\"";h18;;
 	    # j) echo "h19: Lade \$TEST19: \"$TEST19\"";h19;;
 	    # k) echo "h20: Lade \$TEST20: \"$TEST20\"";h20;;
