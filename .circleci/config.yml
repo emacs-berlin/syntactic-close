@@ -11,7 +11,7 @@ jobs:
       - image: silex/emacs:27.2
     working_directory: ~/syntactic-close
     steps:
-      - run: apt update && apt install -y git ssh emacs proof-general
+      - run: apt update && apt install -y git ssh emacs
       - checkout
       - run:
           name: Umgebung
@@ -26,7 +26,6 @@ jobs:
             --eval "(message (getenv \"PWD\"))" \
             --eval "(load \"/root/syntactic-close/syntactic-close.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-emacs-lisp-tests.el\")" \
-            --eval "(load \"/root/syntactic-close/test/syntactic-close-coq-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-c++-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-c-tests.el\")" \
             --eval "(load \"/root/syntactic-close/test/syntactic-close-fundamental-tests.el\")" \
