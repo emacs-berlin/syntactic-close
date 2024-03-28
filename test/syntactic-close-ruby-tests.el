@@ -121,5 +121,5 @@
     (syntactic-close)
     (should (char-equal (char-before) ?\)))))
 
-(provide 'syntactic-close--ruby-tests)
-;;; syntactic-close--ruby-tests.el ends here
+(provide 'syntactic-close-ruby-tests)
+;;; syntactic-close-ruby-tests.el ends here
