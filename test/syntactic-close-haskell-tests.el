@@ -1,3 +1,4 @@
+;; -*- lexical-binding: t; -*-
 
 ;; zipWith (\x ->y(\y -> (x, y) [1, 2, 3] [1, 2, 3]
 

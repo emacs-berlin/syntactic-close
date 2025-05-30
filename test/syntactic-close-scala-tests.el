@@ -195,5 +195,14 @@ Comment ends"
     (syntactic-close)
     (should (looking-back "}}" (line-beginning-position)))))
 
+(ert-deftest syntactic-close-scala-test-TxRSal ()
+  (syntactic-close-test
+      "println(s\"foo: ${bBar}"
+    'scala-mode
+    (goto-char (point-max))
+    (skip-chars-backward " \t\r\n\f") 
+    (syntactic-close)
+    (should (eq (char-before) ?\"))))
+
 (provide 'syntactic-close-scala-tests)
 ;;; syntactic-close-scala-tests.el ends here

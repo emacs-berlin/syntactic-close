@@ -181,7 +181,7 @@
   (syntactic-close-test-with-js-buffer
       "function foo(a,b,c,d) {
 if ( (a == b) || (c == d"
-    (goto-char (point-max)) 
+    (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?\)))))
 
@@ -189,7 +189,7 @@ if ( (a == b) || (c == d"
   (syntactic-close-test-with-js-buffer
       "function foo(a,b,c,d) {
 if ( (a == b) || (c == d)"
-    (goto-char (point-max)) 
+    (goto-char (point-max))
     (syntactic-close)
     (should (looking-back " )" (line-beginning-position)))))
 
@@ -197,7 +197,7 @@ if ( (a == b) || (c == d)"
   (syntactic-close-test-with-js-buffer
       "function foo(a,b,c,d) {
 if ( (a == b) || (c == d) )"
-    (goto-char (point-max)) 
+    (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?\;))))
 
@@ -205,7 +205,7 @@ if ( (a == b) || (c == d) )"
   (syntactic-close-test-with-js-buffer
       "function foo(a,b,c,d) {
 if ( (a == b) || (c == d) );"
-    (goto-char (point-max)) 
+    (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
@@ -224,23 +224,33 @@ if ( (a == b) || (c == d) );"
 (ert-deftest syntactic-close-padded-brace-test ()
   (syntactic-close-test-with-js-buffer
       "{ display: inline;"
-    (goto-char (point-max)) 
+    (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?}))))
 
 (ert-deftest syntactic-close-js-element-test ()
   (syntactic-close-test-with-js-buffer
       "<script"
-    (goto-char (point-max)) 
+    (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?>))))
 
 (ert-deftest syntactic-close-js-assignment-test ()
   (syntactic-close-test-with-js-buffer
       "var Counter = 1"
-    (goto-char (point-max)) 
+    (goto-char (point-max))
     (syntactic-close)
     (should (eq (char-before) ?\;))))
+
+(ert-deftest syntactic-close-js-assignment-NBV88G ()
+  (syntactic-close-test-with-js-buffer
+      "<script type=\"text/javascript\">
+<!-- JavaScript-Anweisungen -->
+"
+    (goto-char (point-max))
+    (syntactic-close)
+    (should (eq (looking-back "</script>" (line-beginning-position))))))
+
 
 (provide 'syntactic-close-js-tests)
 ;;; syntactic-close-js-tests.el ends here
